@@ -13,10 +13,6 @@
 📞 Call Owner
 </button>
   
-<button id="Vet" style="font-size:18px; padding:15px; margin:10px;">
-🪪 Vet Information
-</button>
-  
 <button id="textBtn" style="font-size:18px; padding:15px; margin:10px;">
 💬 Text Owner
 </button>
@@ -35,7 +31,6 @@ const pets = {
   "PET002": {
     name: "Bear",
     phone: "+61422637758"
-    vet: "Greencross Vets - Pakenham"
   }
 };
 
@@ -54,13 +49,7 @@ if (pet) {
   document.getElementById("callBtn").onclick = function() {
     window.location.href = "tel:" + pet.phone;
   };
-
-  // Vet button
-  document.getElementById("textBtn").onclick = function() {
-  window.location.href =
-      "sms:" + pet.vet + "?body=" + encodeURIComponent(
-        "Bear gets treatment from " + pet.vet
-        
+    
   // Text button
   document.getElementById("textBtn").onclick = function() {
     window.location.href =
