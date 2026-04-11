@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Arkforge Pet Admin</title>
+  <title>Pet Admin Panel</title>
 </head>
 
 <body style="font-family: Arial; padding:20px;">
 
-<h1>🐾 Pet Tag Admin</h1>
+<h1>🐾 Pet Admin (Arkforge)</h1>
 
 <label>Pet Name</label><br>
 <input id="name"><br><br>
@@ -14,14 +14,26 @@
 <label>Phone</label><br>
 <input id="phone"><br><br>
 
-<button onclick="generate()">Generate Pet Tag</button>
+<button onclick="addPet()">➕ Add Pet + Generate NFC</button>
 
-<h3>Result</h3>
+<h3>Output</h3>
 <pre id="output"></pre>
 
 <script>
 
-// 1. ID generator
+let pets = {};
+
+// 1. Load existing database
+fetch("pets.json")
+  .then(res => res.json())
+  .then(data => {
+    pets = data;
+  })
+  .catch(() => {
+    pets = {}; // fallback if empty or broken
+  });
+
+// 2. ID generator
 function generateId(length = 10) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let id = "";
@@ -31,22 +43,32 @@ function generateId(length = 10) {
   return id;
 }
 
-// 2. Generate entry
-function generate() {
+// 3. Add pet function
+function addPet() {
 
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
 
+  if (!name || !phone) {
+    alert("Please enter name and phone");
+    return;
+  }
+
   const id = generateId();
 
-  const url = `https://arkforge3dprinting.github.io/pet-tag/?id=${id}`;
+  // add to database
+  pets[id] = {
+    name: name,
+    phone: phone
+  };
 
-  const entry = `"${id}": { "name": "${name}", "phone": "${phone}" }`;
+  const url = "https://arkforge3dprinting.github.io/pet-tag/?id=" + id;
 
+  // output full updated JSON
   document.getElementById("output").innerText =
     "📲 NFC URL:\n" + url +
-    "\n\n📦 Add this to pets.json:\n" +
-    entry;
+    "\n\n📦 COPY THIS INTO pets.json:\n\n" +
+    JSON.stringify(pets, null, 2);
 }
 
 </script>
