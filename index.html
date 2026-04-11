@@ -6,77 +6,62 @@
 
 <body style="font-family: Arial; text-align:center; padding:20px;">
 
-<h1 id="title">🐾 Found Pet</h1>
-<p id="message">Loading...</p>
+<h1 id="title">Loading...</h1>
+<p id="message"></p>
 
-<button id="callBtn" style="font-size:18px; padding:15px; margin:10px;">
-📞 Call Owner
-</button>
-  
-<button id="textBtn" style="font-size:18px; padding:15px; margin:10px;">
-💬 Text Owner
-</button>
-
-<button id="locBtn" style="font-size:18px; padding:15px; margin:10px;">
-📍 Share Location
-</button>
+<button id="callBtn">📞 Call Owner</button>
+<button id="textBtn">💬 Text Owner</button>
+<button id="locBtn">📍 Share Location</button>
 
 <script>
-// 🔑 STEP 1: PET DATABASE (this is your “mini backend”)
-const pets = {
-  "PET001": {
-    name: "Bandit",
-    phone: "+61422590252"
-  },
-  "PET002": {
-    name: "Bear",
-    phone: "+61422637758"
-  }
-};
 
-// 🔑 STEP 2: GET ID FROM URL
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-// 🔑 STEP 3: FIND PET
-const pet = pets[id];
+fetch("pets.json")
+  .then(res => res.json())
+  .then(pets => {
 
-if (pet) {
-  document.getElementById("title").innerText = "🐾 You found " + pet.name;
-  document.getElementById("message").innerText = "Please help me get home safely";
+    const pet = pets[id];
 
-  // Call button
-  document.getElementById("callBtn").onclick = function() {
-    window.location.href = "tel:" + pet.phone;
-  };
-    
-  // Text button
-  document.getElementById("textBtn").onclick = function() {
-    window.location.href =
-      "sms:" + pet.phone + "?body=" + encodeURIComponent(
-        "Hi, I found your pet " + pet.name
-      );
-  };
+    if (!pet) {
+      document.getElementById("title").innerText = "Not found";
+      return;
+    }
 
-  // Location button
-  document.getElementById("locBtn").onclick = function() {
-    navigator.geolocation.getCurrentPosition(function(pos) {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+    document.getElementById("title").innerText = "🐾 You found " + pet.name;
+    document.getElementById("message").innerText = "Help me get home safely";
 
-      const msg =
-        "Hi, I found your pet " + pet.name +
-        ". My location: https://maps.google.com/?q=" + lat + "," + lon;
+    document.getElementById("callBtn").onclick = () => {
+      window.location.href = "tel:" + pet.phone;
+    };
 
+    document.getElementById("textBtn").onclick = () => {
       window.location.href =
-        "sms:" + pet.phone + "?body=" + encodeURIComponent(msg);
-    });
-  };
+        "sms:" + pet.phone +
+        "?body=" + encodeURIComponent("Hi, I found your pet " + pet.name);
+    };
 
-} else {
-  document.getElementById("title").innerText = "Pet not found";
-  document.getElementById("message").innerText = "Invalid tag ID";
-}
+    document.getElementById("locBtn").onclick = () => {
+
+      navigator.geolocation.getCurrentPosition(pos => {
+
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        const msg =
+          "Hi, I found your pet " + pet.name +
+          ". My location: https://maps.google.com/?q=" + lat + "," + lon;
+
+        window.location.href =
+          "sms:" + pet.phone + "?body=" + encodeURIComponent(msg);
+
+      });
+
+    };
+
+  });
+
 </script>
 
 </body>
