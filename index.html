@@ -55,6 +55,12 @@ if (pet) {
     window.location.href = "tel:" + pet.phone;
   };
 
+  // Vet button
+  document.getElementById("textBtn").onclick = function() {
+  window.location.href =
+      "sms:" + pet.vet + "?body=" + encodeURIComponent(
+        "Bear gets treatment from " + pet.vet
+        
   // Text button
   document.getElementById("textBtn").onclick = function() {
     window.location.href =
