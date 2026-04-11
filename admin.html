@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Arkforge Pet Admin</title>
+</head>
+
+<body style="font-family: Arial; padding:20px;">
+
+<h1>🐾 Pet Tag Admin</h1>
+
+<label>Pet Name</label><br>
+<input id="name"><br><br>
+
+<label>Phone</label><br>
+<input id="phone"><br><br>
+
+<button onclick="generate()">Generate Pet Tag</button>
+
+<h3>Result</h3>
+<pre id="output"></pre>
+
+<script>
+
+// 1. ID generator
+function generateId(length = 10) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let id = "";
+  for (let i = 0; i < length; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return id;
+}
+
+// 2. Generate entry
+function generate() {
+
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+
+  const id = generateId();
+
+  const url = `https://YOURUSERNAME.github.io/pet-tag/?id=${id}`;
+
+  const entry = `"${id}": { "name": "${name}", "phone": "${phone}" }`;
+
+  document.getElementById("output").innerText =
+    "📲 NFC URL:\n" + url +
+    "\n\n📦 Add this to pets.json:\n" +
+    entry;
+}
+
+</script>
+
+</body>
+</html>
