@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>Activate Pet Tag</title>
+</head>
+
 <body style="font-family: Arial; text-align:center; padding:20px;">
 
 <h2>Activate Your Pet Tag</h2>
 
+<p><b>Tag Code:</b> <span id="tagId"></span></p>
+
 <input id="name" placeholder="Pet Name"><br><br>
 <input id="phone" placeholder="Your Phone Number"><br><br>
+
+<input type="file" id="photo" accept="image/*"><br><br>
 
 <button id="activateBtn">Activate</button>
 
@@ -14,41 +22,75 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
+// 🔥 YOUR REAL CONFIG HERE
 const firebaseConfig = {
   apiKey: "517154779272",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
+  storageBucket: "arkforge-pets.firebasestorage.app",
+  messagingSenderId: "517154779272",
+  appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// 🧠 Get tag ID from URL
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
+// Show ID on page
+if (!id) {
+  document.getElementById("status").innerText = "Invalid tag link";
+  throw new Error("Missing ID");
+}
+
+document.getElementById("tagId").innerText = id;
+
+// 🚀 Activate button
 document.getElementById("activateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
+  const file = document.getElementById("photo").files[0];
 
   if (!name || !phone) {
-    document.getElementById("status").innerText = "Fill all fields";
+    document.getElementById("status").innerText = "Please fill all fields";
     return;
   }
 
   try {
+    document.getElementById("status").innerText = "Uploading...";
+
+    let photoURL = "";
+
+    // 📸 Upload photo if provided
+    if (file) {
+      const storage = getStorage(app);
+      const storageRef = ref(storage, "pets/" + id);
+
+      await uploadBytes(storageRef, file);
+      photoURL = await getDownloadURL(storageRef);
+    }
+
+    // 💾 Save pet data
     await setDoc(doc(db, "pets", id), {
-      name,
-      phone
+      name: name,
+      phone: phone,
+      photo: photoURL
     });
 
-    document.getElementById("status").innerText = "Activated successfully! Please navigate away from page.";
+    document.getElementById("status").innerText = "✅ Activated successfully!";
+
   } catch (e) {
     console.log(e);
-    document.getElementById("status").innerText = "Already activated or error.";
+    document.getElementById("status").innerText = "❌ " + e.message;
   }
 };
+
 </script>
 
 </body>
