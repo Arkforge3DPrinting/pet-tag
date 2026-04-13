@@ -10,19 +10,19 @@
 
 <input id="name" placeholder="Pet Name"><br><br>
 <input id="phone" placeholder="Owner Phone"><br><br>
-<input id="microchip" placeholder="Microchip Number"><br><br> 
-<input id="photo" placeholder=https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776065818/rf2oebfyhkpqb19gmhhu.jpg"><br><br
-
+<input id="microchip" placeholder="Microchip Number"><br><br>
+<input id="photo" placeholder="Image URL (optional)"><br><br>
 
 <button id="generateBtn">Generate & Save</button>
 
 <p id="result"></p>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// YOUR REAL CONFIG HERE
+// 🔥 Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
@@ -35,7 +35,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ID generator
+// 🔢 ID generator
 function generateId(length = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   let id = "";
@@ -45,38 +45,48 @@ function generateId(length = 10) {
   return id;
 }
 
+// 🚀 SAVE BUTTON
 document.getElementById("generateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
-  const phone = document.getElementById("microchip").value;
+  const microchip = document.getElementById("microchip").value;
+  const photo = document.getElementById("photo").value;
+
+  const result = document.getElementById("result");
 
   if (!name || !phone) {
-    document.getElementById("result").innerText = "Enter name and phone";
+    result.innerText = "Please enter pet name and phone";
     return;
   }
 
   const id = generateId();
 
   try {
+
     await setDoc(doc(db, "pets", id), {
-      name: name,
-      phone: phone
+      name,
+      phone,
+      microchip: microchip || "",
+      photo: photo || ""
     });
 
     const url = `https://arkforge3dprinting.github.io/pet-tag/?id=${id}`;
 
-    document.getElementById("result").innerHTML =
-      `<b>Saved!</b><br><br>
-       <b>ID:</b> ${id}<br><br>
-       <b>URL:</b><br>${url}`;
+    result.innerHTML = `
+      <b>Saved!</b><br><br>
+      <b>ID:</b> ${id}<br><br>
+      <b>URL:</b><br>
+      <a href="${url}" target="_blank">${url}</a>
+    `;
 
   } catch (e) {
-    console.log(e);
-    document.getElementById("result").innerText = "Error saving!";
+    console.log("SAVE ERROR:", e);
+    result.innerText = e.code + " - " + e.message;
   }
 
 };
+
 </script>
 
 </body>
