@@ -4,3 +4,5 @@ Pet-tag tracking system for NFC tag collar badges.
 https://arkforge3dprinting.github.io/pet-tag/updatedb.html
 # Find Pets Example
 https://arkforge3dprinting.github.io/pet-tag/?id=mBNLQEAHJf
+# Customer Activation Link Example
+https://arkforge3dprinting.github.io/pet-tag/activate.html?id=tagcodegoeshere
