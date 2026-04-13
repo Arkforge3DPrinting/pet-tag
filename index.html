@@ -8,6 +8,7 @@
 
 <h1 id="title">Loading...</h1>
 <p id="message"></p>
+<img id="petPhoto" style="max-width:250px; display:none; margin-top:15px;">
 
 <button id="callBtn">📞 Call Owner</button>
 <button id="textBtn">💬 Text Owner</button>
@@ -47,6 +48,12 @@ async function loadPet() {
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
     document.getElementById("message").innerText = "Help me get home safely";
+ if (pet.photo) {
+    const img = document.getElementById("petPhoto");
+    img.src = pet.photo;
+    img.style.display = "block";
+  }
+    
 
     document.getElementById("callBtn").onclick = () => {
       window.location.href = "tel:" + pet.phone;
