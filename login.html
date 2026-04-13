@@ -41,10 +41,10 @@ document.getElementById("loginBtn").onclick = async () => {
 
     window.location.href = "admin.html";
 
-  } catch (e) {
-    document.getElementById("status").innerText = "Login failed";
-  }
-};
+catch (e) {
+  console.log("LOGIN ERROR:", e);
+  document.getElementById("status").innerText = e.code + " - " + e.message;
+}
 
 </script>
 
