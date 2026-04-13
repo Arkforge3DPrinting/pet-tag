@@ -17,6 +17,8 @@
 
 <script type="module">
 
+document.getElementById("status").innerText = "SCRIPT LOADED";
+
 window.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("status").innerText = "JS running...";
@@ -36,7 +38,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("status").innerText = "Firebase loaded";
 
   document.getElementById("btn").onclick = async () => {
-
+console.log("BUTTON CLICKED");
+alert("clicked");
     document.getElementById("status").innerText = "Attempting login...";
 
     try {
