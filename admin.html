@@ -12,7 +12,9 @@
 <br><br>
 
 <button onclick="loadPets()">Refresh List</button>
-
+console.log("LOADING PETS...");
+const snap = await getDocs(collection(db, "pets"));
+console.log("DOC COUNT:", snap.size);
 <hr>
 
 <div id="list"></div>
