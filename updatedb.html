@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - Create Pet Tag</title>
+</head>
+
+<body style="font-family: Arial; max-width: 500px; margin: auto; padding: 20px;">
+
+<h2>Create NFC Pet Tag</h2>
+
+<input id="name" placeholder="Pet name" style="width:100%; padding:10px; margin:5px 0;">
+<input id="phone" placeholder="Phone number" style="width:100%; padding:10px; margin:5px 0;">
+
+<button id="createBtn" style="width:100%; padding:10px;">Generate Tag</button>
+
+<pre id="output" style="margin-top:20px; background:#f4f4f4; padding:10px;"></pre>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "arkforge-pets.firebaseapp.com",
+  projectId: "arkforge-pets",
+  storageBucket: "arkforge-pets.firebasestorage.app",
+  messagingSenderId: "517154779272",
+  appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ID generator
+function generateId(length = 10) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let id = "";
+  for (let i = 0; i < length; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+}
+
+document.getElementById("createBtn").onclick = async () => {
+
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+
+  if (!name || !phone) {
+    alert("Please enter name and phone");
+    return;
+  }
+
+  const id = generateId();
+
+  await setDoc(doc(db, "pets", id), {
+    name: name,
+    phone: phone
+  });
+
+const url = "https://arkforge3dprinting.github.io/pet-tags/?id=" + id;
+
+  document.getElementById("output").innerText =
+    "ID: " + id + "\n\nNFC URL:\n" + url;
+
+};
+</script>
+
+</body>
+</html>
