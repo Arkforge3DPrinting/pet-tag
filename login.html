@@ -1,25 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
+  <title>Login Debug</title>
 </head>
 
-<body style="font-family: Arial; text-align:center; padding:40px;">
+<body>
+<h2>Login Test</h2>
 
-<h2>Admin Login</h2>
+<input id="email" placeholder="email"><br><br>
+<input id="password" placeholder="password" type="password"><br><br>
 
-<input id="email" placeholder="Email" style="padding:10px; width:250px;"><br><br>
-<input id="password" type="password" placeholder="Password" style="padding:10px; width:250px;"><br><br>
+<button id="btn">Login</button>
 
-<button id="loginBtn" style="padding:10px 20px;">Login</button>
-
-<p id="status"></p>
+<p id="status">Page loaded</p>
 
 <script type="module">
+
+document.getElementById("status").innerText = "JS running...";
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "arkforge-pets.firebaseapp.com",
@@ -29,26 +30,25 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-document.getElementById("loginBtn").onclick = async () => {
+document.getElementById("status").innerText = "Firebase loaded";
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+document.getElementById("btn").onclick = async () => {
+  document.getElementById("status").innerText = "Attempting login...";
 
   try {
-    document.getElementById("status").innerText = "Logging in...";
+    await signInWithEmailAndPassword(
+      auth,
+      document.getElementById("email").value,
+      document.getElementById("password").value
+    );
 
-    await signInWithEmailAndPassword(auth, email, password);
-
-    document.getElementById("status").innerText = "Success! Redirecting...";
-
-    window.location.href = "updatedb.html";
-
-  } catch (err) {
-    console.log(err);
-    document.getElementById("status").innerText = "Login failed";
+    document.getElementById("status").innerText = "SUCCESS";
+  } catch (e) {
+    console.log(e);
+    document.getElementById("status").innerText = "FAILED (check console)";
   }
 };
-</script>
 
+</script>
 </body>
 </html>
