@@ -46,9 +46,8 @@ function generateId(length = 10) {
 // 🚀 SAVE BUTTON
 document.getElementById("generateBtn").onclick = async () => {
 
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const photo = document.getElementById("photo").value;
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
 
   const result = document.getElementById("result");
 
@@ -63,9 +62,7 @@ document.getElementById("generateBtn").onclick = async () => {
 
     await setDoc(doc(db, "pets", id), {
       name,
-      phone,
-      microchip: microchip || "",
-      photo: photo || ""
+      phone
     });
 
     const url = `https://arkforge3dprinting.github.io/pet-tag/?id=${id}`;
