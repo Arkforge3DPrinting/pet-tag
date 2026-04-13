@@ -1,34 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin - Create Pet Tag</title>
+  <title>Create Pet Tag</title>
 </head>
 
-<body style="font-family: Arial; max-width: 500px; margin: auto; padding: 20px;">
+<body style="font-family: Arial; text-align:center; padding:20px;">
 
 <h2>Create NFC Pet Tag</h2>
 
-<input id="name" placeholder="Pet name" style="width:100%; padding:10px; margin:5px 0;">
-<input id="phone" placeholder="Phone number" style="width:100%; padding:10px; margin:5px 0;">
+<input id="name" placeholder="Pet Name"><br><br>
+<input id="phone" placeholder="Owner Phone"><br><br>
 
-<button id="createBtn" style="width:100%; padding:10px;">Generate Tag</button>
+<button id="generateBtn">Generate & Save</button>
 
-<pre id="output" style="margin-top:20px; background:#f4f4f4; padding:10px;"></pre>
+<p id="result"></p>
 
 <script type="module">
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-const auth = getAuth();
-
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-  }
-});
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase config
+// YOUR REAL CONFIG HERE
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "arkforge-pets.firebaseapp.com",
@@ -46,32 +37,40 @@ function generateId(length = 10) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let id = "";
   for (let i = 0; i < length; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
+    id += chars[Math.floor(Math.random() * chars.length)];
   }
   return id;
 }
 
-document.getElementById("createBtn").onclick = async () => {
+document.getElementById("generateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
 
   if (!name || !phone) {
-    alert("Please enter name and phone");
+    document.getElementById("result").innerText = "Enter name and phone";
     return;
   }
 
   const id = generateId();
 
-  await setDoc(doc(db, "pets", id), {
-    name: name,
-    phone: phone
-  });
+  try {
+    await setDoc(doc(db, "pets", id), {
+      name: name,
+      phone: phone
+    });
 
-const url = "https://arkforge3dprinting.github.io/pet-tag/?id=" + id;
+    const url = `https://arkforge3dprinting.github.io/pet-tag/?id=${id}`;
 
-  document.getElementById("output").innerText =
-    "ID: " + id + "\n\nNFC URL:\n" + url;
+    document.getElementById("result").innerHTML =
+      `<b>Saved!</b><br><br>
+       <b>ID:</b> ${id}<br><br>
+       <b>URL:</b><br>${url}`;
+
+  } catch (e) {
+    console.log(e);
+    document.getElementById("result").innerText = "Error saving!";
+  }
 
 };
 </script>
