@@ -4,19 +4,19 @@
   <title>Admin Login</title>
 </head>
 
-<body style="font-family:Arial; text-align:center; padding:40px;">
+<body style="font-family: Arial; text-align:center; padding:40px;">
 
 <h2>🔐 Admin Login</h2>
 
-<input id="email" placeholder="Email"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+<input id="email" placeholder="Email" style="padding:8px; width:250px;"><br><br>
+<input id="password" type="password" placeholder="Password" style="padding:8px; width:250px;"><br><br>
 
-<button id="loginBtn">Login</button>
+<button id="loginBtn" style="padding:10px 20px;">Login</button>
 
-<p id="status"></p>
+<p id="status" style="margin-top:20px;"></p>
 
 <script type="module">
-console.log("LOGIN SCRIPT LOADED");
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -29,22 +29,42 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-document.getElementById("loginBtn").onclick = async () => {
+console.log("Login page loaded");
+
+// BUTTON HANDLER
+document.getElementById("loginBtn").addEventListener("click", async () => {
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const status = document.getElementById("status");
+
+  status.innerText = "Logging in...";
+
   try {
-    await signInWithEmailAndPassword(
+
+    const userCredential = await signInWithEmailAndPassword(
       auth,
-      document.getElementById("email").value,
-      document.getElementById("password").value
+      email,
+      password
     );
 
-    document.getElementById("status").innerText = "Login success";
+    console.log("Login success:", userCredential.user.email);
 
-    window.location.href = "admin.html";
+    status.innerText = "Login successful! Redirecting...";
 
-catch (e) {
-  console.log("LOGIN ERROR:", e);
-  document.getElementById("status").innerText = e.code + " - " + e.message;
-}
+    setTimeout(() => {
+      window.location.href = "admin.html";
+    }, 800);
+
+  } catch (error) {
+
+    console.log("LOGIN ERROR:", error);
+
+    status.innerText = error.code + " - " + error.message;
+  }
+
+});
 
 </script>
 
