@@ -84,25 +84,29 @@
       transition:
         transform 0.15s ease,
         opacity 0.15s ease;
+
+      color: white;
     }
 
     button:active {
       transform: scale(0.98);
     }
 
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
     #callBtn {
       background: #28c76f;
-      color: white;
     }
 
     #textBtn {
       background: #3b82f6;
-      color: white;
     }
 
     #locBtn {
       background: #ff9f43;
-      color: white;
     }
 
     .footer {
@@ -131,20 +135,22 @@
   </div>
 
   <div class="footer">
-    Powered by Arkforge Pet Recovery
+    Powered by Arkforge 3D Printing ®
   </div>
 
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 import {
   getFirestore,
   doc,
   getDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
 // Firebase config
@@ -219,26 +225,84 @@ async function loadPet() {
     // LOCATION BUTTON
     document.getElementById("locBtn").onclick = () => {
 
-      navigator.geolocation.getCurrentPosition(pos => {
+      const locBtn =
+        document.getElementById("locBtn");
 
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+      // Prevent spam clicking
+      locBtn.disabled = true;
+      locBtn.innerText = "📡 Getting Location...";
 
-        const msg =
-          "Hi, I found your pet " +
-          pet.name +
-          ". My location: https://maps.google.com/?q=" +
-          lat +
-          "," +
-          lon;
+      if (!navigator.geolocation) {
 
-        window.location.href =
-          "sms:" +
-          pet.phone +
-          "?body=" +
-          encodeURIComponent(msg);
+        alert(
+          "Geolocation is not supported on this device."
+        );
 
-      });
+        locBtn.disabled = false;
+        locBtn.innerText =
+          "📍 Share My Location";
+
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+
+        // SUCCESS
+        (pos) => {
+
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+
+          const msg =
+            "Hi, I found your pet " +
+            pet.name +
+            ". My location: https://maps.google.com/?q=" +
+            lat +
+            "," +
+            lon;
+
+          window.location.href =
+            "sms:" +
+            pet.phone +
+            "?body=" +
+            encodeURIComponent(msg);
+
+          // Reset button
+          setTimeout(() => {
+
+            locBtn.disabled = false;
+
+            locBtn.innerText =
+              "📍 Share My Location";
+
+          }, 2000);
+
+        },
+
+        // ERROR
+        (err) => {
+
+          console.error(err);
+
+          alert(
+            "Could not get your location. Please enable GPS/location permissions and try again."
+          );
+
+          locBtn.disabled = false;
+
+          locBtn.innerText =
+            "📍 Share My Location";
+
+        },
+
+        // OPTIONS
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+
+      );
 
     };
 
