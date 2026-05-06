@@ -18,15 +18,10 @@
     .container {
       max-width: 420px;
       margin: auto;
-
       background: white;
-
       padding: 18px;
-
       border-radius: 20px;
-
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-
       text-align: center;
     }
 
@@ -212,13 +207,13 @@ async function loadPet() {
     // TEXT BUTTON
     document.getElementById("textBtn").onclick = () => {
 
-      window.location.href =
-        "sms:" +
-        pet.phone +
-        "?body=" +
-        encodeURIComponent(
-          "Hi, I found your pet " + pet.name
-        );
+      const msg =
+        "Hi, I found your pet " + pet.name;
+
+      const smsLink =
+        `sms:${pet.phone}?body=${encodeURIComponent(msg)}`;
+
+      window.open(smsLink, "_self");
 
     };
 
@@ -228,9 +223,9 @@ async function loadPet() {
       const locBtn =
         document.getElementById("locBtn");
 
-      // Prevent spam clicking
       locBtn.disabled = true;
-      locBtn.innerText = "📡 Getting Location...";
+      locBtn.innerText =
+        "📡 Getting Location...";
 
       if (!navigator.geolocation) {
 
@@ -238,10 +233,7 @@ async function loadPet() {
           "Geolocation is not supported on this device."
         );
 
-        locBtn.disabled = false;
-        locBtn.innerText =
-          "📍 Share My Location";
-
+        resetButton();
         return;
       }
 
@@ -261,21 +253,13 @@ async function loadPet() {
             "," +
             lon;
 
-          window.location.href =
-            "sms:" +
-            pet.phone +
-            "?body=" +
-            encodeURIComponent(msg);
+          const smsLink =
+            `sms:${pet.phone}?body=${encodeURIComponent(msg)}`;
 
-          // Reset button
-          setTimeout(() => {
+          // More reliable on mobile
+          window.open(smsLink, "_self");
 
-            locBtn.disabled = false;
-
-            locBtn.innerText =
-              "📍 Share My Location";
-
-          }, 2000);
+          resetButton();
 
         },
 
@@ -285,13 +269,10 @@ async function loadPet() {
           console.error(err);
 
           alert(
-            "Could not get your location. Please enable GPS/location permissions and try again."
+            "Could not get your location. Please enable location permissions and try again."
           );
 
-          locBtn.disabled = false;
-
-          locBtn.innerText =
-            "📍 Share My Location";
+          resetButton();
 
         },
 
@@ -303,6 +284,15 @@ async function loadPet() {
         }
 
       );
+
+      function resetButton() {
+
+        locBtn.disabled = false;
+
+        locBtn.innerText =
+          "📍 Share My Location";
+
+      }
 
     };
 
