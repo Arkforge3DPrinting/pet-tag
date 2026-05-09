@@ -2,42 +2,254 @@
 <html>
 <head>
   <title>Activate Pet Tag</title>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 14px;
+      color: #222;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: auto;
+
+      background: white;
+
+      padding: 18px;
+
+      border-radius: 20px;
+
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin: 0 0 10px 0;
+    }
+
+    .tag {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 14px;
+    }
+
+    .tag span {
+      font-weight: bold;
+      color: #222;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 10px;
+
+      border-radius: 12px;
+      border: 1px solid #ddd;
+
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #3b82f6;
+    }
+
+    .upload-box {
+      margin-top: 10px;
+      margin-bottom: 10px;
+
+      padding: 14px;
+
+      border-radius: 14px;
+
+      border: 1px dashed #ccc;
+
+      background: #fafafa;
+
+      text-align: left;
+    }
+
+    .upload-title {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .upload-sub {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    /* hidden file input */
+    #photoInput {
+      display: none;
+    }
+
+    .file-btn {
+      display: block;
+
+      width: 100%;
+
+      padding: 14px;
+
+      border-radius: 12px;
+
+      color: white;
+
+      font-size: 16px;
+      font-weight: bold;
+
+      text-align: center;
+
+      cursor: pointer;
+
+      user-select: none;
+
+      margin-bottom: 10px;
+    }
+
+    .camera {
+      background: #ff9f43;
+    }
+
+    .gallery {
+      background: #3b82f6;
+    }
+
+    .file-btn:active {
+      transform: scale(0.98);
+    }
+
+    #fileName {
+      font-size: 12px;
+      color: #555;
+      margin-top: 8px;
+      word-break: break-word;
+    }
+
+    button {
+      width: 100%;
+
+      padding: 16px;
+
+      border: none;
+
+      border-radius: 14px;
+
+      font-size: 18px;
+      font-weight: bold;
+
+      background: #3b82f6;
+
+      color: white;
+
+      cursor: pointer;
+
+      transition: transform 0.15s ease, opacity 0.15s ease;
+
+      margin-top: 8px;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    progress {
+      width: 100%;
+      height: 10px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    #progressText {
+      font-size: 12px;
+      color: #666;
+      margin-top: 6px;
+    }
+
+    #status {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #999;
+    }
+
+  </style>
 </head>
 
-<body style="font-family: Arial; text-align:center; padding:20px;">
+<body>
 
-<h2>Activate Your Pet Tag</h2>
+<div class="container">
 
-<p><b>Tag Code:</b> <span id="tagId"></span></p>
+  <h2>Activate Your Pet Tag</h2>
 
-<input id="name" placeholder="Pet Name"><br><br> 
-<input id="phone" placeholder="Your Phone Number"><br><br>
+  <div class="tag">
+    Tag Code: <span id="tagId"></span>
+  </div>
 
-<p style="margin-bottom:5px;">
-  <b>📸 Upload a picture of your pet</b><br>
-  <span style="font-size:12px; color:gray;">
-    This helps people identify your pet if found
-  </span>
-</p>
+  <input type="text" id="name" placeholder="Pet Name">
+  <input type="text" id="phone" placeholder="Your Phone Number">
 
-<input type="file" id="photo" accept="image/*"><br><br>
+  <div class="upload-box">
 
-<button id="activateBtn">Activate</button>
-<progress id="uploadProgress" value="0" max="100" style="width:100%; display:none;"></progress>
-<p id="progressText"></p>  
+    <div class="upload-title"> Pet Photo</div>
 
-<p id="status"></p>
+    <div class="upload-sub">
+      Take or upload a photo of your pet
+    </div>
+
+    <!-- single hidden input -->
+    <input type="file" id="photoInput" accept="image/*">
+
+    <div class="file-btn camera" id="cameraBtn">📷 Take Photo</div>
+
+    <div class="file-btn gallery" id="galleryBtn">📁 Choose From Gallery</div>
+
+    <div id="fileName"></div>
+
+  </div>
+
+  <button id="activateBtn">Activate</button>
+
+  <progress id="uploadProgress" value="0" max="100"></progress>
+  <div id="progressText"></div>
+
+  <div id="status"></div>
+
+  <div class="footer">
+    Powered by Arkforge 3D Printing ®
+  </div>
+
+</div>
 
 <script type="module">
-const cloudName = "ddsp7ps7p";
-const uploadPreset = "arkforge-pets";
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// 🔥 YOUR REAL CONFIG HERE
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
@@ -50,11 +262,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🧠 Get tag ID from URL
+// tag id
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-// Show ID on page
 if (!id) {
   document.getElementById("status").innerText = "Invalid tag link";
   throw new Error("Missing ID");
@@ -62,74 +273,116 @@ if (!id) {
 
 document.getElementById("tagId").innerText = id;
 
-// 🚀 Activate button
+// file handling
+const photoInput = document.getElementById("photoInput");
+const fileName = document.getElementById("fileName");
+
+// CAMERA
+document.getElementById("cameraBtn").onclick = () => {
+  photoInput.setAttribute("capture", "environment");
+  photoInput.click();
+};
+
+// GALLERY
+document.getElementById("galleryBtn").onclick = () => {
+  photoInput.removeAttribute("capture");
+  photoInput.click();
+};
+
+// filename display
+photoInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  fileName.innerText = file ? file.name : "";
+});
+
+// activate
 document.getElementById("activateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
-  const file = document.getElementById("photo").files[0];
+  const file = photoInput.files[0];
 
   if (!name || !phone) {
-    document.getElementById("status").innerText = "Please fill all fields";
+    document.getElementById("status").innerText =
+      "Please fill all fields";
     return;
   }
 
   try {
-    document.getElementById("status").innerText = "Uploading...";
+
+    document.getElementById("status").innerText =
+      "Uploading...";
 
     let photoURL = "";
 
-    // 📸 Upload photo if provided
-if (file) {
-  document.getElementById("status").innerText = "Uploading image...";
+    if (file) {
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
+      document.getElementById("status").innerText =
+        "Uploading image...";
 
-  const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "arkforge-pets");
 
-  xhr.open(
-    "POST",
-    "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload"
-  );
+      const xhr = new XMLHttpRequest();
 
-  // show progress UI
-  const progressBar = document.getElementById("uploadProgress");
-  const progressText = document.getElementById("progressText");
+      xhr.open(
+        "POST",
+        "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload"
+      );
 
-  progressBar.style.display = "block";
+      const progressBar =
+        document.getElementById("uploadProgress");
 
-  xhr.upload.onprogress = (event) => {
-    if (event.lengthComputable) {
-      const percent = Math.round((event.loaded / event.total) * 100);
+      const progressText =
+        document.getElementById("progressText");
 
-      progressBar.value = percent;
-      progressText.innerText = `Uploading: ${percent}%`;
+      progressBar.style.display = "block";
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+
+          const percent =
+            Math.round((event.loaded / event.total) * 100);
+
+          progressBar.value = percent;
+
+          progressText.innerText =
+            `Uploading: ${percent}%`;
+        }
+      };
+
+      const response = await new Promise((resolve, reject) => {
+
+        xhr.onload = () =>
+          resolve(JSON.parse(xhr.responseText));
+
+        xhr.onerror = () =>
+          reject("Upload failed");
+
+        xhr.send(formData);
+
+      });
+
+      photoURL = response.secure_url;
     }
-  };
 
-  const response = await new Promise((resolve, reject) => {
-    xhr.onload = () => resolve(JSON.parse(xhr.responseText));
-    xhr.onerror = () => reject("Upload failed");
-    xhr.send(formData);
-  });
-
-  photoURL = response.secure_url;
-}
-    // 💾 Save pet data
     await setDoc(doc(db, "pets", id), {
-      name: name,
-      phone: phone,
+      name,
+      phone,
       photo: photoURL
     });
 
-    document.getElementById("status").innerText = "✅ Activated successfully!";
+    document.getElementById("status").innerText =
+      "✅ Activated successfully!";
 
   } catch (e) {
-    console.log(e);
-    document.getElementById("status").innerText = "❌ " + e.message;
+
+    document.getElementById("status").innerText =
+      "❌ " + e.message;
+
   }
+
 };
 
 </script>
