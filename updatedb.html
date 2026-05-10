@@ -6,9 +6,8 @@
   <!-- QR CODE -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- DOCX + SAVE -->
+  <!-- File saver -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
 
   <style>
     #qrBox {
@@ -25,19 +24,15 @@
 <h2>Create NFC Pet Tag</h2>
 
 <input id="name" placeholder="Pet Name"><br><br>
-
 <input id="phone" placeholder="Primary Owner Phone"><br><br>
-
 <input id="phone2" placeholder="Secondary Phone (Optional)"><br><br>
 
 <button id="generateBtn">Generate & Save</button>
 
 <p id="result"></p>
 
-<!-- QR OUTPUT -->
 <div id="qrBox"></div>
 
-<!-- DOC OUTPUT -->
 <div id="downloadSection" style="margin-top:20px;"></div>
 
 <script type="module">
@@ -45,7 +40,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase config
+// ✅ FIXED DOCX IMPORT (THIS IS THE IMPORTANT FIX)
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun
+} from "https://cdn.jsdelivr.net/npm/docx@8.5.0/+esm";
+
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
@@ -61,7 +63,6 @@ const db = getFirestore(app);
 const defaultPhoto =
   "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
 
-// ID generator
 function generateId(length = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   let id = "";
@@ -71,7 +72,6 @@ function generateId(length = 10) {
   return id;
 }
 
-// RESET UI
 function resetUI() {
   document.getElementById("qrBox").innerHTML = "";
   document.getElementById("downloadSection").innerHTML = "";
@@ -80,17 +80,11 @@ function resetUI() {
 // CREATE TAG
 document.getElementById("generateBtn").onclick = async () => {
 
-  const name =
-    document.getElementById("name").value.trim();
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const phone2 = document.getElementById("phone2").value.trim();
 
-  const phone =
-    document.getElementById("phone").value.trim();
-
-  const phone2 =
-    document.getElementById("phone2").value.trim();
-
-  const result =
-    document.getElementById("result");
+  const result = document.getElementById("result");
 
   resetUI();
 
@@ -102,28 +96,22 @@ document.getElementById("generateBtn").onclick = async () => {
 
   const id = generateId();
 
-  // QR LINK (correct structure)
   const url =
     `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
   try {
 
     await setDoc(doc(db, "pets", id), {
-
       name,
       phone,
       phone2: phone2 || "",
       photo: defaultPhoto
-
     });
 
     result.style.color = "green";
-
     result.innerHTML = `
       <b>Saved Successfully!</b><br><br>
-
       <b>ID:</b> ${id}<br><br>
-
       <b>Tag URL:</b><br>
       <a href="${url}" target="_blank">${url}</a>
     `;
@@ -135,7 +123,7 @@ document.getElementById("generateBtn").onclick = async () => {
       height: 180
     });
 
-    // DOCX BUTTON
+    // DOC BUTTON
     document.getElementById("downloadSection").innerHTML = `
       <button id="downloadDocBtn" style="
         margin-top:15px;
@@ -152,9 +140,7 @@ document.getElementById("generateBtn").onclick = async () => {
       </button>
     `;
 
-    document.getElementById("downloadDocBtn").onclick = () => {
-
-      const { Document, Packer, Paragraph, TextRun } = window.docx;
+    document.getElementById("downloadDocBtn").onclick = async () => {
 
       const doc = new Document({
         sections: [
@@ -183,7 +169,7 @@ document.getElementById("generateBtn").onclick = async () => {
                 ]
               }),
 
-/* pet */
+/* pet info */
               new Paragraph({
                 children: [
                   new TextRun("Pet Name: "),
@@ -211,10 +197,9 @@ document.getElementById("generateBtn").onclick = async () => {
                 ]
               }),
 
-/* steps */
               new Paragraph("1. Scan the QR code using any smartphone camera."),
-              new Paragraph("2. This opens your pet’s secure online profile."),
-              new Paragraph("3. Enter your pet details during activation."),
+              new Paragraph("2. This opens your pet’s secure profile page."),
+              new Paragraph("3. Fill in or confirm your contact details."),
               new Paragraph("4. Found pets can contact you instantly via call or SMS."),
 
               new Paragraph(""),
@@ -222,8 +207,7 @@ document.getElementById("generateBtn").onclick = async () => {
               new Paragraph({
                 children: [
                   new TextRun({
-                    text:
-                      "TIP: Keep your phone number updated for fastest recovery.",
+                    text: "TIP: Keep your phone number updated for fastest recovery.",
                     italics: true
                   })
                 ]
@@ -247,16 +231,13 @@ document.getElementById("generateBtn").onclick = async () => {
         ]
       });
 
-      Packer.toBlob(doc).then((blob) => {
-        saveAs(blob, `${name}-pet-tag-letter.docx`);
-      });
-
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${name}-pet-tag-letter.docx`);
     };
 
   } catch (e) {
 
     console.log(e);
-
     result.style.color = "red";
     result.innerText = e.code + " - " + e.message;
 
