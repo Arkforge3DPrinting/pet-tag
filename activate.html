@@ -93,7 +93,6 @@
       margin-bottom: 10px;
     }
 
-    /* hidden file input */
     #photoInput {
       display: none;
     }
@@ -138,6 +137,47 @@
       color: #555;
       margin-top: 8px;
       word-break: break-word;
+    }
+
+    .tos-box {
+      margin-top: 14px;
+      margin-bottom: 8px;
+
+      padding: 12px;
+
+      border-radius: 12px;
+
+      background: #fafafa;
+
+      border: 1px solid #e5e5e5;
+
+      text-align: left;
+    }
+
+    .tos-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+
+      font-size: 14px;
+      line-height: 1.4;
+      color: #444;
+    }
+
+    .tos-label input {
+      margin-top: 3px;
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+
+    .tos-label a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .tos-label a:hover {
+      text-decoration: underline;
     }
 
     button {
@@ -188,7 +228,8 @@
     #status {
       margin-top: 12px;
       font-size: 14px;
-      color: #444;
+      font-weight: bold;
+      min-height: 20px;
     }
 
     .footer {
@@ -211,30 +252,58 @@
   </div>
 
   <input type="text" id="name" placeholder="Pet Name">
-  <input type="text" id="phone" placeholder="Contact Number">
+
+  <input type="text" id="phone" placeholder="Primary Contact Number">
+
+  <input type="text" id="phone2" placeholder="Secondary Contact Number (Optional)">
 
   <div class="upload-box">
 
-    <div class="upload-title"> Pet Photo</div>
+    <div class="upload-title">Pet Photo</div>
 
     <div class="upload-sub">
       Take or upload a photo of your pet
     </div>
 
-    <!-- single hidden input -->
+    <!-- hidden file input -->
     <input type="file" id="photoInput" accept="image/*">
 
-    <div class="file-btn camera" id="cameraBtn">📷 Take Photo</div>
+    <div class="file-btn camera" id="cameraBtn">
+      📷 Take Photo
+    </div>
 
-    <div class="file-btn gallery" id="galleryBtn">📁 Choose From Gallery</div>
+    <div class="file-btn gallery" id="galleryBtn">
+      📁 Choose From Gallery
+    </div>
 
     <div id="fileName"></div>
+
+  </div>
+
+  <!-- TERMS OF SERVICE -->
+  <div class="tos-box">
+
+    <label class="tos-label">
+
+      <input type="checkbox" id="tosCheckbox">
+
+      <span>
+        I agree to the
+        <a href="https://www.facebook.com/arkforge3dprinting" target="_blank">
+          Terms of Service
+        </a>
+        and understand my pet profile may be publicly accessible
+        when someone scans the NFC/QR tag to help return my pet.
+      </span>
+
+    </label>
 
   </div>
 
   <button id="activateBtn">Activate</button>
 
   <progress id="uploadProgress" value="0" max="100"></progress>
+
   <div id="progressText"></div>
 
   <div id="status"></div>
@@ -248,80 +317,137 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+
+  apiKey: "YOUR_API_KEY",
+
   authDomain: "arkforge-pets.firebaseapp.com",
+
   projectId: "arkforge-pets",
+
   storageBucket: "arkforge-pets.firebasestorage.app",
+
   messagingSenderId: "517154779272",
+
   appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
+
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
 
-// tag id
+// TAG ID
 const params = new URLSearchParams(window.location.search);
+
 const id = params.get("id");
 
+const status = document.getElementById("status");
+
 if (!id) {
-  document.getElementById("status").innerText = "Invalid tag link";
+
+  status.innerHTML =
+    '<span style="color:#e53935;">❌ Invalid tag link</span>';
+
   throw new Error("Missing ID");
 }
 
 document.getElementById("tagId").innerText = id;
 
-// file handling
-const photoInput = document.getElementById("photoInput");
-const fileName = document.getElementById("fileName");
+// FILE HANDLING
+const photoInput =
+  document.getElementById("photoInput");
 
-// CAMERA
+const fileName =
+  document.getElementById("fileName");
+
+// CAMERA BUTTON
 document.getElementById("cameraBtn").onclick = () => {
+
   photoInput.setAttribute("capture", "environment");
+
   photoInput.click();
+
 };
 
-// GALLERY
+// GALLERY BUTTON
 document.getElementById("galleryBtn").onclick = () => {
+
   photoInput.removeAttribute("capture");
+
   photoInput.click();
+
 };
 
-// filename display
+// FILENAME DISPLAY
 photoInput.addEventListener("change", (e) => {
+
   const file = e.target.files[0];
+
   fileName.innerText = file ? file.name : "";
+
 });
 
-// activate
+// ACTIVATE BUTTON
 document.getElementById("activateBtn").onclick = async () => {
 
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const file = photoInput.files[0];
+  const name =
+    document.getElementById("name").value.trim();
 
+  const phone =
+    document.getElementById("phone").value.trim();
+
+  const phone2 =
+    document.getElementById("phone2").value.trim();
+
+  const file =
+    photoInput.files[0];
+
+  const tosAccepted =
+    document.getElementById("tosCheckbox").checked;
+
+  // REQUIRED FIELDS
   if (!name || !phone) {
-    document.getElementById("status").innerText =
-      "Please fill all fields";
+
+    status.innerHTML =
+      '<span style="color:#e53935;">⚠ Please fill all required fields</span>';
+
+    return;
+  }
+
+  // TOS CHECKBOX
+  if (!tosAccepted) {
+
+    status.innerHTML =
+      '<span style="color:#e53935;">⚠ Please accept the Terms of Service</span>';
+
     return;
   }
 
   try {
 
-    document.getElementById("status").innerText =
-      "Uploading...";
+    status.innerHTML =
+      '<span style="color:#444;">Uploading...</span>';
 
     let photoURL = "";
 
+    // IMAGE UPLOAD
     if (file) {
 
-      document.getElementById("status").innerText =
-        "Uploading image...";
+      status.innerHTML =
+        '<span style="color:#444;">Uploading image...</span>';
 
       const formData = new FormData();
+
       formData.append("file", file);
+
       formData.append("upload_preset", "arkforge-pets");
 
       const xhr = new XMLHttpRequest();
@@ -340,6 +466,7 @@ document.getElementById("activateBtn").onclick = async () => {
       progressBar.style.display = "block";
 
       xhr.upload.onprogress = (event) => {
+
         if (event.lengthComputable) {
 
           const percent =
@@ -350,6 +477,7 @@ document.getElementById("activateBtn").onclick = async () => {
           progressText.innerText =
             `Uploading: ${percent}%`;
         }
+
       };
 
       const response = await new Promise((resolve, reject) => {
@@ -358,7 +486,7 @@ document.getElementById("activateBtn").onclick = async () => {
           resolve(JSON.parse(xhr.responseText));
 
         xhr.onerror = () =>
-          reject("Upload failed");
+          reject(new Error("Upload failed"));
 
         xhr.send(formData);
 
@@ -367,19 +495,27 @@ document.getElementById("activateBtn").onclick = async () => {
       photoURL = response.secure_url;
     }
 
+    // SAVE TO FIREBASE
     await setDoc(doc(db, "pets", id), {
+
       name,
       phone,
-      photo: photoURL
+      phone2,
+      photo: photoURL,
+
+      tosAccepted: true,
+
+      activatedAt: new Date().toISOString()
+
     });
 
-    document.getElementById("status").innerText =
-      "✅ Activated successfully!";
+    status.innerHTML =
+      '<span style="color:#2e7d32;">✅ Activated successfully!</span>';
 
   } catch (e) {
 
-    document.getElementById("status").innerText =
-      "❌ " + e.message;
+    status.innerHTML =
+      '<span style="color:#e53935;">❌ ' + e.message + '</span>';
 
   }
 
