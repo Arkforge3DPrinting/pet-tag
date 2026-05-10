@@ -20,11 +20,9 @@
       margin: auto;
 
       background: white;
-
       padding: 14px;
 
       border-radius: 20px;
-
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 
       text-align: center;
@@ -49,29 +47,52 @@
       max-width: 240px;
       aspect-ratio: 1 / 1;
       object-fit: cover;
+
       border-radius: 18px;
       margin: 8px auto;
+
       display: none;
+
       border: 4px solid #ffffff;
       box-shadow: 0 0 0 3px #3b82f6, 0 6px 18px rgba(0,0,0,0.15);
     }
 
-    .button-group {
+    /* SECTION HEADERS */
+    .section-title {
+      text-align: left;
+      font-size: 13px;
+      font-weight: bold;
+      margin-top: 16px;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .section-title.secondary {
+      color: #777;
+      margin-top: 18px;
+    }
+
+    /* BUTTON LAYOUT */
+    .button-row {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      margin-top: 8px;
     }
 
     button {
       width: 100%;
       padding: 14px;
+
       border: none;
       border-radius: 14px;
-      font-size: 17px;
+
+      font-size: 16px;
       font-weight: bold;
+
       cursor: pointer;
+
       transition: transform 0.15s ease, opacity 0.15s ease;
+
       color: white;
     }
 
@@ -84,14 +105,15 @@
       cursor: not-allowed;
     }
 
+    /* PRIMARY */
     #callBtn { background: #28c76f; }
     #textBtn { background: #3b82f6; }
-    #locBtn { background: #ff9f43; }
+    #locBtn  { background: #ff9f43; }
 
-    /* secondary styling */
-    #callBtn2 { background: #1f9d55; }
-    #textBtn2 { background: #2563eb; }
-    #locBtn2 { background: #f59e0b; }
+    /* SECONDARY */
+    #callBtn2 { background: #1f9d55; opacity: 0.9; }
+    #textBtn2 { background: #2563eb; opacity: 0.9; }
+    #locBtn2  { background: #f59e0b; opacity: 0.9; }
 
     .footer {
       margin-top: 14px;
@@ -107,23 +129,24 @@
 <div class="container">
 
   <h1 id="title">Loading...</h1>
-
   <p id="message"></p>
 
   <img id="petPhoto">
 
-  <div class="button-group">
-
-    <!-- PRIMARY -->
+  <!-- PRIMARY -->
+  <div class="section-title">Primary Contact</div>
+  <div class="button-row">
     <button id="callBtn">📞 Call Owner</button>
     <button id="textBtn">💬 Text Owner</button>
-    <button id="locBtn">📍 Share My Location</button>
+    <button id="locBtn">📍 Share Location</button>
+  </div>
 
-    <!-- SECONDARY (hidden until needed) -->
-    <button id="callBtn2" style="display:none;">📞 Call Secondary Contact</button>
-    <button id="textBtn2" style="display:none;">💬 Text Secondary Contact</button>
-    <button id="locBtn2" style="display:none;">📍 Share Location to Secondary</button>
-
+  <!-- SECONDARY -->
+  <div class="section-title secondary">Backup Contact</div>
+  <div class="button-row">
+    <button id="callBtn2">📞 Call Backup</button>
+    <button id="textBtn2">💬 Text Backup</button>
+    <button id="locBtn2">📍 Share Location</button>
   </div>
 
   <div class="footer">
@@ -174,7 +197,6 @@ async function loadPet() {
   document.getElementById("message").innerText =
     "Help me get home safely";
 
-  // PHOTO
   if (pet.photo) {
     const img = document.getElementById("petPhoto");
     img.src = pet.photo;
@@ -192,75 +214,61 @@ async function loadPet() {
   document.getElementById("textBtn").onclick = () => {
     const msg = "Hi, I found your pet " + pet.name;
 
-    const smsLink =
-      `sms:${pet.phone}?body=${encodeURIComponent(msg)}`;
-
-    window.open(smsLink, "_self");
+    window.open(
+      `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
+      "_self"
+    );
   };
 
   document.getElementById("locBtn").onclick = () => {
 
-    const btn = document.getElementById("locBtn");
-
-    btn.disabled = true;
-    btn.innerText = "📡 Getting Location...";
-
-    navigator.geolocation.getCurrentPosition(
-
-      (pos) => {
-
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-
-        const msg =
-          "Hi, I found your pet " +
-          pet.name +
-          ". My location: https://maps.google.com/?q=" +
-          lat + "," + lon;
-
-        window.open(
-          `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
-          "_self"
-        );
-
-        reset();
-
-      },
-
-      () => {
-        alert("Location failed or denied.");
-        reset();
-      }
-
-    );
-
-    function reset() {
-      btn.disabled = false;
-      btn.innerText = "📍 Share My Location";
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported.");
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      const msg =
+        "Hi, I found your pet " +
+        pet.name +
+        ". My location: https://maps.google.com/?q=" +
+        lat + "," + lon;
+
+      window.open(
+        `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
+        "_self"
+      );
+
+    });
+
   };
 
   // =========================
-  // SECONDARY CONTACT (NEW)
+  // SECONDARY CONTACT (FIXED SAFE VERSION)
   // =========================
 
-  if (pet.phone2 && pet.phone2.trim() !== "") {
+  const hasBackup = pet.phone2 && pet.phone2.trim() !== "";
 
-    const show = (id) =>
-      document.getElementById(id).style.display = "block";
+  if (!hasBackup) {
 
-    show("callBtn2");
-    show("textBtn2");
-    show("locBtn2");
+    // hide backup section entirely if not used
+    document.querySelectorAll("#callBtn2, #textBtn2, #locBtn2")
+      .forEach(btn => btn.style.display = "none");
+
+  } else {
 
     document.getElementById("callBtn2").onclick = () => {
       window.location.href = "tel:" + pet.phone2;
     };
 
     document.getElementById("textBtn2").onclick = () => {
+
       const msg =
-        "Hi, I found your pet " + pet.name +
-        " (secondary contact)";
+        "Hi, I found your pet " + pet.name + " (backup contact)";
 
       window.open(
         `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
@@ -294,7 +302,6 @@ async function loadPet() {
       });
 
     };
-
   }
 
 }
