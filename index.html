@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
@@ -23,18 +22,12 @@
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       text-align: center;
+      display: none; /* 🔒 hidden until verified */
     }
 
-    h1 {
-      font-size: 24px;
-      margin: 0 0 6px 0;
-    }
+    h1 { font-size: 24px; margin: 0 0 6px 0; }
 
-    p {
-      font-size: 15px;
-      color: #666;
-      margin: 0 0 10px 0;
-    }
+    p { font-size: 15px; color: #666; margin: 0 0 10px 0; }
 
     #petPhoto {
       width: 100%;
@@ -48,7 +41,6 @@
       box-shadow: 0 0 0 3px #3b82f6, 0 6px 18px rgba(0,0,0,0.15);
     }
 
-    /* GRID */
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -56,7 +48,6 @@
       margin-top: 14px;
     }
 
-    /* SINGLE CONTACT MODE */
     .single {
       grid-template-columns: 1fr !important;
       justify-items: center;
@@ -70,15 +61,9 @@
       font-size: 13px;
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.15s ease;
       color: white;
     }
 
-    button:active {
-      transform: scale(0.97);
-    }
-
-    /* COLORS */
     #callBtn, #callBtn2 { background: #28c76f; }
     #textBtn, #textBtn2 { background: #3b82f6; }
     #locBtn, #locBtn2   { background: #ff9f43; }
@@ -89,19 +74,47 @@
       color: #999;
     }
 
+    /* 🔒 LOCK SCREEN */
+    #locked {
+      max-width: 420px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      text-align: center;
+      display: none;
+    }
   </style>
 </head>
 
 <body>
 
-<div class="container">
+<!-- 🔒 LOCK SCREEN -->
+<div id="locked">
+  <h2>🐾 Tag Not Activated</h2>
+  <p>This pet tag must be activated before contact details are available.</p>
+
+  <div style="
+    margin-top: 15px;
+    padding: 14px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    font-size: 13px;
+    text-align: left;
+  ">
+    Please follow the activation instructions provided with the tag packaging.
+  </div>
+</div>
+
+<!-- 🔓 MAIN VIEW -->
+<div class="container" id="main">
 
   <h1 id="title">Loading...</h1>
   <p id="message"></p>
 
   <img id="petPhoto">
 
-  <!-- BUTTON GRID -->
   <div id="btnGrid" class="grid">
 
     <button id="callBtn"></button>
@@ -138,6 +151,25 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const id = new URLSearchParams(window.location.search).get("id");
+
+const main = document.getElementById("main");
+const locked = document.getElementById("locked");
+
+if (!id) {
+  locked.style.display = "block";
+  locked.innerHTML = "<h2>❌ Invalid Link</h2>";
+  throw new Error("Missing ID");
+}
+
+function showLocked() {
+  locked.style.display = "block";
+}
+
+function showMain() {
+  main.style.display = "block";
+}
+
 function setSingleMode() {
   document.getElementById("btnGrid").classList.add("single");
 }
@@ -149,17 +181,25 @@ function removeEl(id) {
 
 async function loadPet() {
 
-  const id = new URLSearchParams(window.location.search).get("id");
-  if (!id) return;
-
   const snap = await getDoc(doc(db, "pets", id));
-  if (!snap.exists()) return;
+
+  if (!snap.exists()) {
+    showLocked();
+    return;
+  }
 
   const pet = snap.data();
 
+  // 🔒 IMPORTANT GATE
+  if (pet.status !== "active") {
+    showLocked();
+    return;
+  }
+
+  showMain();
+
   document.getElementById("title").innerText = "🐾 You found " + pet.name;
 
-  // ✅ DYNAMIC MESSAGE (FIX YOU REQUESTED)
   document.getElementById("message").innerText =
     `Help get ${pet.name} home safely.`;
 
@@ -171,19 +211,13 @@ async function loadPet() {
 
   const secondaryExists = pet.phone2 && pet.phone2.trim() !== "";
 
-  // ================= PRIMARY LABELS =================
-
   document.getElementById("callBtn").innerText = "📞 Call";
   document.getElementById("textBtn").innerText = "💬 Text";
   document.getElementById("locBtn").innerText  = "📍 Send Location";
 
-  // ================= SECONDARY LABELS =================
-
   document.getElementById("callBtn2").innerText = "📞 Call Secondary";
   document.getElementById("textBtn2").innerText = "💬 Text Secondary";
   document.getElementById("locBtn2").innerText  = "📍 Send Location Secondary";
-
-  // ================= PRIMARY ACTIONS =================
 
   document.getElementById("callBtn").onclick = () =>
     window.location.href = "tel:" + pet.phone;
@@ -206,16 +240,11 @@ async function loadPet() {
 
   };
 
-  // ================= SECONDARY LOGIC =================
-
   if (!secondaryExists) {
-
     removeEl("callBtn2");
     removeEl("textBtn2");
     removeEl("locBtn2");
-
     setSingleMode();
-
     return;
   }
 
