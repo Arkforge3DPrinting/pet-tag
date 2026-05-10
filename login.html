@@ -92,6 +92,7 @@
 
     #togglePw {
       margin-top: 6px;
+      margin-bottom: 10px;
       background: #eee;
       color: #333;
       font-weight: normal;
@@ -102,6 +103,7 @@
       font-size: 13px;
       color: #555;
       min-height: 18px;
+      word-break: break-word;
     }
 
   </style>
@@ -120,11 +122,20 @@
   <h2>🔐 Login</h2>
 
   <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
 
-  <button id="togglePw" type="button">👁 Show Password</button>
+  <input
+    id="password"
+    type="password"
+    placeholder="Password"
+  >
 
-  <button id="loginBtn">Login</button>
+  <button id="togglePw" type="button">
+    👁 Show Password
+  </button>
+
+  <button id="loginBtn">
+    Login
+  </button>
 
   <p id="status"></p>
 
@@ -132,88 +143,132 @@
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
 import {
   getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  signInWithEmailAndPassword
+}
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// FIREBASE CONFIG
 const firebaseConfig = {
+
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+
   authDomain: "arkforge-pets.firebaseapp.com",
+
   projectId: "arkforge-pets"
+
 };
 
 const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
 
-const email = document.getElementById("email");
-const password = document.getElementById("password");
-const status = document.getElementById("status");
-const btn = document.getElementById("loginBtn");
+// ELEMENTS
+const email =
+  document.getElementById("email");
 
-// ---------------- AUTO LOGIN
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    window.location.href = "admin.html";
-  }
-});
+const password =
+  document.getElementById("password");
 
-// ---------------- LOGIN
+const status =
+  document.getElementById("status");
+
+const btn =
+  document.getElementById("loginBtn");
+
+// LOGIN
 btn.onclick = async () => {
 
-  const em = email.value.trim();
-  const pw = password.value;
+  const em =
+    email.value.trim();
+
+  const pw =
+    password.value;
 
   if (!em || !pw) {
-    status.innerText = "Please enter email and password";
+
+    status.innerText =
+      "Please enter email and password";
+
     return;
   }
 
   btn.disabled = true;
-  btn.innerText = "Logging in...";
-  status.innerText = "Authenticating...";
+
+  btn.innerText =
+    "Logging in...";
+
+  status.innerText =
+    "Authenticating...";
 
   try {
 
-    await signInWithEmailAndPassword(auth, em, pw);
+    await signInWithEmailAndPassword(
+      auth,
+      em,
+      pw
+    );
 
-    status.innerText = "Success! Redirecting...";
+    status.innerText =
+      "Success! Redirecting...";
 
     setTimeout(() => {
-      window.location.href = "admin.html";
+
+      window.location.href =
+        "admin.html";
+
     }, 700);
 
   } catch (e) {
 
-    status.innerText = e.code + " - " + e.message;
+    status.innerText =
+      e.code + " - " + e.message;
 
   } finally {
 
     btn.disabled = false;
-    btn.innerText = "Login";
+
+    btn.innerText =
+      "Login";
+
   }
 
 };
 
-// ---------------- ENTER KEY SUPPORT
+// ENTER KEY SUPPORT
 document.addEventListener("keydown", (e) => {
+
   if (e.key === "Enter") {
+
     btn.click();
+
   }
+
 });
 
-// ---------------- SHOW/HIDE PASSWORD
+// SHOW/HIDE PASSWORD
 document.getElementById("togglePw").onclick = () => {
 
   if (password.type === "password") {
+
     password.type = "text";
-    document.getElementById("togglePw").innerText = "🙈 Hide Password";
+
+    document.getElementById("togglePw").innerText =
+      "🙈 Hide Password";
+
   } else {
+
     password.type = "password";
-    document.getElementById("togglePw").innerText = "👁 Show Password";
+
+    document.getElementById("togglePw").innerText =
+      "👁 Show Password";
+
   }
+
 };
 
 </script>
