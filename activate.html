@@ -90,7 +90,6 @@
 
   <h2>Activate Pet Tag</h2>
 
-  <!-- ID DISPLAY -->
   <div class="tagid">
     Tag ID: <span id="tagIdDisplay"></span>
   </div>
@@ -120,7 +119,7 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } 
+import { getFirestore, doc, setDoc, getDoc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -135,7 +134,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔑 SOURCE OF TRUTH ID
+// ID FROM URL
 const urlId = new URLSearchParams(window.location.search).get("id");
 
 const status = document.getElementById("status");
@@ -145,12 +144,10 @@ if (!urlId) {
   throw new Error("Missing ID");
 }
 
-// 🆔 DISPLAY ID ON PAGE
 document.getElementById("tagIdDisplay").innerText = urlId;
 
 const photoInput = document.getElementById("photoInput");
 
-// camera / gallery
 document.getElementById("cameraBtn").onclick = () => {
   photoInput.setAttribute("capture", "environment");
   photoInput.click();
@@ -161,21 +158,12 @@ document.getElementById("galleryBtn").onclick = () => {
   photoInput.click();
 };
 
-// ACTIVATE
 document.getElementById("activateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
   const tos = document.getElementById("tosCheckbox").checked;
-
-  const displayedId = document.getElementById("tagIdDisplay").innerText;
-
-  // 🔒 HARD MATCH CHECK
-  if (urlId !== displayedId) {
-    status.innerText = "❌ Tag ID mismatch. Activation blocked.";
-    return;
-  }
 
   if (!name || !phone) {
     status.innerText = "⚠ Fill required fields";
@@ -216,12 +204,20 @@ document.getElementById("activateBtn").onclick = async () => {
       photoURL = data.secure_url;
     }
 
+    // 🔥 FINAL FIX: SINGLE SOURCE OF TRUTH
     const payload = {
       name,
       phone,
       phone2: phone2 || existing.phone2 || "",
-      photo: photoURL || existing.photo || "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
+
+      photo: photoURL || existing.photo ||
+        "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
+
       tosAccepted: true,
+
+      // ✅ THIS IS WHAT FIXES YOUR FIND-PET BUG
+      status: "active",
+
       activatedAt: new Date().toISOString()
     };
 
