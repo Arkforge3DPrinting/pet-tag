@@ -27,15 +27,13 @@
 
     h1 {
       font-size: 24px;
-      margin-top: 0;
-      margin-bottom: 4px;
+      margin: 0 0 4px 0;
     }
 
     p {
       font-size: 15px;
       color: #666;
-      margin-top: 0;
-      margin-bottom: 10px;
+      margin: 0 0 10px 0;
     }
 
     #petPhoto {
@@ -50,20 +48,29 @@
       box-shadow: 0 0 0 3px #3b82f6, 0 6px 18px rgba(0,0,0,0.15);
     }
 
-    /* GRID SYSTEM */
+    /* LABELS */
+    .label {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      margin-top: 16px;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* GRID */
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 14px;
+      margin-bottom: 6px;
     }
 
-    .label {
-      text-align: left;
-      font-size: 12px;
-      font-weight: bold;
-      color: #444;
-      margin-top: 12px;
+    /* SINGLE COLUMN MODE */
+    .single {
+      grid-template-columns: 1fr !important;
     }
 
     button {
@@ -83,19 +90,23 @@
     }
 
     /* PRIMARY */
-    .p1 { background: #28c76f; }
-    .p2 { background: #3b82f6; }
-    .p3 { background: #ff9f43; }
+    #callBtn { background: #28c76f; }
+    #textBtn { background: #3b82f6; }
+    #locBtn  { background: #ff9f43; }
 
     /* SECONDARY */
-    .s1 { background: #1f9d55; opacity: 0.9; }
-    .s2 { background: #2563eb; opacity: 0.9; }
-    .s3 { background: #f59e0b; opacity: 0.9; }
+    #callBtn2 { background: #1f9d55; }
+    #textBtn2 { background: #2563eb; }
+    #locBtn2  { background: #f59e0b; }
 
     .footer {
       margin-top: 14px;
       font-size: 12px;
       color: #999;
+    }
+
+    #secondaryWrap {
+      display: none;
     }
 
   </style>
@@ -110,23 +121,25 @@
 
   <img id="petPhoto">
 
-  <!-- GRID HEADERS -->
+  <!-- CALL -->
   <div class="label">Call</div>
-  <div class="grid">
-    <button id="callBtn" class="p1">📞 Primary</button>
-    <button id="callBtn2" class="s1">📞 Secondary</button>
+  <div id="callGrid" class="grid">
+    <button id="callBtn">📞 Primary</button>
+    <button id="callBtn2">📞 Secondary</button>
   </div>
 
+  <!-- TEXT -->
   <div class="label">Text</div>
-  <div class="grid">
-    <button id="textBtn" class="p2">💬 Primary</button>
-    <button id="textBtn2" class="s2">💬 Secondary</button>
+  <div id="textGrid" class="grid">
+    <button id="textBtn">💬 Primary</button>
+    <button id="textBtn2">💬 Secondary</button>
   </div>
 
+  <!-- LOCATION -->
   <div class="label">Send Location</div>
-  <div class="grid">
-    <button id="locBtn" class="p3">📍 Primary</button>
-    <button id="locBtn2" class="s3">📍 Secondary</button>
+  <div id="locGrid" class="grid">
+    <button id="locBtn">📍 Primary</button>
+    <button id="locBtn2">📍 Secondary</button>
   </div>
 
   <div class="footer">
@@ -151,6 +164,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+function setSingleMode(grid) {
+  grid.classList.add("single");
+}
 
 async function loadPet() {
 
@@ -179,16 +196,19 @@ async function loadPet() {
     img.style.display = "block";
   }
 
-  // ===== PRIMARY =====
+  const primary = pet.phone && pet.phone.trim() !== "";
+  const secondary = pet.phone2 && pet.phone2.trim() !== "";
+
+  // ================= PRIMARY =================
+
   document.getElementById("callBtn").onclick = () =>
     window.location.href = "tel:" + pet.phone;
 
-  document.getElementById("textBtn").onclick = () => {
+  document.getElementById("textBtn").onclick = () =>
     window.open(
       `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
       "_self"
     );
-  };
 
   document.getElementById("locBtn").onclick = () => {
 
@@ -209,27 +229,31 @@ async function loadPet() {
 
   };
 
-  // ===== SECONDARY =====
-  const hasBackup = pet.phone2 && pet.phone2.trim() !== "";
+  // ================= SECONDARY =================
 
-  const safeSecondary = (fn) => {
-    if (!hasBackup) return;
-    fn();
-  };
+  const call2 = document.getElementById("callBtn2");
+  const text2 = document.getElementById("textBtn2");
+  const loc2  = document.getElementById("locBtn2");
 
-  document.getElementById("callBtn2").onclick = () =>
-    safeSecondary(() => window.location.href = "tel:" + pet.phone2);
+  if (!secondary) {
 
-  document.getElementById("textBtn2").onclick = () =>
-    safeSecondary(() =>
+    // ❌ no backup → remove secondary UI completely
+    call2.remove();
+    text2.remove();
+    loc2.remove();
+
+  } else {
+
+    call2.onclick = () =>
+      window.location.href = "tel:" + pet.phone2;
+
+    text2.onclick = () =>
       window.open(
         `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
         "_self"
-      )
-    );
+      );
 
-  document.getElementById("locBtn2").onclick = () =>
-    safeSecondary(() => {
+    loc2.onclick = () => {
 
       navigator.geolocation.getCurrentPosition((pos) => {
 
@@ -246,7 +270,19 @@ async function loadPet() {
 
       });
 
-    });
+    };
+
+  }
+
+  // ================= AUTO SINGLE-COLUMN MODE =================
+
+  if (!secondary) {
+
+    setSingleMode(document.getElementById("callGrid"));
+    setSingleMode(document.getElementById("textGrid"));
+    setSingleMode(document.getElementById("locGrid"));
+
+  }
 
 }
 
