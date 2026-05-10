@@ -3,43 +3,150 @@
 <head>
   <title>Create Pet Tag NFC</title>
 
-  <!-- QR -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- File saver -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
-    #qrBox {
-      margin-top: 20px;
+
+    /* 🔥 FIX OVERFLOW ISSUE */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 18px;
       display: flex;
       justify-content: center;
     }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      margin: 0 0 10px 0;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #3b82f6;
+    }
+
+    .full {
+      grid-column: span 2;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    #generateBtn {
+      background: #3b82f6;
+      color: white;
+    }
+
+    #result {
+      margin-top: 10px;
+      font-size: 13px;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .bottom {
+      display: flex;
+      gap: 14px;
+      margin-top: 14px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    #qrBox {
+      display: flex;
+      justify-content: center;
+    }
+
+    #downloadSection button {
+      background: #111;
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .meta {
+      font-size: 12px;
+      color: #555;
+    }
+
   </style>
 </head>
 
-<body style="font-family: Arial; text-align:center; padding:20px;">
+<body>
 
-<h2>Create NFC Pet Tag</h2>
+<div class="card">
 
-<input id="name" placeholder="Pet Name"><br><br>
-<input id="phone" placeholder="Primary Owner Phone"><br><br>
-<input id="phone2" placeholder="Secondary Phone (Optional)"><br><br>
+  <h2>Create NFC Pet Tag</h2>
 
-<button id="generateBtn">Generate & Save</button>
+  <div class="grid">
 
-<p id="result"></p>
+    <input id="name" placeholder="Pet Name" class="full">
+    <input id="phone" placeholder="Primary Phone">
+    <input id="phone2" placeholder="Secondary (optional)">
 
-<div id="qrBox"></div>
+    <button id="generateBtn" class="full">Generate & Save</button>
 
-<div id="downloadSection" style="margin-top:20px;"></div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="bottom">
+
+    <div id="qrBox"></div>
+
+    <div id="downloadSection"></div>
+
+  </div>
+
+</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ✅ DOCX (correct ES module build)
 import {
   Document,
   Packer,
@@ -63,208 +170,103 @@ const db = getFirestore(app);
 const defaultPhoto =
   "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
 
-function generateId(length = 10) {
+function idGen(len = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let id = "";
-  for (let i = 0; i < length; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return id;
+  return Array.from({ length: len }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
 }
 
-function resetUI() {
+function reset() {
   document.getElementById("qrBox").innerHTML = "";
   document.getElementById("downloadSection").innerHTML = "";
 }
 
-// Convert QR canvas → base64 image
-function getQRBase64() {
-  const canvas = document.querySelector("#qrBox canvas");
-  return canvas.toDataURL("image/png");
+function qrBase64() {
+  return document.querySelector("#qrBox canvas")?.toDataURL("image/png");
 }
 
-// CREATE TAG
 document.getElementById("generateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
 
-  const result = document.getElementById("result");
+  reset();
 
-  resetUI();
+  if (!name || !phone) return;
 
-  if (!name || !phone) {
-    result.style.color = "red";
-    result.innerText = "Please enter pet name and primary phone";
-    return;
-  }
-
-  const id = generateId();
+  const id = idGen();
 
   const url =
     `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
-  try {
+  await setDoc(doc(db, "pets", id), {
+    name,
+    phone,
+    phone2: phone2 || "",
+    photo: defaultPhoto
+  });
 
-    await setDoc(doc(db, "pets", id), {
-      name,
-      phone,
-      phone2: phone2 || "",
-      photo: defaultPhoto
-    });
+  document.getElementById("result").innerHTML =
+    `<div class="meta"><b>ID:</b> ${id}</div>
+     <div class="meta">${url}</div>`;
 
-    result.style.color = "green";
-    result.innerHTML = `
-      <b>Saved Successfully!</b><br><br>
-      <b>ID:</b> ${id}<br><br>
-      <b>URL:</b><br>
-      <a href="${url}" target="_blank">${url}</a>
-    `;
+  new QRCode(document.getElementById("qrBox"), {
+    text: url,
+    width: 140,
+    height: 140
+  });
 
-    // Generate QR
-    new QRCode(document.getElementById("qrBox"), {
-      text: url,
-      width: 180,
-      height: 180
-    });
+  document.getElementById("downloadSection").innerHTML = `
+    <button id="docBtn">Download Letter</button>
+  `;
 
-    // DOC BUTTON
-    document.getElementById("downloadSection").innerHTML = `
-      <button id="downloadDocBtn" style="
-        margin-top:15px;
-        padding:12px;
-        width:100%;
-        border:none;
-        border-radius:12px;
-        background:#111;
-        color:white;
-        font-weight:bold;
-        cursor:pointer;
-      ">
-        📄 Download Customer Letter (.docx)
-      </button>
-    `;
+  document.getElementById("docBtn").onclick = async () => {
 
-    document.getElementById("downloadDocBtn").onclick = async () => {
+    const doc = new Document({
+      sections: [{
+        children: [
 
-      const qrBase64 = getQRBase64();
-
-      const doc = new Document({
-        sections: [
-          {
+          new Paragraph({
             children: [
+              new TextRun({ text: "Pet Tag Activation", bold: true })
+            ]
+          }),
 
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: "Arkforge 3D Printing - Pet Tag Activation",
-                    bold: true,
-                    size: 28
-                  })
-                ]
-              }),
+          new Paragraph(""),
+          new Paragraph(`Pet: ${name}`),
+          new Paragraph(`Link: ${url}`),
 
-/* spacing */
-              new Paragraph(""),
+          new Paragraph(""),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Scan QR to access profile", bold: true })
+            ]
+          }),
 
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: "IMPORTANT CUSTOMER INFORMATION",
-                    bold: true
-                  })
-                ]
-              }),
-
-/* pet */
-              new Paragraph({
-                children: [
-                  new TextRun("Pet Name: "),
-                  new TextRun({ text: name, bold: true })
-                ]
-              }),
-
-/* link */
-              new Paragraph({
-                children: [
-                  new TextRun("Tag Link: "),
-                  new TextRun({ text: url, bold: true })
-                ]
-              }),
-
-/* QR IMAGE (FIXED PROPERLY) */
-              new Paragraph(""),
-              new Paragraph("QR Code:"),
-
-              new Paragraph({
-                children: [
-                  new ImageRun({
-                    data: qrBase64,
-                    transformation: {
-                      width: 180,
-                      height: 180
-                    }
-                  })
-                ]
-              }),
+/* QR */
+          new Paragraph({
+            children: [
+              new ImageRun({
+                data: qrBase64(),
+                transformation: { width: 140, height: 140 }
+              })
+            ]
+          }),
 
 /* instructions */
-              new Paragraph(""),
+          new Paragraph(""),
+          new Paragraph("Scan → view profile → contact owner."),
+          new Paragraph("Keep details updated for fast recovery."),
 
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: "HOW TO USE YOUR PET TAG",
-                    bold: true
-                  })
-                ]
-              }),
-
-/* steps */
-              new Paragraph("1. Scan the QR code using any smartphone camera."),
-              new Paragraph("2. This opens your pet’s secure profile page."),
-              new Paragraph("3. Confirm or update contact details."),
-              new Paragraph("4. Found pets can call or text the owner instantly."),
-
-              new Paragraph(""),
-
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: "TIP: Keep your phone number up to date for fastest recovery.",
-                    italics: true
-                  })
-                ]
-              }),
-
-/* footer */
-              new Paragraph(""),
-
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text:
-                      "Powered by Arkforge 3D Printing NFC Pet Recovery System",
-                    italics: true
-                  })
-                ]
-              })
-
-            ]
-          }
         ]
-      });
+      }]
+    });
 
-      const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${name}-pet-tag-letter.docx`);
-    };
-
-  } catch (e) {
-    console.log(e);
-    result.style.color = "red";
-    result.innerText = e.code + " - " + e.message;
-  }
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `${name}-tag.docx`);
+  };
 
 };
 
