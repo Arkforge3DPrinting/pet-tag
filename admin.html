@@ -1,18 +1,105 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard</title>
+  <title>Admin Dashboard v2</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      background: #f4f6f8;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .row input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    button {
+      padding: 8px 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .delete {
+      background: #e74c3c;
+      color: white;
+    }
+
+    img {
+      max-width: 120px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .meta {
+      font-size: 12px;
+      color: #666;
+      word-break: break-word;
+    }
+
+    .badges {
+      margin-top: 6px;
+      font-size: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-right: 5px;
+      font-size: 11px;
+    }
+
+    .red { background: #ffdddd; }
+    .orange { background: #ffe5cc; }
+    .green { background: #ddffdd; }
+
+  </style>
 </head>
 
-<body style="font-family: Arial; padding:20px; max-width:900px; margin:auto;">
+<body>
 
-<h2>🐾 Pet Tag Admin Dashboard</h2>
+<h2>🐾 Pet Tag Admin Dashboard (Live)</h2>
 
-<input id="search" placeholder="Search Tag ID..." style="width:100%; padding:8px;">
-<br><br>
-
-<button id="refreshBtn">Refresh List</button>
-<hr>
+<input id="search" placeholder="Search Tag ID or Name...">
 
 <div id="list"></div>
 
@@ -22,7 +109,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
   getFirestore,
   collection,
-  getDocs,
+  onSnapshot,
   doc,
   updateDoc,
   deleteDoc
@@ -33,7 +120,6 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// 🔥 CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
@@ -43,105 +129,121 @@ const firebaseConfig = {
   appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
 };
 
-// ✅ INIT IN CORRECT ORDER
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 const listDiv = document.getElementById("list");
 
-console.log("ADMIN LOADED");
+let allPets = [];
 
-// ------------------
-// AUTH CHECK
-// ------------------
+let currentFilter = "";
+
+// ---------------- AUTH
 onAuthStateChanged(auth, (user) => {
-
-  console.log("AUTH:", user);
-
   if (!user) {
-    alert("Not logged in");
     window.location.href = "login.html";
     return;
   }
 
-  loadPets();
+  listenPets();
 });
 
-// ------------------
-// LOAD PETS
-// ------------------
-async function loadPets() {
+// ---------------- LIVE DATA
+function listenPets() {
 
-  console.log("LOADING PETS...");
+  onSnapshot(collection(db, "pets"), (snap) => {
 
-  listDiv.innerHTML = "Loading...";
+    allPets = [];
 
-  try {
-    const snap = await getDocs(collection(db, "pets"));
-
-    console.log("DOC COUNT:", snap.size);
-
-    listDiv.innerHTML = "";
-
-    snap.forEach((docSnap) => {
-
-      const data = docSnap.data();
-      const id = docSnap.id;
-
-      const div = document.createElement("div");
-      div.style = "border:1px solid #ccc; padding:10px; margin-bottom:10px;";
-
-      div.innerHTML = `
-        <b>Tag ID:</b> ${id}<br><br>
-
-        <input id="name-${id}" value="${data.name || ""}"><br><br>
-        <input id="phone-${id}" value="${data.phone || ""}"><br><br>
-
-        ${data.photo ? `<img src="${data.photo}" style="max-width:120px;"><br><br>` : ""}
-
-        <button onclick="save('${id}')">💾 Save</button>
-        <button onclick="removeTag('${id}')">🗑 Delete</button>
-      `;
-
-      listDiv.appendChild(div);
+    snap.forEach(docSnap => {
+      allPets.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
     });
 
-  } catch (e) {
-    console.log("LOAD ERROR:", e);
-    listDiv.innerText = e.message;
-  }
+    render();
+  });
 }
 
-// ------------------
-// SAVE
-// ------------------
-window.save = async function (id) {
+// ---------------- RENDER
+function render() {
 
-  const name = document.getElementById("name-" + id).value;
-  const phone = document.getElementById("phone-" + id).value;
+  const filtered = allPets.filter(p => {
 
-  await updateDoc(doc(db, "pets", id), { name, phone });
+    const val = currentFilter.toLowerCase();
 
-  alert("Updated");
+    return (
+      p.id.toLowerCase().includes(val) ||
+      (p.name || "").toLowerCase().includes(val)
+    );
+  });
+
+  listDiv.innerHTML = "";
+
+  filtered.forEach(p => {
+
+    const statusBadges = [];
+
+    if (!p.photo || p.photo.includes("placeholderpaw")) {
+      statusBadges.push(`<span class="badge orange">No Photo</span>`);
+    }
+
+    if (!p.phone2) {
+      statusBadges.push(`<span class="badge red">No Secondary</span>`);
+    }
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <div class="meta"><b>ID:</b> ${p.id}</div>
+
+      <div class="badges">${statusBadges.join("")}</div>
+
+      <div class="row">
+        <input id="name-${p.id}" value="${p.name || ""}" placeholder="Name">
+        <input id="phone-${p.id}" value="${p.phone || ""}" placeholder="Primary">
+        <input id="phone2-${p.id}" value="${p.phone2 || ""}" placeholder="Secondary">
+      </div>
+
+      ${p.photo ? `<img src="${p.photo}">` : ""}
+
+      <div style="margin-top:8px;">
+        <button class="save" onclick="save('${p.id}')">Save</button>
+        <button class="delete" onclick="removeTag('${p.id}')">Delete</button>
+      </div>
+    `;
+
+    listDiv.appendChild(div);
+  });
+}
+
+// ---------------- SEARCH
+document.getElementById("search").addEventListener("input", (e) => {
+  currentFilter = e.target.value;
+  render();
+});
+
+// ---------------- SAVE
+window.save = async function(id) {
+
+  await updateDoc(doc(db, "pets", id), {
+    name: document.getElementById("name-" + id).value,
+    phone: document.getElementById("phone-" + id).value,
+    phone2: document.getElementById("phone2-" + id).value || ""
+  });
+
 };
 
-// ------------------
-// DELETE
-// ------------------
-window.removeTag = async function (id) {
+// ---------------- DELETE
+window.removeTag = async function(id) {
 
   if (!confirm("Delete this tag?")) return;
 
   await deleteDoc(doc(db, "pets", id));
-
-  loadPets();
 };
-
-// ------------------
-// BUTTON
-// ------------------
-document.getElementById("refreshBtn").onclick = loadPets;
 
 </script>
 
