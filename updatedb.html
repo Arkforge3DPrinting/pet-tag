@@ -2,6 +2,14 @@
 <html>
 <head>
   <title>Create Pet Tag NFC</title>
+
+  <!-- QR CODE -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- DOCX + SAVE -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+
 </head>
 
 <body style="font-family: Arial; text-align:center; padding:20px;">
@@ -17,6 +25,12 @@
 <button id="generateBtn">Generate & Save</button>
 
 <p id="result"></p>
+
+<!-- QR OUTPUT -->
+<div id="qrBox" style="margin-top:20px;"></div>
+
+<!-- DOC OUTPUT -->
+<div id="downloadSection" style="margin-top:20px;"></div>
 
 <script type="module">
 
@@ -36,7 +50,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Default pet image (fallback)
+// Default image
 const defaultPhoto =
   "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
 
@@ -48,6 +62,12 @@ function generateId(length = 10) {
     id += chars[Math.floor(Math.random() * chars.length)];
   }
   return id;
+}
+
+// CLEAR UI
+function resetUI() {
+  document.getElementById("qrBox").innerHTML = "";
+  document.getElementById("downloadSection").innerHTML = "";
 }
 
 // CREATE TAG
@@ -65,18 +85,19 @@ document.getElementById("generateBtn").onclick = async () => {
   const result =
     document.getElementById("result");
 
-  // VALIDATION
+  resetUI();
+
   if (!name || !phone) {
-
     result.style.color = "red";
-
-    result.innerText =
-      "Please enter pet name and primary phone";
-
+    result.innerText = "Please enter pet name and primary phone";
     return;
   }
 
   const id = generateId();
+
+  // 🔥 YOUR UPDATED QR DESTINATION
+  const url =
+    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
   try {
 
@@ -84,38 +105,125 @@ document.getElementById("generateBtn").onclick = async () => {
 
       name,
       phone,
-
       phone2: phone2 || "",
-
       photo: defaultPhoto
 
     });
 
-    const url =
-      `https://arkforge3dprinting.github.io/pet-tag/?id=${id}`;
-
     result.style.color = "green";
 
     result.innerHTML = `
-
       <b>Saved Successfully!</b><br><br>
 
       <b>ID:</b> ${id}<br><br>
 
-      <b>Tag URL:</b><br>
-
+      <b>QR Link:</b><br>
       <a href="${url}" target="_blank">${url}</a>
-
     `;
+
+    // QR CODE
+    new QRCode(document.getElementById("qrBox"), {
+      text: url,
+      width: 180,
+      height: 180
+    });
+
+    // DOC BUTTON
+    document.getElementById("downloadSection").innerHTML = `
+      <button id="downloadDocBtn" style="
+        margin-top:15px;
+        padding:12px;
+        width:100%;
+        border:none;
+        border-radius:12px;
+        background:#111;
+        color:white;
+        font-weight:bold;
+        cursor:pointer;
+      ">
+        📄 Download Customer Letter (.docx)
+      </button>
+    `;
+
+    document.getElementById("downloadDocBtn").onclick = () => {
+
+      const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+      const doc = new Document({
+        sections: [
+          {
+            children: [
+
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "Arkforge 3D Printing - Pet Tag Activation",
+                    bold: true,
+                    size: 28
+                  })
+                ]
+              }),
+
+              new Paragraph(""),
+
+              new Paragraph({
+                children: [
+                  new TextRun("Pet Name: "),
+                  new TextRun({ text: name, bold: true })
+                ]
+              }),
+
+/* spacing */
+              new Paragraph(""),
+
+              new Paragraph({
+                children: [
+                  new TextRun("Tag URL: "),
+                  new TextRun({ text: url, bold: true })
+                ]
+              }),
+
+/* instruction */
+              new Paragraph(""),
+
+              new Paragraph({
+                children: [
+                  new TextRun(
+                    "Scan the QR code or open the link above to access the pet’s profile and contact the owner immediately."
+                  )
+                ]
+              }),
+
+/* footer */
+              new Paragraph(""),
+
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text:
+                      "Powered by Arkforge 3D Printing NFC Pet Recovery System",
+                    italics: true
+                  })
+                ]
+              })
+
+            ]
+          }
+        ]
+      });
+
+      Packer.toBlob(doc).then((blob) => {
+        saveAs(blob, `${name}-pet-tag-letter.docx`);
+      });
+
+    };
 
   } catch (e) {
 
     console.log("SAVE ERROR:", e);
 
     result.style.color = "red";
-
-    result.innerText =
-      e.code + " - " + e.message;
+    result.innerText = e.code + " - " + e.message;
 
   }
 
