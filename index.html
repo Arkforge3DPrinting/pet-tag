@@ -27,7 +27,7 @@
 
     h1 {
       font-size: 24px;
-      margin: 0 0 4px 0;
+      margin: 0 0 6px 0;
     }
 
     p {
@@ -48,22 +48,18 @@
       box-shadow: 0 0 0 3px #3b82f6, 0 6px 18px rgba(0,0,0,0.15);
     }
 
-    .label {
-      text-align: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: #888;
-      margin-top: 16px;
-      margin-bottom: 6px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
+    /* GRID */
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+
+    /* SINGLE CONTACT MODE */
+    .single {
+      grid-template-columns: 1fr !important;
+      justify-items: center;
     }
 
     button {
@@ -82,10 +78,16 @@
       transform: scale(0.97);
     }
 
-    /* colors */
+    /* COLORS */
     #callBtn, #callBtn2 { background: #28c76f; }
     #textBtn, #textBtn2 { background: #3b82f6; }
     #locBtn, #locBtn2   { background: #ff9f43; }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #999;
+    }
 
   </style>
 </head>
@@ -99,25 +101,22 @@
 
   <img id="petPhoto">
 
-  <!-- CALL -->
-  <div class="label">Call</div>
-  <div id="callGrid" class="grid">
+  <!-- BUTTON GRID -->
+  <div id="btnGrid" class="grid">
+
     <button id="callBtn"></button>
     <button id="callBtn2"></button>
-  </div>
 
-  <!-- TEXT -->
-  <div class="label">Text</div>
-  <div id="textGrid" class="grid">
     <button id="textBtn"></button>
     <button id="textBtn2"></button>
-  </div>
 
-  <!-- LOCATION -->
-  <div class="label">Send Location</div>
-  <div id="locGrid" class="grid">
     <button id="locBtn"></button>
     <button id="locBtn2"></button>
+
+  </div>
+
+  <div class="footer">
+    Powered by Arkforge 3D Printing ®
   </div>
 
 </div>
@@ -139,54 +138,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function setLabels(primary, secondary, hasSecondary) {
+function setSingleMode() {
+  document.getElementById("btnGrid").classList.add("single");
+}
 
-  const callBtn = document.getElementById("callBtn");
-  const callBtn2 = document.getElementById("callBtn2");
-
-  const textBtn = document.getElementById("textBtn");
-  const textBtn2 = document.getElementById("textBtn2");
-
-  const locBtn = document.getElementById("locBtn");
-  const locBtn2 = document.getElementById("locBtn2");
-
-  if (!hasSecondary) {
-
-    callBtn.innerText = "📞 Call";
-    textBtn.innerText = "💬 Text";
-    locBtn.innerText  = "📍 Location";
-
-    callBtn2.remove();
-    textBtn2.remove();
-    locBtn2.remove();
-
-  } else {
-
-    callBtn.innerText = "📞 Call Primary";
-    textBtn.innerText = "💬 Text Primary";
-    locBtn.innerText  = "📍 Send Location Primary";
-
-    callBtn2.innerText = "📞 Call Secondary";
-    textBtn2.innerText = "💬 Text Secondary";
-    locBtn2.innerText  = "📍 Send Location Secondary";
-
-  }
+function removeEl(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
 }
 
 async function loadPet() {
 
   const id = new URLSearchParams(window.location.search).get("id");
-
   if (!id) return;
 
   const snap = await getDoc(doc(db, "pets", id));
-
   if (!snap.exists()) return;
 
   const pet = snap.data();
 
   document.getElementById("title").innerText = "🐾 You found " + pet.name;
-  document.getElementById("message").innerText = "Help me get home safely";
+
+  // ✅ DYNAMIC MESSAGE (FIX YOU REQUESTED)
+  document.getElementById("message").innerText =
+    `I found ${pet.name}. Help me get them home safely.`;
 
   if (pet.photo) {
     const img = document.getElementById("petPhoto");
@@ -194,13 +169,21 @@ async function loadPet() {
     img.style.display = "block";
   }
 
-  const primary = pet.phone;
-  const secondary = pet.phone2 && pet.phone2.trim() !== "";
+  const secondaryExists = pet.phone2 && pet.phone2.trim() !== "";
 
-  // ================= LABEL SYSTEM =================
-  setLabels(primary, secondary, secondary);
+  // ================= PRIMARY LABELS =================
 
-  // ================= PRIMARY =================
+  document.getElementById("callBtn").innerText = "📞 Call";
+  document.getElementById("textBtn").innerText = "💬 Text";
+  document.getElementById("locBtn").innerText  = "📍 Send Location";
+
+  // ================= SECONDARY LABELS =================
+
+  document.getElementById("callBtn2").innerText = "📞 Call Secondary";
+  document.getElementById("textBtn2").innerText = "💬 Text Secondary";
+  document.getElementById("locBtn2").innerText  = "📍 Send Location Secondary";
+
+  // ================= PRIMARY ACTIONS =================
 
   document.getElementById("callBtn").onclick = () =>
     window.location.href = "tel:" + pet.phone;
@@ -213,8 +196,7 @@ async function loadPet() {
     navigator.geolocation.getCurrentPosition((pos) => {
 
       const msg =
-        "I found your pet " +
-        pet.name +
+        "I found " + pet.name +
         ". Location: https://maps.google.com/?q=" +
         pos.coords.latitude + "," + pos.coords.longitude;
 
@@ -224,9 +206,18 @@ async function loadPet() {
 
   };
 
-  // ================= SECONDARY =================
+  // ================= SECONDARY LOGIC =================
 
-  if (!secondary) return;
+  if (!secondaryExists) {
+
+    removeEl("callBtn2");
+    removeEl("textBtn2");
+    removeEl("locBtn2");
+
+    setSingleMode();
+
+    return;
+  }
 
   document.getElementById("callBtn2").onclick = () =>
     window.location.href = "tel:" + pet.phone2;
@@ -239,8 +230,7 @@ async function loadPet() {
     navigator.geolocation.getCurrentPosition((pos) => {
 
       const msg =
-        "I found your pet " +
-        pet.name +
+        "I found " + pet.name +
         ". Location: https://maps.google.com/?q=" +
         pos.coords.latitude + "," + pos.coords.longitude;
 
