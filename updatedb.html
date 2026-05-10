@@ -3,7 +3,7 @@
 <head>
   <title>Create Pet Tag NFC</title>
 
-  <!-- QR CODE -->
+  <!-- QR -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <!-- File saver -->
@@ -16,7 +16,6 @@
       justify-content: center;
     }
   </style>
-
 </head>
 
 <body style="font-family: Arial; text-align:center; padding:20px;">
@@ -40,12 +39,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ✅ FIXED DOCX IMPORT (THIS IS THE IMPORTANT FIX)
+// ✅ DOCX (correct ES module build)
 import {
   Document,
   Packer,
   Paragraph,
-  TextRun
+  TextRun,
+  ImageRun
 } from "https://cdn.jsdelivr.net/npm/docx@8.5.0/+esm";
 
 const firebaseConfig = {
@@ -75,6 +75,12 @@ function generateId(length = 10) {
 function resetUI() {
   document.getElementById("qrBox").innerHTML = "";
   document.getElementById("downloadSection").innerHTML = "";
+}
+
+// Convert QR canvas → base64 image
+function getQRBase64() {
+  const canvas = document.querySelector("#qrBox canvas");
+  return canvas.toDataURL("image/png");
 }
 
 // CREATE TAG
@@ -112,11 +118,11 @@ document.getElementById("generateBtn").onclick = async () => {
     result.innerHTML = `
       <b>Saved Successfully!</b><br><br>
       <b>ID:</b> ${id}<br><br>
-      <b>Tag URL:</b><br>
+      <b>URL:</b><br>
       <a href="${url}" target="_blank">${url}</a>
     `;
 
-    // QR CODE
+    // Generate QR
     new QRCode(document.getElementById("qrBox"), {
       text: url,
       width: 180,
@@ -141,6 +147,8 @@ document.getElementById("generateBtn").onclick = async () => {
     `;
 
     document.getElementById("downloadDocBtn").onclick = async () => {
+
+      const qrBase64 = getQRBase64();
 
       const doc = new Document({
         sections: [
@@ -169,7 +177,7 @@ document.getElementById("generateBtn").onclick = async () => {
                 ]
               }),
 
-/* pet info */
+/* pet */
               new Paragraph({
                 children: [
                   new TextRun("Pet Name: "),
@@ -185,6 +193,22 @@ document.getElementById("generateBtn").onclick = async () => {
                 ]
               }),
 
+/* QR IMAGE (FIXED PROPERLY) */
+              new Paragraph(""),
+              new Paragraph("QR Code:"),
+
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    data: qrBase64,
+                    transformation: {
+                      width: 180,
+                      height: 180
+                    }
+                  })
+                ]
+              }),
+
 /* instructions */
               new Paragraph(""),
 
@@ -197,17 +221,18 @@ document.getElementById("generateBtn").onclick = async () => {
                 ]
               }),
 
+/* steps */
               new Paragraph("1. Scan the QR code using any smartphone camera."),
               new Paragraph("2. This opens your pet’s secure profile page."),
-              new Paragraph("3. Fill in or confirm your contact details."),
-              new Paragraph("4. Found pets can contact you instantly via call or SMS."),
+              new Paragraph("3. Confirm or update contact details."),
+              new Paragraph("4. Found pets can call or text the owner instantly."),
 
               new Paragraph(""),
 
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: "TIP: Keep your phone number updated for fastest recovery.",
+                    text: "TIP: Keep your phone number up to date for fastest recovery.",
                     italics: true
                   })
                 ]
@@ -236,11 +261,9 @@ document.getElementById("generateBtn").onclick = async () => {
     };
 
   } catch (e) {
-
     console.log(e);
     result.style.color = "red";
     result.innerText = e.code + " - " + e.message;
-
   }
 
 };
