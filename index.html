@@ -130,18 +130,15 @@
     This pet tag must be activated before contact details are available.
   </p>
 
-  <div class="tagbox">
+<div class="tagbox">
 
-    <div class="tagbox-title">🆔 Tag Code</div>
+  <div class="tagbox-title">🆔 Tag Code</div>
 
-    <div class="tagcode" id="tagCode"></div>
+  <div class="tagcode" id="tagCode"></div>
 
-    <div class="taghint">
-      If you don’t have the packaging, quote this code when contacting support. You can reach us at Arkforge3DPrinting@outlook.com
-      Alternatively you can contact us via Facebook live chat. www.facebook.com/arkforge3dprinting
-    </div>
+  <div class="taghint" id="tagLink"></div>
 
-  </div>
+</div>
 
 </div>
 
@@ -228,7 +225,22 @@ async function loadPet() {
   }
 
   const pet = snap.data();
+const baseUrl =
+  "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
 
+// show raw ID
+document.getElementById("tagCode").innerText = id;
+
+// show clickable URL
+document.getElementById("tagLink").innerHTML = `
+  <a href="${baseUrl}" target="_blank" style="
+    color:#3b82f6;
+    word-break: break-all;
+    text-decoration: underline;
+  ">
+    ${baseUrl}
+  </a>
+`;
   // 🔒 BLOCK UNACTIVATED
   if (pet.status !== "active") {
     document.getElementById("tagCode").innerText = id;
