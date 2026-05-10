@@ -24,11 +24,7 @@
       text-align: center;
     }
 
-    h2 {
-      margin-top: 0;
-    }
-
-    input[type="text"] {
+    input {
       width: 100%;
       padding: 14px;
       margin-bottom: 10px;
@@ -42,9 +38,7 @@
       border-color: #3b82f6;
     }
 
-    #photoInput {
-      display: none;
-    }
+    #photoInput { display: none; }
 
     .btn {
       width: 100%;
@@ -85,9 +79,9 @@
 
   <h2>Activate Pet Tag</h2>
 
-  <input id="name" type="text" placeholder="Pet Name">
-  <input id="phone" type="text" placeholder="Primary Contact Number">
-  <input id="phone2" type="text" placeholder="Secondary Contact (optional)">
+  <input id="name" placeholder="Pet Name">
+  <input id="phone" placeholder="Primary Contact Number">
+  <input id="phone2" placeholder="Secondary Contact (optional)">
 
   <input type="file" id="photoInput" accept="image/*">
 
@@ -97,7 +91,7 @@
   <div class="tos-box">
     <label>
       <input type="checkbox" id="tosCheckbox">
-      I agree to the Terms of Service and understand this pet profile may be publicly visible when scanned.
+      I agree to Terms of Service and understand this pet profile may be publicly visible when scanned.
     </label>
   </div>
 
@@ -148,7 +142,7 @@ document.getElementById("galleryBtn").onclick = () => {
   photoInput.click();
 };
 
-// 🔥 MAIN ACTIVATION
+// MAIN ACTIVATION
 document.getElementById("activateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value.trim();
@@ -169,16 +163,20 @@ document.getElementById("activateBtn").onclick = async () => {
   try {
 
     // 🔒 HARD LOCK: must already exist
-    const existing = await getDoc(doc(db, "pets", id));
+    const ref = doc(db, "pets", id);
+    const existingSnap = await getDoc(ref);
 
-    if (!existing.exists()) {
-      status.innerText = "❌ This tag is not registered in system";
+    if (!existingSnap.exists()) {
+      status.innerText = "❌ This tag is not registered";
       return;
     }
+
+    const existing = existingSnap.data();
 
     let photoURL = "";
     const file = photoInput.files[0];
 
+    // upload only if new file exists
     if (file) {
 
       const form = new FormData();
@@ -194,18 +192,17 @@ document.getElementById("activateBtn").onclick = async () => {
       photoURL = data.secure_url;
     }
 
+    // 🧠 SAFE MERGE (prevents wiping placeholder image)
     const payload = {
       name,
       phone,
+      phone2: phone2 || existing.phone2 || "",
+      photo: photoURL || existing.photo || "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
       tosAccepted: true,
       activatedAt: new Date().toISOString()
     };
 
-    if (phone2) payload.phone2 = phone2;
-    if (photoURL) payload.photo = photoURL;
-
-    // 💾 SAFE UPDATE ONLY (NO NEW DOCUMENTS)
-    await setDoc(doc(db, "pets", id), payload);
+    await setDoc(ref, payload, { merge: true });
 
     status.innerText = "✅ Activated successfully!";
 
