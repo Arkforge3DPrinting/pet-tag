@@ -22,7 +22,7 @@
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       text-align: center;
-      display: none; /* 🔒 hidden until verified */
+      display: none;
     }
 
     h1 { font-size: 24px; margin: 0 0 6px 0; }
@@ -74,7 +74,7 @@
       color: #999;
     }
 
-    /* 🔒 LOCK SCREEN */
+    /* LOCK SCREEN */
     #locked {
       max-width: 420px;
       margin: auto;
@@ -93,6 +93,7 @@
 <!-- 🔒 LOCK SCREEN -->
 <div id="locked">
   <h2>🐾 Tag Not Activated</h2>
+
   <p>This pet tag must be activated before contact details are available.</p>
 
   <div style="
@@ -104,6 +105,21 @@
     text-align: left;
   ">
     Please follow the activation instructions provided with the tag packaging.
+  </div>
+
+  <!-- 🔥 TAG CODE DISPLAY -->
+  <div style="
+    margin-top: 14px;
+    padding: 14px;
+    background: #111;
+    color: white;
+    border-radius: 12px;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-align: center;
+  ">
+    Tag Code:<br>
+    <span id="tagCode" style="font-size:16px;font-weight:bold;"></span>
   </div>
 </div>
 
@@ -155,6 +171,7 @@ const id = new URLSearchParams(window.location.search).get("id");
 
 const main = document.getElementById("main");
 const locked = document.getElementById("locked");
+const tagCodeEl = document.getElementById("tagCode");
 
 if (!id) {
   locked.style.display = "block";
@@ -184,21 +201,26 @@ async function loadPet() {
   const snap = await getDoc(doc(db, "pets", id));
 
   if (!snap.exists()) {
+
     showLocked();
+    tagCodeEl.innerText = id;   // 🔥 SHOW ID
     return;
   }
 
   const pet = snap.data();
 
-  // 🔒 IMPORTANT GATE
+  // 🔒 GATE
   if (pet.status !== "active") {
+
     showLocked();
+    tagCodeEl.innerText = id;   // 🔥 SHOW ID
     return;
   }
 
   showMain();
 
-  document.getElementById("title").innerText = "🐾 You found " + pet.name;
+  document.getElementById("title").innerText =
+    "🐾 You found " + pet.name;
 
   document.getElementById("message").innerText =
     `Help get ${pet.name} home safely.`;
@@ -209,7 +231,8 @@ async function loadPet() {
     img.style.display = "block";
   }
 
-  const secondaryExists = pet.phone2 && pet.phone2.trim() !== "";
+  const secondaryExists =
+    pet.phone2 && pet.phone2.trim() !== "";
 
   document.getElementById("callBtn").innerText = "📞 Call";
   document.getElementById("textBtn").innerText = "💬 Text";
@@ -223,7 +246,10 @@ async function loadPet() {
     window.location.href = "tel:" + pet.phone;
 
   document.getElementById("textBtn").onclick = () =>
-    window.open(`sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+    window.open(
+      `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
+      "_self"
+    );
 
   document.getElementById("locBtn").onclick = () => {
 
@@ -234,7 +260,10 @@ async function loadPet() {
         ". Location: https://maps.google.com/?q=" +
         pos.coords.latitude + "," + pos.coords.longitude;
 
-      window.open(`sms:${pet.phone}?body=${encodeURIComponent(msg)}`, "_self");
+      window.open(
+        `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
+        "_self"
+      );
 
     });
 
@@ -252,7 +281,10 @@ async function loadPet() {
     window.location.href = "tel:" + pet.phone2;
 
   document.getElementById("textBtn2").onclick = () =>
-    window.open(`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+    window.open(
+      `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
+      "_self"
+    );
 
   document.getElementById("locBtn2").onclick = () => {
 
@@ -263,7 +295,10 @@ async function loadPet() {
         ". Location: https://maps.google.com/?q=" +
         pos.coords.latitude + "," + pos.coords.longitude;
 
-      window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
+      window.open(
+        `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
+        "_self"
+      );
 
     });
 
