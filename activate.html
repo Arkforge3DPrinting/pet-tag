@@ -22,11 +22,10 @@
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       text-align: center;
+      display: none; /* 🔒 hidden until validation passes */
     }
 
-    h2 {
-      margin-bottom: 4px;
-    }
+    h2 { margin-bottom: 4px; }
 
     .tagid {
       font-size: 12px;
@@ -81,16 +80,50 @@
       font-weight: bold;
       min-height: 20px;
     }
+
+    /* 🔒 BLOCK SCREEN */
+    #blocked {
+      max-width: 420px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      text-align: center;
+      display: none;
+    }
   </style>
 </head>
 
 <body>
 
-<div class="container">
+<!-- 🔒 BLOCK SCREEN -->
+<div id="blocked">
+  <h2>🐾 Tag Not Activated</h2>
+  <p>
+    This pet tag must be activated before it can be used.
+  </p>
+
+  <div style="
+    margin-top: 15px;
+    padding: 14px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    font-size: 13px;
+    text-align: left;
+  ">
+    <b>Activation required:</b><br><br>
+
+    Please follow the instructions included in your packaging and scan the official QR code to complete setup.
+    Once activated, this tag will unlock automatically.
+  </div>
+</div>
+
+<!-- 🔓 MAIN FORM -->
+<div class="container" id="mainForm">
 
   <h2>Activate Pet Tag</h2>
 
-  <!-- ID DISPLAY -->
   <div class="tagid">
     Tag ID: <span id="tagIdDisplay"></span>
   </div>
@@ -135,22 +168,55 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔑 SOURCE OF TRUTH ID
 const urlId = new URLSearchParams(window.location.search).get("id");
 
 const status = document.getElementById("status");
 
+const mainForm = document.getElementById("mainForm");
+const blocked = document.getElementById("blocked");
+
 if (!urlId) {
-  status.innerText = "❌ Invalid activation link";
+  blocked.style.display = "block";
+  blocked.innerHTML = "<h2>❌ Invalid Link</h2>";
   throw new Error("Missing ID");
 }
 
-// 🆔 DISPLAY ID ON PAGE
 document.getElementById("tagIdDisplay").innerText = urlId;
+
+// 🔒 PRE-CHECK TAG STATUS BEFORE SHOWING FORM
+(async () => {
+
+  try {
+
+    const ref = doc(db, "pets", urlId);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      blocked.style.display = "block";
+      blocked.innerHTML = "<h2>❌ Tag Not Found</h2>";
+      return;
+    }
+
+    const data = snap.data();
+
+    // 🚫 HARD LOCK IF NOT ACTIVE
+    if (data.status !== "active") {
+      blocked.style.display = "block";
+      return;
+    }
+
+    // ✔ ALLOW ACCESS
+    mainForm.style.display = "block";
+
+  } catch (e) {
+    blocked.style.display = "block";
+    blocked.innerHTML = "<h2>❌ Error loading tag</h2>";
+  }
+
+})();
 
 const photoInput = document.getElementById("photoInput");
 
-// camera / gallery
 document.getElementById("cameraBtn").onclick = () => {
   photoInput.setAttribute("capture", "environment");
   photoInput.click();
@@ -169,14 +235,6 @@ document.getElementById("activateBtn").onclick = async () => {
   const phone2 = document.getElementById("phone2").value.trim();
   const tos = document.getElementById("tosCheckbox").checked;
 
-  const displayedId = document.getElementById("tagIdDisplay").innerText;
-
-  // 🔒 HARD MATCH CHECK
-  if (urlId !== displayedId) {
-    status.innerText = "❌ Tag ID mismatch. Activation blocked.";
-    return;
-  }
-
   if (!name || !phone) {
     status.innerText = "⚠ Fill required fields";
     return;
@@ -193,7 +251,7 @@ document.getElementById("activateBtn").onclick = async () => {
     const existingSnap = await getDoc(ref);
 
     if (!existingSnap.exists()) {
-      status.innerText = "❌ Tag not registered in system";
+      status.innerText = "❌ Tag not registered";
       return;
     }
 
@@ -216,16 +274,15 @@ document.getElementById("activateBtn").onclick = async () => {
       photoURL = data.secure_url;
     }
 
-    const payload = {
+    await setDoc(ref, {
       name,
       phone,
       phone2: phone2 || existing.phone2 || "",
-      photo: photoURL || existing.photo || "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
+      photo: photoURL || existing.photo,
       tosAccepted: true,
+      status: "active",
       activatedAt: new Date().toISOString()
-    };
-
-    await setDoc(ref, payload, { merge: true });
+    }, { merge: true });
 
     status.innerText = "✅ Activated successfully!";
 
