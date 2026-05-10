@@ -10,5 +10,3 @@ https://arkforge3dprinting.github.io/pet-tag/activate.html?id=ahaAvnu1Yz
 https://console.cloudinary.com/app/c-9871aeeea5113607acffe58db4fc41/home/dashboard
 # Admin Board
 https://arkforge3dprinting.github.io/pet-tag/login.html
-# Control Hub
-https://arkforge3dprinting.github.io/pet-tag/controlhub.html
