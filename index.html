@@ -79,11 +79,42 @@
       max-width: 420px;
       margin: auto;
       background: white;
-      padding: 30px;
+      padding: 22px;
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       text-align: center;
       display: none;
+    }
+
+    .tagbox {
+      margin-top: 14px;
+      padding: 14px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      text-align: left;
+    }
+
+    .tagbox-title {
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .tagcode {
+      font-family: monospace;
+      font-size: 15px;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      word-break: break-all;
+    }
+
+    .taghint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #666;
     }
   </style>
 </head>
@@ -92,35 +123,25 @@
 
 <!-- 🔒 LOCK SCREEN -->
 <div id="locked">
+
   <h2>🐾 Tag Not Activated</h2>
 
-  <p>This pet tag must be activated before contact details are available.</p>
+  <p>
+    This pet tag must be activated before contact details are available.
+  </p>
 
-  <div style="
-    margin-top: 15px;
-    padding: 14px;
-    background: #f3f4f6;
-    border-radius: 12px;
-    font-size: 13px;
-    text-align: left;
-  ">
-    Please follow the activation instructions provided with the tag packaging.
+  <div class="tagbox">
+
+    <div class="tagbox-title">🆔 Tag Code</div>
+
+    <div class="tagcode" id="tagCode"></div>
+
+    <div class="taghint">
+      If you don’t have the packaging, quote this code when contacting support.
+    </div>
+
   </div>
 
-  <!-- 🔥 TAG CODE DISPLAY -->
-  <div style="
-    margin-top: 14px;
-    padding: 14px;
-    background: #111;
-    color: white;
-    border-radius: 12px;
-    font-size: 14px;
-    letter-spacing: 1px;
-    text-align: center;
-  ">
-    Tag Code:<br>
-    <span id="tagCode" style="font-size:16px;font-weight:bold;"></span>
-  </div>
 </div>
 
 <!-- 🔓 MAIN VIEW -->
@@ -171,11 +192,10 @@ const id = new URLSearchParams(window.location.search).get("id");
 
 const main = document.getElementById("main");
 const locked = document.getElementById("locked");
-const tagCodeEl = document.getElementById("tagCode");
 
 if (!id) {
   locked.style.display = "block";
-  locked.innerHTML = "<h2>❌ Invalid Link</h2>";
+  document.getElementById("tagCode").innerText = "INVALID";
   throw new Error("Missing ID");
 }
 
@@ -201,19 +221,17 @@ async function loadPet() {
   const snap = await getDoc(doc(db, "pets", id));
 
   if (!snap.exists()) {
-
+    document.getElementById("tagCode").innerText = id;
     showLocked();
-    tagCodeEl.innerText = id;   // 🔥 SHOW ID
     return;
   }
 
   const pet = snap.data();
 
-  // 🔒 GATE
+  // 🔒 BLOCK UNACTIVATED
   if (pet.status !== "active") {
-
+    document.getElementById("tagCode").innerText = id;
     showLocked();
-    tagCodeEl.innerText = id;   // 🔥 SHOW ID
     return;
   }
 
@@ -231,8 +249,7 @@ async function loadPet() {
     img.style.display = "block";
   }
 
-  const secondaryExists =
-    pet.phone2 && pet.phone2.trim() !== "";
+  const secondaryExists = pet.phone2 && pet.phone2.trim() !== "";
 
   document.getElementById("callBtn").innerText = "📞 Call";
   document.getElementById("textBtn").innerText = "💬 Text";
@@ -246,10 +263,7 @@ async function loadPet() {
     window.location.href = "tel:" + pet.phone;
 
   document.getElementById("textBtn").onclick = () =>
-    window.open(
-      `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-      "_self"
-    );
+    window.open(`sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
 
   document.getElementById("locBtn").onclick = () => {
 
@@ -260,10 +274,7 @@ async function loadPet() {
         ". Location: https://maps.google.com/?q=" +
         pos.coords.latitude + "," + pos.coords.longitude;
 
-      window.open(
-        `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
-        "_self"
-      );
+      window.open(`sms:${pet.phone}?body=${encodeURIComponent(msg)}`, "_self");
 
     });
 
@@ -281,10 +292,7 @@ async function loadPet() {
     window.location.href = "tel:" + pet.phone2;
 
   document.getElementById("textBtn2").onclick = () =>
-    window.open(
-      `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-      "_self"
-    );
+    window.open(`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
 
   document.getElementById("locBtn2").onclick = () => {
 
@@ -295,10 +303,7 @@ async function loadPet() {
         ". Location: https://maps.google.com/?q=" +
         pos.coords.latitude + "," + pos.coords.longitude;
 
-      window.open(
-        `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
-        "_self"
-      );
+      window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
 
     });
 
