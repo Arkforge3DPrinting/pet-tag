@@ -2,11 +2,9 @@
 <html>
 <head>
   <title>Activate Pet Tag</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-
     * { box-sizing: border-box; }
 
     body {
@@ -14,7 +12,6 @@
       background: #f4f6f8;
       margin: 0;
       padding: 14px;
-      color: #222;
     }
 
     .container {
@@ -28,7 +25,7 @@
     }
 
     h2 {
-      margin: 0 0 10px 0;
+      margin-top: 0;
     }
 
     input[type="text"] {
@@ -37,69 +34,48 @@
       margin-bottom: 10px;
       border-radius: 12px;
       border: 1px solid #ddd;
-      font-size: 16px;
+      font-size: 15px;
     }
 
     input:focus {
-      border-color: #3b82f6;
       outline: none;
-    }
-
-    .upload-box {
-      margin: 10px 0;
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px dashed #ccc;
-      background: #fafafa;
+      border-color: #3b82f6;
     }
 
     #photoInput {
       display: none;
     }
 
-    .file-btn {
-      display: block;
+    .btn {
       width: 100%;
       padding: 14px;
+      border: none;
       border-radius: 12px;
-      color: white;
       font-weight: bold;
       cursor: pointer;
-      margin-bottom: 8px;
+      color: white;
+      margin-bottom: 10px;
     }
 
     .camera { background: #ff9f43; }
     .gallery { background: #3b82f6; }
+    .activate { background: #3b82f6; font-size: 18px; }
 
-    button {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 14px;
-      font-size: 18px;
-      font-weight: bold;
-      background: #3b82f6;
-      color: white;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    #fileName {
-      font-size: 12px;
-      margin-top: 6px;
-      color: #555;
-      word-break: break-word;
+    .tos-box {
+      text-align: left;
+      font-size: 13px;
+      padding: 10px;
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      margin: 12px 0;
     }
 
     #status {
-      margin-top: 12px;
-      font-size: 14px;
+      margin-top: 10px;
+      font-weight: bold;
+      min-height: 20px;
     }
-
   </style>
 </head>
 
@@ -107,24 +83,25 @@
 
 <div class="container">
 
-  <h2>Activate Your Pet Tag</h2>
+  <h2>Activate Pet Tag</h2>
 
-  <input type="text" id="name" placeholder="Pet Name">
-  <input type="text" id="phone" placeholder="Primary Contact Number">
-  <input type="text" id="phone2" placeholder="Secondary Contact (optional)">
+  <input id="name" type="text" placeholder="Pet Name">
+  <input id="phone" type="text" placeholder="Primary Contact Number">
+  <input id="phone2" type="text" placeholder="Secondary Contact (optional)">
 
-  <div class="upload-box">
+  <input type="file" id="photoInput" accept="image/*">
 
-    <input type="file" id="photoInput" accept="image/*">
+  <button class="btn camera" id="cameraBtn">📷 Take Photo</button>
+  <button class="btn gallery" id="galleryBtn">📁 Choose Photo</button>
 
-    <div class="file-btn camera" id="cameraBtn">📷 Take Photo</div>
-    <div class="file-btn gallery" id="galleryBtn">📁 Choose From Gallery</div>
-
-    <div id="fileName"></div>
-
+  <div class="tos-box">
+    <label>
+      <input type="checkbox" id="tosCheckbox">
+      I agree to the Terms of Service and understand this pet profile may be publicly visible when scanned.
+    </label>
   </div>
 
-  <button id="activateBtn">Activate</button>
+  <button class="btn activate" id="activateBtn">Activate</button>
 
   <div id="status"></div>
 
@@ -133,10 +110,11 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  apiKey: "YOUR_API_KEY",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -147,20 +125,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ID generator
-function generateId(length = 10) {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let id = "";
-  for (let i = 0; i < length; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return id;
+// 🔑 ID from URL (CRITICAL)
+const id = new URLSearchParams(window.location.search).get("id");
+
+const status = document.getElementById("status");
+
+if (!id) {
+  status.innerText = "❌ Invalid activation link";
+  throw new Error("Missing ID");
 }
 
-// file input
 const photoInput = document.getElementById("photoInput");
-const fileName = document.getElementById("fileName");
 
+// camera / gallery
 document.getElementById("cameraBtn").onclick = () => {
   photoInput.setAttribute("capture", "environment");
   photoInput.click();
@@ -171,87 +148,69 @@ document.getElementById("galleryBtn").onclick = () => {
   photoInput.click();
 };
 
-photoInput.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  fileName.innerText = file ? file.name : "";
-});
-
-// MAIN SAVE
+// 🔥 MAIN ACTIVATION
 document.getElementById("activateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
-
-  const status = document.getElementById("status");
+  const tos = document.getElementById("tosCheckbox").checked;
 
   if (!name || !phone) {
-    status.innerText = "Please fill in pet name and primary contact";
+    status.innerText = "⚠ Fill required fields";
     return;
   }
 
-  const id = generateId();
-  let photoURL = "";
+  if (!tos) {
+    status.innerText = "⚠ Accept Terms of Service";
+    return;
+  }
 
   try {
 
-    // ================= UPLOAD IMAGE =================
+    // 🔒 HARD LOCK: must already exist
+    const existing = await getDoc(doc(db, "pets", id));
+
+    if (!existing.exists()) {
+      status.innerText = "❌ This tag is not registered in system";
+      return;
+    }
+
+    let photoURL = "";
     const file = photoInput.files[0];
 
     if (file) {
 
-      status.innerText = "Uploading image...";
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", "arkforge-pets");
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "arkforge-pets");
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",
+        { method: "POST", body: form }
+      );
 
-      const xhr = new XMLHttpRequest();
-
-      xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
-
-      const response = await new Promise((resolve, reject) => {
-
-        xhr.onload = () => resolve(JSON.parse(xhr.responseText));
-        xhr.onerror = () => reject("Upload failed");
-
-        xhr.send(formData);
-
-      });
-
-      photoURL = response.secure_url;
+      const data = await res.json();
+      photoURL = data.secure_url;
     }
 
-    // ================= BUILD FIRESTORE DATA =================
-
-    const data = {
+    const payload = {
       name,
-      phone
+      phone,
+      tosAccepted: true,
+      activatedAt: new Date().toISOString()
     };
 
-    if (phone2) {
-      data.phone2 = phone2;
-    }
+    if (phone2) payload.phone2 = phone2;
+    if (photoURL) payload.photo = photoURL;
 
-    // 🔥 IMPORTANT FIX (prevents placeholder being overwritten)
-    if (photoURL) {
-      data.photo = photoURL;
-    }
+    // 💾 SAFE UPDATE ONLY (NO NEW DOCUMENTS)
+    await setDoc(doc(db, "pets", id), payload);
 
-    await setDoc(doc(db, "pets", id), data);
-
-    const url = `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
-
-    status.innerHTML = `
-      <b>Activated!</b><br><br>
-      <b>ID:</b> ${id}<br><br>
-      <b>URL:</b><br>
-      <a href="${url}" target="_blank">${url}</a>
-    `;
+    status.innerText = "✅ Activated successfully!";
 
   } catch (e) {
-    console.log(e);
-    status.innerText = "Error: " + e.message;
+    status.innerText = "❌ " + e.message;
   }
 
 };
