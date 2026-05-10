@@ -9,7 +9,10 @@
 <h2>Create NFC Pet Tag</h2>
 
 <input id="name" placeholder="Pet Name"><br><br>
-<input id="phone" placeholder="Owner Phone"><br><br>
+
+<input id="phone" placeholder="Primary Owner Phone"><br><br>
+
+<input id="phone2" placeholder="Secondary Phone (Optional)"><br><br>
 
 <button id="generateBtn">Generate & Save</button>
 
@@ -20,7 +23,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔥 Firebase config
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
@@ -33,7 +36,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔢 ID generator
+// ID generator
 function generateId(length = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   let id = "";
@@ -43,16 +46,29 @@ function generateId(length = 10) {
   return id;
 }
 
-// 🚀 SAVE BUTTON
+// CREATE TAG
 document.getElementById("generateBtn").onclick = async () => {
 
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
+  const name =
+    document.getElementById("name").value.trim();
 
-  const result = document.getElementById("result");
+  const phone =
+    document.getElementById("phone").value.trim();
 
+  const phone2 =
+    document.getElementById("phone2").value.trim();
+
+  const result =
+    document.getElementById("result");
+
+  // BASIC VALIDATION
   if (!name || !phone) {
-    result.innerText = "Please enter pet name and phone";
+
+    result.style.color = "red";
+
+    result.innerText =
+      "Please enter pet name and primary phone";
+
     return;
   }
 
@@ -61,22 +77,41 @@ document.getElementById("generateBtn").onclick = async () => {
   try {
 
     await setDoc(doc(db, "pets", id), {
+
       name,
-      phone
+      phone,
+
+      // optional field
+      phone2: phone2 || ""
+
     });
 
-    const url = `https://arkforge3dprinting.github.io/pet-tag/?id=${id}`;
+    const url =
+      `https://arkforge3dprinting.github.io/pet-tag/?id=${id}`;
+
+    result.style.color = "green";
 
     result.innerHTML = `
-      <b>Saved!</b><br><br>
+
+      <b>Saved Successfully!</b><br><br>
+
       <b>ID:</b> ${id}<br><br>
-      <b>URL:</b><br>
+
+      <b>Tag URL:</b><br>
+
       <a href="${url}" target="_blank">${url}</a>
+
     `;
 
   } catch (e) {
+
     console.log("SAVE ERROR:", e);
-    result.innerText = e.code + " - " + e.message;
+
+    result.style.color = "red";
+
+    result.innerText =
+      e.code + " - " + e.message;
+
   }
 
 };
