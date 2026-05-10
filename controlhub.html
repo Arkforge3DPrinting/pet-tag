@@ -5,6 +5,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
 
     * {
@@ -22,7 +24,7 @@
     /* SIDEBAR */
     .sidebar {
       width: 240px;
-      background: #111827;
+      background: #0f172a;
       color: white;
       padding: 14px;
       display: flex;
@@ -32,18 +34,22 @@
 
     .brand {
       font-weight: bold;
+      font-size: 18px;
       margin-bottom: 10px;
     }
 
     .nav {
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      background: #1f2937;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .nav:hover {
-      background: #374151;
+      background: #334155;
     }
 
     .nav.active {
@@ -53,20 +59,28 @@
     /* MAIN */
     .main {
       flex: 1;
-      padding: 20px;
+      padding: 18px;
       overflow-y: auto;
     }
 
     .panel {
       display: none;
       background: white;
-      padding: 20px;
+      padding: 18px;
       border-radius: 14px;
       box-shadow: 0 4px 18px rgba(0,0,0,0.08);
     }
 
     .panel.active {
       display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
     }
 
     button {
@@ -77,6 +91,43 @@
       background: #3b82f6;
       color: white;
       font-weight: bold;
+      width: 100%;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+
+    .card {
+      background: #f9fafb;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #eee;
+    }
+
+    #qrBox {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      .nav {
+        flex: 1;
+        justify-content: center;
+      }
     }
 
   </style>
@@ -87,14 +138,10 @@
 <!-- SIDEBAR -->
 <div class="sidebar">
 
-  <div class="brand">🐾 Control Hub</div>
+  <div class="brand">🐾 Hub</div>
 
   <div class="nav active" onclick="openTab('create', this)">
     ➕ Create
-  </div>
-
-  <div class="nav" onclick="openTab('activate', this)">
-    🔐 Activate
   </div>
 
   <div class="nav" onclick="openTab('database', this)">
@@ -113,59 +160,146 @@
   <!-- CREATE -->
   <div id="create" class="panel active">
     <h2>Create Tag</h2>
-    <p>This is your create tool embedded view.</p>
 
-    <button onclick="window.location.href='create.html'">
-      Open Full Tool (optional)
+    <input id="name" placeholder="Pet Name">
+    <input id="phone" placeholder="Primary Phone">
+    <input id="phone2" placeholder="Secondary Phone (optional)">
+
+    <button onclick="createTag()">
+      Generate Tag
     </button>
-  </div>
 
-  <!-- ACTIVATE -->
-  <div id="activate" class="panel">
-    <h2>Activate Tag</h2>
-    <p>This will eventually be embedded activation form.</p>
-
-    <button onclick="window.location.href='activate.html'">
-      Open Full Tool
-    </button>
+    <p id="createStatus"></p>
   </div>
 
   <!-- DATABASE -->
   <div id="database" class="panel">
-    <h2>Database</h2>
-    <p>Your admin dashboard can be pasted directly here later.</p>
-
-    <button onclick="window.location.href='admin.html'">
-      Open Full Dashboard
-    </button>
+    <h2>Live Database</h2>
+    <div id="dbList"></div>
   </div>
 
   <!-- QR -->
   <div id="qr" class="panel">
-    <h2>QR Tools</h2>
-    <p>Placeholder for QR generator tools.</p>
+    <h2>QR Generator</h2>
+
+    <input id="qrText" placeholder="Paste URL or ID">
+
+    <button onclick="genQR()">Generate QR</button>
+
+    <div id="qrBox"></div>
   </div>
 
 </div>
 
-<script>
+<script type="module">
 
-function openTab(id, el) {
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // panels
+// FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  authDomain: "arkforge-pets.firebaseapp.com",
+  projectId: "arkforge-pets"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// NAV
+window.openTab = (id, el) => {
+
   document.querySelectorAll('.panel')
     .forEach(p => p.classList.remove('active'));
 
   document.getElementById(id)
     .classList.add('active');
 
-  // nav state
   document.querySelectorAll('.nav')
     .forEach(n => n.classList.remove('active'));
 
   el.classList.add('active');
 
+};
+
+// CREATE TAG
+window.createTag = async () => {
+
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const phone2 = document.getElementById("phone2").value;
+
+  const status = document.getElementById("createStatus");
+
+  if (!name || !phone) {
+    status.innerText = "Missing fields";
+    return;
+  }
+
+  await addDoc(collection(db, "pets"), {
+    name,
+    phone,
+    phone2: phone2 || "",
+    photo: ""
+  });
+
+  status.innerText = "Tag created ✔";
+
+};
+
+// DATABASE LIVE
+function loadDB() {
+
+  const list = document.getElementById("dbList");
+
+  onSnapshot(collection(db, "pets"), (snap) => {
+
+    list.innerHTML = "";
+
+    snap.forEach((doc) => {
+
+      const d = doc.data();
+
+      const div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <b>${d.name}</b><br>
+        ${d.phone}<br>
+        ${d.phone2 || "No secondary"}
+      `;
+
+      list.appendChild(div);
+
+    });
+
+  });
+
 }
+
+loadDB();
+
+// QR
+window.genQR = () => {
+
+  const text =
+    document.getElementById("qrText").value;
+
+  document.getElementById("qrBox").innerHTML = "";
+
+  new QRCode(document.getElementById("qrBox"), {
+    text,
+    width: 160,
+    height: 160
+  });
+
+};
 
 </script>
 
