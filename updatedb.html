@@ -36,6 +36,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Default pet image (fallback)
+const defaultPhoto =
+  "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
+
 // ID generator
 function generateId(length = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -61,7 +65,7 @@ document.getElementById("generateBtn").onclick = async () => {
   const result =
     document.getElementById("result");
 
-  // BASIC VALIDATION
+  // VALIDATION
   if (!name || !phone) {
 
     result.style.color = "red";
@@ -81,8 +85,9 @@ document.getElementById("generateBtn").onclick = async () => {
       name,
       phone,
 
-      // optional field
-      phone2: phone2 || ""
+      phone2: phone2 || "",
+
+      photo: defaultPhoto
 
     });
 
