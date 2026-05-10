@@ -1,111 +1,200 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard v2</title>
+  <title>Admin Dashboard v3</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial;
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
+      font-family: Arial, sans-serif;
       background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
     }
 
     h2 {
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
-    input {
+    #search {
       width: 100%;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 12px;
+      border-radius: 10px;
       border: 1px solid #ccc;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .filters button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #ddd;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .filters button.active {
+      background: #3b82f6;
+      color: white;
     }
 
     .card {
       background: white;
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 12px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+
+    .meta {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+
+    .badges {
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+
+    .green {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .orange {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .blue {
+      background: #dbeafe;
+      color: #1d4ed8;
     }
 
     .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .row input {
+      flex: 1;
+      min-width: 220px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    img {
+      max-width: 120px;
+      border-radius: 10px;
+      margin-top: 6px;
+      border: 2px solid #eee;
+    }
+
+    .buttons {
+      margin-top: 10px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .row input {
+    .buttons button {
       flex: 1;
-      min-width: 200px;
-    }
-
-    button {
-      padding: 8px 10px;
+      min-width: 120px;
+      padding: 10px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
     }
 
-    .save {
+    .saveBtn {
       background: #3b82f6;
       color: white;
     }
 
-    .delete {
-      background: #e74c3c;
+    .deleteBtn {
+      background: #ef4444;
       color: white;
     }
-
-    img {
-      max-width: 120px;
-      border-radius: 8px;
-      margin-top: 8px;
-    }
-
-    .meta {
-      font-size: 12px;
-      color: #666;
-      word-break: break-word;
-    }
-
-    .badges {
-      margin-top: 6px;
-      font-size: 12px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 6px;
-      margin-right: 5px;
-      font-size: 11px;
-    }
-
-    .red { background: #ffdddd; }
-    .orange { background: #ffe5cc; }
-    .green { background: #ddffdd; }
 
   </style>
 </head>
 
 <body>
 
-<h2>🐾 Pet Tag Admin Dashboard (Live)</h2>
+<h2>🐾 Arkforge Admin Dashboard</h2>
 
-<input id="search" placeholder="Search Tag ID or Name...">
+<input
+  id="search"
+  placeholder="Search Tag ID or Pet Name..."
+>
+
+<div class="filters">
+
+  <button class="active" onclick="setFilter('all', this)">
+    All
+  </button>
+
+  <button onclick="setFilter('inactive', this)">
+    Unactivated
+  </button>
+
+  <button onclick="setFilter('active', this)">
+    Activated
+  </button>
+
+  <button onclick="setFilter('missingPhoto', this)">
+    No Photo
+  </button>
+
+  <button onclick="setFilter('missingSecondary', this)">
+    No Secondary
+  </button>
+
+</div>
 
 <div id="list"></div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -113,136 +202,293 @@ import {
   doc,
   updateDoc,
   deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
   getAuth,
   onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+}
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// FIREBASE
 const firebaseConfig = {
+
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+
   authDomain: "arkforge-pets.firebaseapp.com",
+
   projectId: "arkforge-pets",
+
   storageBucket: "arkforge-pets.firebasestorage.app",
+
   messagingSenderId: "517154779272",
+
   appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
+
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+const app =
+  initializeApp(firebaseConfig);
 
-const listDiv = document.getElementById("list");
+const db =
+  getFirestore(app);
+
+const auth =
+  getAuth(app);
+
+const listDiv =
+  document.getElementById("list");
 
 let allPets = [];
 
-let currentFilter = "";
+let currentSearch = "";
 
-// ---------------- AUTH
+let currentFilter = "all";
+
+// AUTH
 onAuthStateChanged(auth, (user) => {
+
   if (!user) {
-    window.location.href = "login.html";
+
+    window.location.href =
+      "login.html";
+
     return;
   }
 
-  listenPets();
+  listenForPets();
+
 });
 
-// ---------------- LIVE DATA
-function listenPets() {
+// LIVE SNAPSHOT
+function listenForPets() {
 
   onSnapshot(collection(db, "pets"), (snap) => {
 
     allPets = [];
 
-    snap.forEach(docSnap => {
+    snap.forEach((docSnap) => {
+
       allPets.push({
         id: docSnap.id,
         ...docSnap.data()
       });
+
     });
 
     render();
+
   });
+
 }
 
-// ---------------- RENDER
+// SEARCH
+document.getElementById("search")
+.addEventListener("input", (e) => {
+
+  currentSearch =
+    e.target.value.toLowerCase();
+
+  render();
+
+});
+
+// FILTER BUTTONS
+window.setFilter = (filter, btn) => {
+
+  currentFilter = filter;
+
+  document.querySelectorAll(".filters button")
+    .forEach(b => b.classList.remove("active"));
+
+  btn.classList.add("active");
+
+  render();
+
+};
+
+// RENDER
 function render() {
-
-  const filtered = allPets.filter(p => {
-
-    const val = currentFilter.toLowerCase();
-
-    return (
-      p.id.toLowerCase().includes(val) ||
-      (p.name || "").toLowerCase().includes(val)
-    );
-  });
 
   listDiv.innerHTML = "";
 
-  filtered.forEach(p => {
+  const filtered = allPets.filter((p) => {
 
-    const statusBadges = [];
+    const matchesSearch =
 
-    if (!p.photo || p.photo.includes("placeholderpaw")) {
-      statusBadges.push(`<span class="badge orange">No Photo</span>`);
+      p.id.toLowerCase().includes(currentSearch) ||
+
+      (p.name || "")
+      .toLowerCase()
+      .includes(currentSearch);
+
+    if (!matchesSearch) return false;
+
+    switch (currentFilter) {
+
+      case "inactive":
+        return !p.activatedAt;
+
+      case "active":
+        return !!p.activatedAt;
+
+      case "missingPhoto":
+        return (
+          !p.photo ||
+          p.photo.includes("placeholderpaw")
+        );
+
+      case "missingSecondary":
+        return !p.phone2;
+
+      default:
+        return true;
+
     }
 
+  });
+
+  filtered.forEach((p) => {
+
+    const badges = [];
+
+    // ACTIVATION
+    if (p.activatedAt) {
+
+      badges.push(`
+        <span class="badge green">
+          Activated
+        </span>
+      `);
+
+    } else {
+
+      badges.push(`
+        <span class="badge red">
+          Unactivated
+        </span>
+      `);
+
+    }
+
+    // PHOTO
+    if (!p.photo ||
+        p.photo.includes("placeholderpaw")) {
+
+      badges.push(`
+        <span class="badge orange">
+          No Photo
+        </span>
+      `);
+
+    }
+
+    // SECONDARY
     if (!p.phone2) {
-      statusBadges.push(`<span class="badge red">No Secondary</span>`);
+
+      badges.push(`
+        <span class="badge blue">
+          No Secondary
+        </span>
+      `);
+
     }
 
-    const div = document.createElement("div");
+    const div =
+      document.createElement("div");
+
     div.className = "card";
 
     div.innerHTML = `
-      <div class="meta"><b>ID:</b> ${p.id}</div>
 
-      <div class="badges">${statusBadges.join("")}</div>
+      <div class="meta">
+        <b>Tag ID:</b> ${p.id}
+      </div>
+
+      <div class="badges">
+        ${badges.join("")}
+      </div>
 
       <div class="row">
-        <input id="name-${p.id}" value="${p.name || ""}" placeholder="Name">
-        <input id="phone-${p.id}" value="${p.phone || ""}" placeholder="Primary">
-        <input id="phone2-${p.id}" value="${p.phone2 || ""}" placeholder="Secondary">
+
+        <input
+          id="name-${p.id}"
+          value="${p.name || ""}"
+          placeholder="Pet Name"
+        >
+
+        <input
+          id="phone-${p.id}"
+          value="${p.phone || ""}"
+          placeholder="Primary Number"
+        >
+
+        <input
+          id="phone2-${p.id}"
+          value="${p.phone2 || ""}"
+          placeholder="Secondary Number"
+        >
+
       </div>
 
-      ${p.photo ? `<img src="${p.photo}">` : ""}
+      ${p.photo
+        ? `<img src="${p.photo}">`
+        : ""
+      }
 
-      <div style="margin-top:8px;">
-        <button class="save" onclick="save('${p.id}')">Save</button>
-        <button class="delete" onclick="removeTag('${p.id}')">Delete</button>
+      <div class="buttons">
+
+        <button
+          class="saveBtn"
+          onclick="savePet('${p.id}')"
+        >
+          💾 Save
+        </button>
+
+        <button
+          class="deleteBtn"
+          onclick="deletePet('${p.id}')"
+        >
+          🗑 Delete
+        </button>
+
       </div>
+
     `;
 
     listDiv.appendChild(div);
+
   });
+
 }
 
-// ---------------- SEARCH
-document.getElementById("search").addEventListener("input", (e) => {
-  currentFilter = e.target.value;
-  render();
-});
-
-// ---------------- SAVE
-window.save = async function(id) {
+// SAVE
+window.savePet = async (id) => {
 
   await updateDoc(doc(db, "pets", id), {
-    name: document.getElementById("name-" + id).value,
-    phone: document.getElementById("phone-" + id).value,
-    phone2: document.getElementById("phone2-" + id).value || ""
+
+    name:
+      document.getElementById("name-" + id).value,
+
+    phone:
+      document.getElementById("phone-" + id).value,
+
+    phone2:
+      document.getElementById("phone2-" + id).value
+
   });
 
 };
 
-// ---------------- DELETE
-window.removeTag = async function(id) {
+// DELETE
+window.deletePet = async (id) => {
 
-  if (!confirm("Delete this tag?")) return;
+  if (!confirm("Delete this pet tag?"))
+    return;
 
   await deleteDoc(doc(db, "pets", id));
+
 };
 
 </script>
