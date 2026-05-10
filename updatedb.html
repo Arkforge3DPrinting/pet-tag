@@ -9,11 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
-
-    /* 🔥 FIX OVERFLOW ISSUE */
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: Arial, sans-serif;
@@ -110,7 +106,6 @@
       font-size: 12px;
       color: #555;
     }
-
   </style>
 </head>
 
@@ -188,87 +183,98 @@ function qrBase64() {
 
 document.getElementById("generateBtn").onclick = async () => {
 
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const phone2 = document.getElementById("phone2").value.trim();
+  try {
 
-  reset();
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const phone2 = document.getElementById("phone2").value.trim();
 
-  if (!name || !phone) return;
+    reset();
 
-  const id = idGen();
+    if (!name || !phone) {
+      alert("Please enter pet name and primary phone");
+      return;
+    }
 
-  const url =
-    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+    const id = idGen();
 
-  await setDoc(doc(db, "pets", id), {
-    name,
-    phone,
-    phone2: phone2 || "",
-    photo: defaultPhoto
-    status: "inactive"
-  });
+    const url =
+      `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
-  document.getElementById("result").innerHTML =
-    `<div class="meta"><b>ID:</b> ${id}</div>
-     <div class="meta">${url}</div>`;
+    await setDoc(doc(db, "pets", id), {
 
-  new QRCode(document.getElementById("qrBox"), {
-    text: url,
-    width: 140,
-    height: 140
-  });
+      name,
+      phone,
+      phone2: phone2 || "",
+      photo: defaultPhoto,
 
-  document.getElementById("downloadSection").innerHTML = `
-    <button id="docBtn">Download Letter</button>
-  `;
+      // 🔐 SAFE STATUS FLAG (does NOT break anything)
+      status: "inactive"
 
-  document.getElementById("docBtn").onclick = async () => {
-
-    const doc = new Document({
-      sections: [{
-        children: [
-
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Pet Tag Activation", bold: true })
-            ]
-          }),
-
-          new Paragraph(""),
-          new Paragraph(`Pet: ${name}`),
-          new Paragraph(`Link: ${url}`),
-
-          new Paragraph(""),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Scan QR to access profile", bold: true })
-            ]
-          }),
-
-/* QR */
-          new Paragraph({
-            children: [
-              new ImageRun({
-                data: qrBase64(),
-                transformation: { width: 140, height: 140 }
-              })
-            ]
-          }),
-
-/* instructions */
-          new Paragraph(""),
-          new Paragraph("Scan → view profile → contact owner."),
-          new Paragraph("Keep details updated for fast recovery."),
-
-        ]
-      }]
     });
 
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${name}-tag.docx`);
-  };
+    document.getElementById("result").innerHTML =
+      `<div class="meta"><b>ID:</b> ${id}</div>
+       <div class="meta">${url}</div>`;
 
+    new QRCode(document.getElementById("qrBox"), {
+      text: url,
+      width: 140,
+      height: 140
+    });
+
+    document.getElementById("downloadSection").innerHTML = `
+      <button id="docBtn">Download Letter</button>
+    `;
+
+    document.getElementById("docBtn").onclick = async () => {
+
+      const doc = new Document({
+        sections: [{
+          children: [
+
+            new Paragraph({
+              children: [
+                new TextRun({ text: "Pet Tag Activation", bold: true })
+              ]
+            }),
+
+            new Paragraph(""),
+            new Paragraph(`Pet: ${name}`),
+            new Paragraph(`Link: ${url}`),
+
+            new Paragraph(""),
+            new Paragraph({
+              children: [
+                new TextRun({ text: "Scan QR to access profile", bold: true })
+              ]
+            }),
+
+            new Paragraph({
+              children: [
+                new ImageRun({
+                  data: qrBase64(),
+                  transformation: { width: 140, height: 140 }
+                })
+              ]
+            }),
+
+            new Paragraph(""),
+            new Paragraph("Scan → view profile → contact owner."),
+            new Paragraph("Keep details updated for fast recovery.")
+
+          ]
+        }]
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${name}-tag.docx`);
+    };
+
+  } catch (err) {
+    console.error("CREATE TAG ERROR:", err);
+    alert("Error creating tag: " + err.message);
+  }
 };
 
 </script>
