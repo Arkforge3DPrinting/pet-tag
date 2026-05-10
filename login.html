@@ -121,7 +121,10 @@
 
   <h2>🔐 Login</h2>
 
-  <input id="email" placeholder="Email">
+  <input
+    id="email"
+    placeholder="Email"
+  >
 
   <input
     id="password"
@@ -129,7 +132,10 @@
     placeholder="Password"
   >
 
-  <button id="togglePw" type="button">
+  <button
+    id="togglePw"
+    type="button"
+  >
     👁 Show Password
   </button>
 
@@ -148,7 +154,9 @@ from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 import {
   getAuth,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserSessionPersistence
 }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -163,9 +171,11 @@ const firebaseConfig = {
 
 };
 
-const app = initializeApp(firebaseConfig);
+const app =
+  initializeApp(firebaseConfig);
 
-const auth = getAuth(app);
+const auth =
+  getAuth(app);
 
 // ELEMENTS
 const email =
@@ -206,6 +216,12 @@ btn.onclick = async () => {
     "Authenticating...";
 
   try {
+
+    // ✅ SESSION ONLY LOGIN
+    await setPersistence(
+      auth,
+      browserSessionPersistence
+    );
 
     await signInWithEmailAndPassword(
       auth,
