@@ -32,17 +32,14 @@
 
     h1 {
       font-size: 24px;
-
       margin-top: 0;
       margin-bottom: 2px;
-
       line-height: 1.15;
     }
 
     p {
       font-size: 16px;
       color: #666;
-
       margin-top: 0;
       margin-bottom: 8px;
     }
@@ -50,49 +47,31 @@
     #petPhoto {
       width: 100%;
       max-width: 240px;
-
       aspect-ratio: 1 / 1;
-
       object-fit: cover;
-
       border-radius: 18px;
-
       margin: 8px auto;
-
       display: none;
-
       border: 4px solid #ffffff;
-
-      box-shadow:
-        0 0 0 3px #3b82f6,
-        0 6px 18px rgba(0,0,0,0.15);
+      box-shadow: 0 0 0 3px #3b82f6, 0 6px 18px rgba(0,0,0,0.15);
     }
 
     .button-group {
       display: flex;
       flex-direction: column;
-
       gap: 10px;
-
       margin-top: 8px;
     }
 
     button {
       width: 100%;
       padding: 14px;
-
       border: none;
       border-radius: 14px;
-
       font-size: 17px;
       font-weight: bold;
-
       cursor: pointer;
-
-      transition:
-        transform 0.15s ease,
-        opacity 0.15s ease;
-
+      transition: transform 0.15s ease, opacity 0.15s ease;
       color: white;
     }
 
@@ -105,23 +84,18 @@
       cursor: not-allowed;
     }
 
-    #callBtn {
-      background: #28c76f;
-    }
+    #callBtn { background: #28c76f; }
+    #textBtn { background: #3b82f6; }
+    #locBtn { background: #ff9f43; }
 
-    #textBtn {
-      background: #3b82f6;
-    }
-
-    #locBtn {
-      background: #ff9f43;
-    }
+    /* secondary styling */
+    #callBtn2 { background: #1f9d55; }
+    #textBtn2 { background: #2563eb; }
+    #locBtn2 { background: #f59e0b; }
 
     .footer {
       margin-top: 14px;
-
       font-size: 12px;
-
       color: #999;
     }
 
@@ -139,9 +113,17 @@
   <img id="petPhoto">
 
   <div class="button-group">
+
+    <!-- PRIMARY -->
     <button id="callBtn">📞 Call Owner</button>
     <button id="textBtn">💬 Text Owner</button>
     <button id="locBtn">📍 Share My Location</button>
+
+    <!-- SECONDARY (hidden until needed) -->
+    <button id="callBtn2" style="display:none;">📞 Call Secondary Contact</button>
+    <button id="textBtn2" style="display:none;">💬 Text Secondary Contact</button>
+    <button id="locBtn2" style="display:none;">📍 Share Location to Secondary</button>
+
   </div>
 
   <div class="footer">
@@ -152,18 +134,9 @@
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import {
-  getFirestore,
-  doc,
-  getDoc
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
@@ -182,143 +155,145 @@ async function loadPet() {
   const id = params.get("id");
 
   if (!id) {
-
-    document.getElementById("title").innerText =
-      "No pet ID found";
-
+    document.getElementById("title").innerText = "No pet ID found";
     return;
   }
 
   const snap = await getDoc(doc(db, "pets", id));
 
-  if (snap.exists()) {
+  if (!snap.exists()) {
+    document.getElementById("title").innerText = "Error loading pet information";
+    return;
+  }
 
-    const pet = snap.data();
+  const pet = snap.data();
 
-    document.getElementById("title").innerText =
-      "🐾 You found " + pet.name;
+  document.getElementById("title").innerText =
+    "🐾 You found " + pet.name;
 
-    document.getElementById("message").innerText =
-      "Help me get home safely";
+  document.getElementById("message").innerText =
+    "Help me get home safely";
 
-    // PHOTO
-    if (pet.photo) {
+  // PHOTO
+  if (pet.photo) {
+    const img = document.getElementById("petPhoto");
+    img.src = pet.photo;
+    img.style.display = "block";
+  }
 
-      const img = document.getElementById("petPhoto");
+  // =========================
+  // PRIMARY CONTACT
+  // =========================
 
-      img.src = pet.photo;
+  document.getElementById("callBtn").onclick = () => {
+    window.location.href = "tel:" + pet.phone;
+  };
 
-      img.style.display = "block";
-    }
+  document.getElementById("textBtn").onclick = () => {
+    const msg = "Hi, I found your pet " + pet.name;
 
-    // CALL BUTTON
-    document.getElementById("callBtn").onclick = () => {
+    const smsLink =
+      `sms:${pet.phone}?body=${encodeURIComponent(msg)}`;
 
-      window.location.href =
-        "tel:" + pet.phone;
+    window.open(smsLink, "_self");
+  };
 
-    };
+  document.getElementById("locBtn").onclick = () => {
 
-    // TEXT BUTTON
-    document.getElementById("textBtn").onclick = () => {
+    const btn = document.getElementById("locBtn");
 
-      const msg =
-        "Hi, I found your pet " + pet.name;
+    btn.disabled = true;
+    btn.innerText = "📡 Getting Location...";
 
-      const smsLink =
-        `sms:${pet.phone}?body=${encodeURIComponent(msg)}`;
+    navigator.geolocation.getCurrentPosition(
 
-      window.open(smsLink, "_self");
+      (pos) => {
 
-    };
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-    // LOCATION BUTTON
-    document.getElementById("locBtn").onclick = () => {
+        const msg =
+          "Hi, I found your pet " +
+          pet.name +
+          ". My location: https://maps.google.com/?q=" +
+          lat + "," + lon;
 
-      const locBtn =
-        document.getElementById("locBtn");
-
-      locBtn.disabled = true;
-
-      locBtn.innerText =
-        "📡 Getting Location...";
-
-      if (!navigator.geolocation) {
-
-        alert(
-          "Geolocation is not supported on this device."
+        window.open(
+          `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
+          "_self"
         );
 
-        resetButton();
+        reset();
 
+      },
+
+      () => {
+        alert("Location failed or denied.");
+        reset();
+      }
+
+    );
+
+    function reset() {
+      btn.disabled = false;
+      btn.innerText = "📍 Share My Location";
+    }
+  };
+
+  // =========================
+  // SECONDARY CONTACT (NEW)
+  // =========================
+
+  if (pet.phone2 && pet.phone2.trim() !== "") {
+
+    const show = (id) =>
+      document.getElementById(id).style.display = "block";
+
+    show("callBtn2");
+    show("textBtn2");
+    show("locBtn2");
+
+    document.getElementById("callBtn2").onclick = () => {
+      window.location.href = "tel:" + pet.phone2;
+    };
+
+    document.getElementById("textBtn2").onclick = () => {
+      const msg =
+        "Hi, I found your pet " + pet.name +
+        " (secondary contact)";
+
+      window.open(
+        `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
+        "_self"
+      );
+    };
+
+    document.getElementById("locBtn2").onclick = () => {
+
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported.");
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(
+      navigator.geolocation.getCurrentPosition((pos) => {
 
-        // SUCCESS
-        (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
+        const msg =
+          "Hi, I found your pet " +
+          pet.name +
+          ". My location: https://maps.google.com/?q=" +
+          lat + "," + lon;
 
-          const msg =
-            "Hi, I found your pet " +
-            pet.name +
-            ". My location: https://maps.google.com/?q=" +
-            lat +
-            "," +
-            lon;
+        window.open(
+          `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
+          "_self"
+        );
 
-          const smsLink =
-            `sms:${pet.phone}?body=${encodeURIComponent(msg)}`;
-
-          window.open(smsLink, "_self");
-
-          resetButton();
-
-        },
-
-        // ERROR
-        (err) => {
-
-          console.error(err);
-
-          alert(
-            "Could not get your location. Please enable location permissions and try again."
-          );
-
-          resetButton();
-
-        },
-
-        // OPTIONS
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0
-        }
-
-      );
-
-      function resetButton() {
-
-        locBtn.disabled = false;
-
-        locBtn.innerText =
-          "📍 Share My Location";
-
-      }
+      });
 
     };
-
-  } else {
-
-    document.getElementById("title").innerText =
-      "Error loading pet information";
-
-    document.getElementById("message").innerText =
-      "Please contact Arkforge3DPrinting@outlook.com";
 
   }
 
