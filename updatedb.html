@@ -10,6 +10,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
 
+  <style>
+    #qrBox {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+
 </head>
 
 <body style="font-family: Arial; text-align:center; padding:20px;">
@@ -27,7 +35,7 @@
 <p id="result"></p>
 
 <!-- QR OUTPUT -->
-<div id="qrBox" style="margin-top:20px;"></div>
+<div id="qrBox"></div>
 
 <!-- DOC OUTPUT -->
 <div id="downloadSection" style="margin-top:20px;"></div>
@@ -50,7 +58,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Default image
 const defaultPhoto =
   "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
 
@@ -64,7 +71,7 @@ function generateId(length = 10) {
   return id;
 }
 
-// CLEAR UI
+// RESET UI
 function resetUI() {
   document.getElementById("qrBox").innerHTML = "";
   document.getElementById("downloadSection").innerHTML = "";
@@ -95,7 +102,7 @@ document.getElementById("generateBtn").onclick = async () => {
 
   const id = generateId();
 
-  // 🔥 YOUR UPDATED QR DESTINATION
+  // QR LINK (correct structure)
   const url =
     `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
@@ -117,7 +124,7 @@ document.getElementById("generateBtn").onclick = async () => {
 
       <b>ID:</b> ${id}<br><br>
 
-      <b>QR Link:</b><br>
+      <b>Tag URL:</b><br>
       <a href="${url}" target="_blank">${url}</a>
     `;
 
@@ -128,7 +135,7 @@ document.getElementById("generateBtn").onclick = async () => {
       height: 180
     });
 
-    // DOC BUTTON
+    // DOCX BUTTON
     document.getElementById("downloadSection").innerHTML = `
       <button id="downloadDocBtn" style="
         margin-top:15px;
@@ -164,8 +171,19 @@ document.getElementById("generateBtn").onclick = async () => {
                 ]
               }),
 
+/* spacing */
               new Paragraph(""),
 
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "IMPORTANT CUSTOMER INFORMATION",
+                    bold: true
+                  })
+                ]
+              }),
+
+/* pet */
               new Paragraph({
                 children: [
                   new TextRun("Pet Name: "),
@@ -173,24 +191,41 @@ document.getElementById("generateBtn").onclick = async () => {
                 ]
               }),
 
-/* spacing */
-              new Paragraph(""),
-
+/* link */
               new Paragraph({
                 children: [
-                  new TextRun("Tag URL: "),
+                  new TextRun("Tag Link: "),
                   new TextRun({ text: url, bold: true })
                 ]
               }),
 
-/* instruction */
+/* instructions */
               new Paragraph(""),
 
               new Paragraph({
                 children: [
-                  new TextRun(
-                    "Scan the QR code or open the link above to access the pet’s profile and contact the owner immediately."
-                  )
+                  new TextRun({
+                    text: "HOW TO USE YOUR PET TAG",
+                    bold: true
+                  })
+                ]
+              }),
+
+/* steps */
+              new Paragraph("1. Scan the QR code using any smartphone camera."),
+              new Paragraph("2. This opens your pet’s secure online profile."),
+              new Paragraph("3. Enter your pet details during activation."),
+              new Paragraph("4. Found pets can contact you instantly via call or SMS."),
+
+              new Paragraph(""),
+
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text:
+                      "TIP: Keep your phone number updated for fastest recovery.",
+                    italics: true
+                  })
                 ]
               }),
 
@@ -220,7 +255,7 @@ document.getElementById("generateBtn").onclick = async () => {
 
   } catch (e) {
 
-    console.log("SAVE ERROR:", e);
+    console.log(e);
 
     result.style.color = "red";
     result.innerText = e.code + " - " + e.message;
