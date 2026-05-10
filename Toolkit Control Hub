@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Arkforge Control Hub</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      background: #f4f6f8;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px;
+      background: #111827;
+      color: white;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .brand {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .nav-btn {
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #1f2937;
+      transition: 0.2s;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .nav-btn:hover {
+      background: #374151;
+    }
+
+    .nav-btn.active {
+      background: #3b82f6;
+    }
+
+    /* MAIN AREA */
+    .main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .panel {
+      display: none;
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    /* MOBILE */
+    @media (max-width: 700px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      .nav-btn {
+        flex: 1;
+        text-align: center;
+        white-space: nowrap;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+  <div class="brand">🐾 Arkforge Hub</div>
+
+  <div class="nav-btn active" onclick="showPanel('create', this)">
+    ➕ Create Tag
+  </div>
+
+  <div class="nav-btn" onclick="showPanel('activate', this)">
+    🔐 Activate Tag
+  </div>
+
+  <div class="nav-btn" onclick="showPanel('database', this)">
+    📦 Database
+  </div>
+
+  <div class="nav-btn" onclick="showPanel('qr', this)">
+    📱 QR Tools
+  </div>
+
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- CREATE -->
+  <div id="create" class="panel active">
+    <h2>Create Tag</h2>
+    <p>Link to your existing create page or embed it here later.</p>
+
+    <button onclick="window.location.href='create.html'">
+      Open Create Tool
+    </button>
+  </div>
+
+  <!-- ACTIVATE -->
+  <div id="activate" class="panel">
+    <h2>Activate Tag</h2>
+    <p>Customer activation tool.</p>
+
+    <button onclick="window.location.href='activate.html'">
+      Open Activation Page
+    </button>
+  </div>
+
+  <!-- DATABASE -->
+  <div id="database" class="panel">
+    <h2>Database</h2>
+    <p>Live pet tag management system.</p>
+
+    <button onclick="window.location.href='admin.html'">
+      Open Database Dashboard
+    </button>
+  </div>
+
+  <!-- QR TOOLS -->
+  <div id="qr" class="panel">
+    <h2>QR Tools</h2>
+    <p>Future expansion area (bulk QR generation, exports, etc).</p>
+
+    <button disabled>
+      Coming Soon
+    </button>
+  </div>
+
+</div>
+
+<script>
+
+function showPanel(id, btn) {
+
+  // panels
+  document.querySelectorAll('.panel')
+    .forEach(p => p.classList.remove('active'));
+
+  document.getElementById(id)
+    .classList.add('active');
+
+  // buttons
+  document.querySelectorAll('.nav-btn')
+    .forEach(b => b.classList.remove('active'));
+
+  btn.classList.add('active');
+
+}
+
+</script>
+
+</body>
+</html>
