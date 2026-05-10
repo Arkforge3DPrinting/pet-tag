@@ -105,12 +105,6 @@
       border: 1px solid #ccc;
     }
 
-    img {
-      max-width: 120px;
-      border-radius: 10px;
-      border: 2px solid #eee;
-    }
-
     .buttons {
       margin-top: 10px;
       display: flex;
@@ -138,11 +132,31 @@
       color: white;
     }
 
-    .qrBox {
+    /* QR RIGHT ALIGN */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 12px;
+      gap: 10px;
+    }
+
+    .leftSide {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-top: 8px;
+    }
+
+    .leftSide img {
+      max-width: 110px;
+      border-radius: 10px;
+      border: 2px solid #eee;
+    }
+
+    .qrSide {
+      margin-left: auto;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
     }
 
   </style>
@@ -161,6 +175,11 @@
   <button onclick="setFilter('active', this)">Activated</button>
   <button onclick="setFilter('missingPhoto', this)">No Photo</button>
   <button onclick="setFilter('missingSecondary', this)">No Secondary</button>
+
+  <!-- ⚡ WORK MODE -->
+  <button onclick="toggleWorkMode(this)">
+    ⚡ Work Mode (Unactivated Only)
+  </button>
 
 </div>
 
@@ -201,6 +220,7 @@ const listDiv = document.getElementById("list");
 let allPets = [];
 let currentSearch = "";
 let currentFilter = "all";
+let workMode = false;
 
 // AUTH
 onAuthStateChanged(auth, (user) => {
@@ -208,28 +228,18 @@ onAuthStateChanged(auth, (user) => {
     window.location.href = "login.html";
     return;
   }
-
   listenForPets();
 });
 
-// LIVE DATA
+// DATA
 function listenForPets() {
-
   onSnapshot(collection(db, "pets"), (snap) => {
-
     allPets = [];
-
     snap.forEach((docSnap) => {
-      allPets.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
+      allPets.push({ id: docSnap.id, ...docSnap.data() });
     });
-
     render();
-
   });
-
 }
 
 // SEARCH
@@ -238,7 +248,7 @@ document.getElementById("search").addEventListener("input", (e) => {
   render();
 });
 
-// FILTERS
+// FILTER
 window.setFilter = (filter, btn) => {
   currentFilter = filter;
 
@@ -250,18 +260,29 @@ window.setFilter = (filter, btn) => {
   render();
 };
 
-// QR GENERATOR
-function makeQR(id, container) {
+// ⚡ WORK MODE TOGGLE
+window.toggleWorkMode = (btn) => {
+  workMode = !workMode;
 
+  btn.classList.toggle("active");
+
+  btn.innerText = workMode
+    ? "⚡ Work Mode: ON"
+    : "⚡ Work Mode (Unactivated Only)";
+
+  render();
+};
+
+// QR
+function makeQR(id, el) {
   const url =
     `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
-  new QRCode(container, {
+  new QRCode(el, {
     text: url,
     width: 90,
     height: 90
   });
-
 }
 
 // RENDER
@@ -276,6 +297,11 @@ function render() {
       (p.name || "").toLowerCase().includes(currentSearch);
 
     if (!matchesSearch) return false;
+
+    // ⚡ WORK MODE OVERRIDE
+    if (workMode) {
+      return !p.activatedAt;
+    }
 
     switch (currentFilter) {
 
@@ -293,12 +319,27 @@ function render() {
 
       default:
         return true;
-
     }
-
   });
 
   filtered.forEach((p) => {
+
+    const badges = [];
+
+    // STATUS INTELLIGENCE LAYER
+    if (p.activatedAt) {
+      badges.push(`<span class="badge green">Activated</span>`);
+    } else {
+      badges.push(`<span class="badge red">Unactivated</span>`);
+    }
+
+    if (!p.photo || p.photo.includes("placeholderpaw")) {
+      badges.push(`<span class="badge orange">No Photo</span>`);
+    }
+
+    if (!p.phone2) {
+      badges.push(`<span class="badge blue">No Secondary</span>`);
+    }
 
     const div = document.createElement("div");
     div.className = "card";
@@ -307,27 +348,29 @@ function render() {
 
       <div class="meta"><b>Tag ID:</b> ${p.id}</div>
 
-      <div class="row">
+      <div class="badges">${badges.join("")}</div>
 
+      <div class="row">
         <input id="name-${p.id}" value="${p.name || ""}" placeholder="Pet Name">
         <input id="phone-${p.id}" value="${p.phone || ""}" placeholder="Primary">
         <input id="phone2-${p.id}" value="${p.phone2 || ""}" placeholder="Secondary">
-
       </div>
 
-      <div class="qrBox">
+      <div class="footer">
 
-        ${p.photo ? `<img src="${p.photo}">` : ""}
+        <div class="leftSide">
+          ${p.photo ? `<img src="${p.photo}">` : ""}
+        </div>
 
-        <div id="qr-${p.id}"></div>
+        <div class="qrSide">
+          <div id="qr-${p.id}"></div>
+        </div>
 
       </div>
 
       <div class="buttons">
-
         <button class="saveBtn" onclick="savePet('${p.id}')">💾 Save</button>
         <button class="deleteBtn" onclick="deletePet('${p.id}')">🗑 Delete</button>
-
       </div>
 
     `;
@@ -335,38 +378,29 @@ function render() {
     listDiv.appendChild(div);
 
     setTimeout(() => {
-
-      const qrBox = document.getElementById("qr-" + p.id);
-
-      if (qrBox) {
-        qrBox.innerHTML = "";
-        makeQR(p.id, qrBox);
+      const qr = document.getElementById("qr-" + p.id);
+      if (qr) {
+        qr.innerHTML = "";
+        makeQR(p.id, qr);
       }
-
     }, 0);
 
   });
-
 }
 
 // SAVE
 window.savePet = async (id) => {
-
   await updateDoc(doc(db, "pets", id), {
     name: document.getElementById("name-" + id).value,
     phone: document.getElementById("phone-" + id).value,
     phone2: document.getElementById("phone2-" + id).value
   });
-
 };
 
 // DELETE
 window.deletePet = async (id) => {
-
   if (!confirm("Delete this pet tag?")) return;
-
   await deleteDoc(doc(db, "pets", id));
-
 };
 
 </script>
