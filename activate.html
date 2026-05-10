@@ -7,9 +7,7 @@
 
   <style>
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: Arial, sans-serif;
@@ -22,75 +20,37 @@
     .container {
       max-width: 420px;
       margin: auto;
-
       background: white;
-
       padding: 18px;
-
       border-radius: 20px;
-
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-
       text-align: center;
     }
 
     h2 {
-      font-size: 24px;
       margin: 0 0 10px 0;
-    }
-
-    .tag {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 14px;
-    }
-
-    .tag span {
-      font-weight: bold;
-      color: #222;
     }
 
     input[type="text"] {
       width: 100%;
       padding: 14px;
       margin-bottom: 10px;
-
       border-radius: 12px;
       border: 1px solid #ddd;
-
       font-size: 16px;
-      outline: none;
     }
 
     input:focus {
       border-color: #3b82f6;
+      outline: none;
     }
 
     .upload-box {
-      margin-top: 10px;
-      margin-bottom: 10px;
-
+      margin: 10px 0;
       padding: 14px;
-
       border-radius: 14px;
-
       border: 1px dashed #ccc;
-
       background: #fafafa;
-
-      text-align: left;
-    }
-
-    .upload-title {
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .upload-sub {
-      font-size: 12px;
-      color: #888;
-      margin-bottom: 10px;
     }
 
     #photoInput {
@@ -99,143 +59,45 @@
 
     .file-btn {
       display: block;
-
       width: 100%;
-
       padding: 14px;
-
       border-radius: 12px;
-
       color: white;
-
-      font-size: 16px;
       font-weight: bold;
-
-      text-align: center;
-
       cursor: pointer;
-
-      user-select: none;
-
-      margin-bottom: 10px;
-    }
-
-    .camera {
-      background: #ff9f43;
-    }
-
-    .gallery {
-      background: #3b82f6;
-    }
-
-    .file-btn:active {
-      transform: scale(0.98);
-    }
-
-    #fileName {
-      font-size: 12px;
-      color: #555;
-      margin-top: 8px;
-      word-break: break-word;
-    }
-
-    .tos-box {
-      margin-top: 14px;
       margin-bottom: 8px;
-
-      padding: 12px;
-
-      border-radius: 12px;
-
-      background: #fafafa;
-
-      border: 1px solid #e5e5e5;
-
-      text-align: left;
     }
 
-    .tos-label {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-
-      font-size: 14px;
-      line-height: 1.4;
-      color: #444;
-    }
-
-    .tos-label input {
-      margin-top: 3px;
-      transform: scale(1.2);
-      cursor: pointer;
-    }
-
-    .tos-label a {
-      color: #3b82f6;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .tos-label a:hover {
-      text-decoration: underline;
-    }
+    .camera { background: #ff9f43; }
+    .gallery { background: #3b82f6; }
 
     button {
       width: 100%;
-
       padding: 16px;
-
       border: none;
-
       border-radius: 14px;
-
       font-size: 18px;
       font-weight: bold;
-
       background: #3b82f6;
-
       color: white;
-
       cursor: pointer;
-
-      transition: transform 0.15s ease, opacity 0.15s ease;
-
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     button:active {
       transform: scale(0.98);
     }
 
-    button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    progress {
-      width: 100%;
-      height: 10px;
-      margin-top: 10px;
-      display: none;
-    }
-
-    #progressText {
+    #fileName {
       font-size: 12px;
-      color: #666;
       margin-top: 6px;
+      color: #555;
+      word-break: break-word;
     }
 
     #status {
       margin-top: 12px;
       font-size: 14px;
-      font-weight: bold;
-      min-height: 20px;
-    }
-
-    .footer {
-      margin-top: 14px;
-      font-size: 12px;
-      color: #999;
     }
 
   </style>
@@ -247,246 +109,111 @@
 
   <h2>Activate Your Pet Tag</h2>
 
-  <div class="tag">
-    Tag Code: <span id="tagId"></span>
-  </div>
-
   <input type="text" id="name" placeholder="Pet Name">
-
   <input type="text" id="phone" placeholder="Primary Contact Number">
-
-  <input type="text" id="phone2" placeholder="Secondary Contact Number (Optional)">
+  <input type="text" id="phone2" placeholder="Secondary Contact (optional)">
 
   <div class="upload-box">
 
-    <div class="upload-title">Pet Photo</div>
-
-    <div class="upload-sub">
-      Take or upload a photo of your pet
-    </div>
-
-    <!-- hidden file input -->
     <input type="file" id="photoInput" accept="image/*">
 
-    <div class="file-btn camera" id="cameraBtn">
-      📷 Take Photo
-    </div>
-
-    <div class="file-btn gallery" id="galleryBtn">
-      📁 Choose From Gallery
-    </div>
+    <div class="file-btn camera" id="cameraBtn">📷 Take Photo</div>
+    <div class="file-btn gallery" id="galleryBtn">📁 Choose From Gallery</div>
 
     <div id="fileName"></div>
 
   </div>
 
-  <!-- TERMS OF SERVICE -->
-  <div class="tos-box">
-
-    <label class="tos-label">
-
-      <input type="checkbox" id="tosCheckbox">
-
-      <span>
-        I agree to the
-        <a href="https://www.facebook.com/arkforge3dprinting" target="_blank">
-          Terms of Service
-        </a>
-        and understand my pet profile may be publicly accessible
-        when someone scans the NFC/QR tag to help return my pet.
-      </span>
-
-    </label>
-
-  </div>
-
   <button id="activateBtn">Activate</button>
 
-  <progress id="uploadProgress" value="0" max="100"></progress>
-
-  <div id="progressText"></div>
-
   <div id="status"></div>
-
-  <div class="footer">
-    Powered by Arkforge 3D Printing ®
-  </div>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-
-  apiKey: "YOUR_API_KEY",
-
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
-
   projectId: "arkforge-pets",
-
   storageBucket: "arkforge-pets.firebasestorage.app",
-
   messagingSenderId: "517154779272",
-
   appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
-
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 
-// TAG ID
-const params = new URLSearchParams(window.location.search);
-
-const id = params.get("id");
-
-const status = document.getElementById("status");
-
-if (!id) {
-
-  status.innerHTML =
-    '<span style="color:#e53935;">❌ Invalid tag link</span>';
-
-  throw new Error("Missing ID");
+// ID generator
+function generateId(length = 10) {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let id = "";
+  for (let i = 0; i < length; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return id;
 }
 
-document.getElementById("tagId").innerText = id;
+// file input
+const photoInput = document.getElementById("photoInput");
+const fileName = document.getElementById("fileName");
 
-// FILE HANDLING
-const photoInput =
-  document.getElementById("photoInput");
-
-const fileName =
-  document.getElementById("fileName");
-
-// CAMERA BUTTON
 document.getElementById("cameraBtn").onclick = () => {
-
   photoInput.setAttribute("capture", "environment");
-
   photoInput.click();
-
 };
 
-// GALLERY BUTTON
 document.getElementById("galleryBtn").onclick = () => {
-
   photoInput.removeAttribute("capture");
-
   photoInput.click();
-
 };
 
-// FILENAME DISPLAY
 photoInput.addEventListener("change", (e) => {
-
   const file = e.target.files[0];
-
   fileName.innerText = file ? file.name : "";
-
 });
 
-// ACTIVATE BUTTON
+// MAIN SAVE
 document.getElementById("activateBtn").onclick = async () => {
 
-  const name =
-    document.getElementById("name").value.trim();
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const phone2 = document.getElementById("phone2").value.trim();
 
-  const phone =
-    document.getElementById("phone").value.trim();
+  const status = document.getElementById("status");
 
-  const phone2 =
-    document.getElementById("phone2").value.trim();
-
-  const file =
-    photoInput.files[0];
-
-  const tosAccepted =
-    document.getElementById("tosCheckbox").checked;
-
-  // REQUIRED FIELDS
   if (!name || !phone) {
-
-    status.innerHTML =
-      '<span style="color:#e53935;">⚠ Please fill all required fields</span>';
-
+    status.innerText = "Please fill in pet name and primary contact";
     return;
   }
 
-  // TOS CHECKBOX
-  if (!tosAccepted) {
-
-    status.innerHTML =
-      '<span style="color:#e53935;">⚠ Please accept the Terms of Service</span>';
-
-    return;
-  }
+  const id = generateId();
+  let photoURL = "";
 
   try {
 
-    status.innerHTML =
-      '<span style="color:#444;">Uploading...</span>';
+    // ================= UPLOAD IMAGE =================
+    const file = photoInput.files[0];
 
-    let photoURL = "";
-
-    // IMAGE UPLOAD
     if (file) {
 
-      status.innerHTML =
-        '<span style="color:#444;">Uploading image...</span>';
+      status.innerText = "Uploading image...";
 
       const formData = new FormData();
-
       formData.append("file", file);
-
       formData.append("upload_preset", "arkforge-pets");
 
       const xhr = new XMLHttpRequest();
 
-      xhr.open(
-        "POST",
-        "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload"
-      );
-
-      const progressBar =
-        document.getElementById("uploadProgress");
-
-      const progressText =
-        document.getElementById("progressText");
-
-      progressBar.style.display = "block";
-
-      xhr.upload.onprogress = (event) => {
-
-        if (event.lengthComputable) {
-
-          const percent =
-            Math.round((event.loaded / event.total) * 100);
-
-          progressBar.value = percent;
-
-          progressText.innerText =
-            `Uploading: ${percent}%`;
-        }
-
-      };
+      xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
 
       const response = await new Promise((resolve, reject) => {
 
-        xhr.onload = () =>
-          resolve(JSON.parse(xhr.responseText));
-
-        xhr.onerror = () =>
-          reject(new Error("Upload failed"));
+        xhr.onload = () => resolve(JSON.parse(xhr.responseText));
+        xhr.onerror = () => reject("Upload failed");
 
         xhr.send(formData);
 
@@ -495,28 +222,36 @@ document.getElementById("activateBtn").onclick = async () => {
       photoURL = response.secure_url;
     }
 
-    // SAVE TO FIREBASE
-    await setDoc(doc(db, "pets", id), {
+    // ================= BUILD FIRESTORE DATA =================
 
+    const data = {
       name,
-      phone,
-      phone2,
-      photo: photoURL,
+      phone
+    };
 
-      tosAccepted: true,
+    if (phone2) {
+      data.phone2 = phone2;
+    }
 
-      activatedAt: new Date().toISOString()
+    // 🔥 IMPORTANT FIX (prevents placeholder being overwritten)
+    if (photoURL) {
+      data.photo = photoURL;
+    }
 
-    });
+    await setDoc(doc(db, "pets", id), data);
 
-    status.innerHTML =
-      '<span style="color:#2e7d32;">✅ Activated successfully!</span>';
+    const url = `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+
+    status.innerHTML = `
+      <b>Activated!</b><br><br>
+      <b>ID:</b> ${id}<br><br>
+      <b>URL:</b><br>
+      <a href="${url}" target="_blank">${url}</a>
+    `;
 
   } catch (e) {
-
-    status.innerHTML =
-      '<span style="color:#e53935;">❌ ' + e.message + '</span>';
-
+    console.log(e);
+    status.innerText = "Error: " + e.message;
   }
 
 };
