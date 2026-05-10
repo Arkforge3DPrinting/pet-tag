@@ -24,6 +24,17 @@
       text-align: center;
     }
 
+    h2 {
+      margin-bottom: 4px;
+    }
+
+    .tagid {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+      word-break: break-all;
+    }
+
     input {
       width: 100%;
       padding: 14px;
@@ -79,6 +90,11 @@
 
   <h2>Activate Pet Tag</h2>
 
+  <!-- ID DISPLAY -->
+  <div class="tagid">
+    Tag ID: <span id="tagIdDisplay"></span>
+  </div>
+
   <input id="name" placeholder="Pet Name">
   <input id="phone" placeholder="Primary Contact Number">
   <input id="phone2" placeholder="Secondary Contact (optional)">
@@ -91,7 +107,7 @@
   <div class="tos-box">
     <label>
       <input type="checkbox" id="tosCheckbox">
-      I agree to Terms of Service and understand this pet profile may be publicly visible when scanned.
+      I agree to Terms of Service and understand this profile may be publicly visible when scanned.
     </label>
   </div>
 
@@ -119,15 +135,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔑 ID from URL (CRITICAL)
-const id = new URLSearchParams(window.location.search).get("id");
+// 🔑 SOURCE OF TRUTH ID
+const urlId = new URLSearchParams(window.location.search).get("id");
 
 const status = document.getElementById("status");
 
-if (!id) {
+if (!urlId) {
   status.innerText = "❌ Invalid activation link";
   throw new Error("Missing ID");
 }
+
+// 🆔 DISPLAY ID ON PAGE
+document.getElementById("tagIdDisplay").innerText = urlId;
 
 const photoInput = document.getElementById("photoInput");
 
@@ -142,13 +161,21 @@ document.getElementById("galleryBtn").onclick = () => {
   photoInput.click();
 };
 
-// MAIN ACTIVATION
+// ACTIVATE
 document.getElementById("activateBtn").onclick = async () => {
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
   const tos = document.getElementById("tosCheckbox").checked;
+
+  const displayedId = document.getElementById("tagIdDisplay").innerText;
+
+  // 🔒 HARD MATCH CHECK
+  if (urlId !== displayedId) {
+    status.innerText = "❌ Tag ID mismatch. Activation blocked.";
+    return;
+  }
 
   if (!name || !phone) {
     status.innerText = "⚠ Fill required fields";
@@ -162,12 +189,11 @@ document.getElementById("activateBtn").onclick = async () => {
 
   try {
 
-    // 🔒 HARD LOCK: must already exist
-    const ref = doc(db, "pets", id);
+    const ref = doc(db, "pets", urlId);
     const existingSnap = await getDoc(ref);
 
     if (!existingSnap.exists()) {
-      status.innerText = "❌ This tag is not registered";
+      status.innerText = "❌ Tag not registered in system";
       return;
     }
 
@@ -176,9 +202,7 @@ document.getElementById("activateBtn").onclick = async () => {
     let photoURL = "";
     const file = photoInput.files[0];
 
-    // upload only if new file exists
     if (file) {
-
       const form = new FormData();
       form.append("file", file);
       form.append("upload_preset", "arkforge-pets");
@@ -192,7 +216,6 @@ document.getElementById("activateBtn").onclick = async () => {
       photoURL = data.secure_url;
     }
 
-    // 🧠 SAFE MERGE (prevents wiping placeholder image)
     const payload = {
       name,
       phone,
