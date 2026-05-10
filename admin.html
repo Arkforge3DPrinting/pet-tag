@@ -5,6 +5,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
 
     * {
@@ -83,25 +85,10 @@
       margin-bottom: 5px;
     }
 
-    .green {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .red {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .orange {
-      background: #ffedd5;
-      color: #9a3412;
-    }
-
-    .blue {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
+    .green { background: #dcfce7; color: #166534; }
+    .red { background: #fee2e2; color: #991b1b; }
+    .orange { background: #ffedd5; color: #9a3412; }
+    .blue { background: #dbeafe; color: #1d4ed8; }
 
     .row {
       display: flex;
@@ -121,7 +108,6 @@
     img {
       max-width: 120px;
       border-radius: 10px;
-      margin-top: 6px;
       border: 2px solid #eee;
     }
 
@@ -152,6 +138,13 @@
       color: white;
     }
 
+    .qrBox {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
   </style>
 </head>
 
@@ -159,32 +152,15 @@
 
 <h2>🐾 Arkforge Admin Dashboard</h2>
 
-<input
-  id="search"
-  placeholder="Search Tag ID or Pet Name..."
->
+<input id="search" placeholder="Search Tag ID or Pet Name...">
 
 <div class="filters">
 
-  <button class="active" onclick="setFilter('all', this)">
-    All
-  </button>
-
-  <button onclick="setFilter('inactive', this)">
-    Unactivated
-  </button>
-
-  <button onclick="setFilter('active', this)">
-    Activated
-  </button>
-
-  <button onclick="setFilter('missingPhoto', this)">
-    No Photo
-  </button>
-
-  <button onclick="setFilter('missingSecondary', this)">
-    No Secondary
-  </button>
+  <button class="active" onclick="setFilter('all', this)">All</button>
+  <button onclick="setFilter('inactive', this)">Unactivated</button>
+  <button onclick="setFilter('active', this)">Activated</button>
+  <button onclick="setFilter('missingPhoto', this)">No Photo</button>
+  <button onclick="setFilter('missingSecondary', this)">No Secondary</button>
 
 </div>
 
@@ -192,9 +168,7 @@
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -202,66 +176,43 @@ import {
   doc,
   updateDoc,
   deleteDoc
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
   getAuth,
   onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// FIREBASE
 const firebaseConfig = {
-
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
-
   authDomain: "arkforge-pets.firebaseapp.com",
-
   projectId: "arkforge-pets",
-
   storageBucket: "arkforge-pets.firebasestorage.app",
-
   messagingSenderId: "517154779272",
-
   appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
-
 };
 
-const app =
-  initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-const db =
-  getFirestore(app);
-
-const auth =
-  getAuth(app);
-
-const listDiv =
-  document.getElementById("list");
+const listDiv = document.getElementById("list");
 
 let allPets = [];
-
 let currentSearch = "";
-
 let currentFilter = "all";
 
 // AUTH
 onAuthStateChanged(auth, (user) => {
-
   if (!user) {
-
-    window.location.href =
-      "login.html";
-
+    window.location.href = "login.html";
     return;
   }
 
   listenForPets();
-
 });
 
-// LIVE SNAPSHOT
+// LIVE DATA
 function listenForPets() {
 
   onSnapshot(collection(db, "pets"), (snap) => {
@@ -269,12 +220,10 @@ function listenForPets() {
     allPets = [];
 
     snap.forEach((docSnap) => {
-
       allPets.push({
         id: docSnap.id,
         ...docSnap.data()
       });
-
     });
 
     render();
@@ -284,19 +233,13 @@ function listenForPets() {
 }
 
 // SEARCH
-document.getElementById("search")
-.addEventListener("input", (e) => {
-
-  currentSearch =
-    e.target.value.toLowerCase();
-
+document.getElementById("search").addEventListener("input", (e) => {
+  currentSearch = e.target.value.toLowerCase();
   render();
-
 });
 
-// FILTER BUTTONS
+// FILTERS
 window.setFilter = (filter, btn) => {
-
   currentFilter = filter;
 
   document.querySelectorAll(".filters button")
@@ -305,8 +248,21 @@ window.setFilter = (filter, btn) => {
   btn.classList.add("active");
 
   render();
-
 };
+
+// QR GENERATOR
+function makeQR(id, container) {
+
+  const url =
+    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+
+  new QRCode(container, {
+    text: url,
+    width: 90,
+    height: 90
+  });
+
+}
 
 // RENDER
 function render() {
@@ -316,12 +272,8 @@ function render() {
   const filtered = allPets.filter((p) => {
 
     const matchesSearch =
-
       p.id.toLowerCase().includes(currentSearch) ||
-
-      (p.name || "")
-      .toLowerCase()
-      .includes(currentSearch);
+      (p.name || "").toLowerCase().includes(currentSearch);
 
     if (!matchesSearch) return false;
 
@@ -334,10 +286,7 @@ function render() {
         return !!p.activatedAt;
 
       case "missingPhoto":
-        return (
-          !p.photo ||
-          p.photo.includes("placeholderpaw")
-        );
+        return !p.photo || p.photo.includes("placeholderpaw");
 
       case "missingSecondary":
         return !p.phone2;
@@ -351,113 +300,50 @@ function render() {
 
   filtered.forEach((p) => {
 
-    const badges = [];
-
-    // ACTIVATION
-    if (p.activatedAt) {
-
-      badges.push(`
-        <span class="badge green">
-          Activated
-        </span>
-      `);
-
-    } else {
-
-      badges.push(`
-        <span class="badge red">
-          Unactivated
-        </span>
-      `);
-
-    }
-
-    // PHOTO
-    if (!p.photo ||
-        p.photo.includes("placeholderpaw")) {
-
-      badges.push(`
-        <span class="badge orange">
-          No Photo
-        </span>
-      `);
-
-    }
-
-    // SECONDARY
-    if (!p.phone2) {
-
-      badges.push(`
-        <span class="badge blue">
-          No Secondary
-        </span>
-      `);
-
-    }
-
-    const div =
-      document.createElement("div");
-
+    const div = document.createElement("div");
     div.className = "card";
 
     div.innerHTML = `
 
-      <div class="meta">
-        <b>Tag ID:</b> ${p.id}
-      </div>
-
-      <div class="badges">
-        ${badges.join("")}
-      </div>
+      <div class="meta"><b>Tag ID:</b> ${p.id}</div>
 
       <div class="row">
 
-        <input
-          id="name-${p.id}"
-          value="${p.name || ""}"
-          placeholder="Pet Name"
-        >
-
-        <input
-          id="phone-${p.id}"
-          value="${p.phone || ""}"
-          placeholder="Primary Number"
-        >
-
-        <input
-          id="phone2-${p.id}"
-          value="${p.phone2 || ""}"
-          placeholder="Secondary Number"
-        >
+        <input id="name-${p.id}" value="${p.name || ""}" placeholder="Pet Name">
+        <input id="phone-${p.id}" value="${p.phone || ""}" placeholder="Primary">
+        <input id="phone2-${p.id}" value="${p.phone2 || ""}" placeholder="Secondary">
 
       </div>
 
-      ${p.photo
-        ? `<img src="${p.photo}">`
-        : ""
-      }
+      <div class="qrBox">
+
+        ${p.photo ? `<img src="${p.photo}">` : ""}
+
+        <div id="qr-${p.id}"></div>
+
+      </div>
 
       <div class="buttons">
 
-        <button
-          class="saveBtn"
-          onclick="savePet('${p.id}')"
-        >
-          💾 Save
-        </button>
-
-        <button
-          class="deleteBtn"
-          onclick="deletePet('${p.id}')"
-        >
-          🗑 Delete
-        </button>
+        <button class="saveBtn" onclick="savePet('${p.id}')">💾 Save</button>
+        <button class="deleteBtn" onclick="deletePet('${p.id}')">🗑 Delete</button>
 
       </div>
 
     `;
 
     listDiv.appendChild(div);
+
+    setTimeout(() => {
+
+      const qrBox = document.getElementById("qr-" + p.id);
+
+      if (qrBox) {
+        qrBox.innerHTML = "";
+        makeQR(p.id, qrBox);
+      }
+
+    }, 0);
 
   });
 
@@ -467,16 +353,9 @@ function render() {
 window.savePet = async (id) => {
 
   await updateDoc(doc(db, "pets", id), {
-
-    name:
-      document.getElementById("name-" + id).value,
-
-    phone:
-      document.getElementById("phone-" + id).value,
-
-    phone2:
-      document.getElementById("phone2-" + id).value
-
+    name: document.getElementById("name-" + id).value,
+    phone: document.getElementById("phone-" + id).value,
+    phone2: document.getElementById("phone2-" + id).value
   });
 
 };
@@ -484,8 +363,7 @@ window.savePet = async (id) => {
 // DELETE
 window.deletePet = async (id) => {
 
-  if (!confirm("Delete this pet tag?"))
-    return;
+  if (!confirm("Delete this pet tag?")) return;
 
   await deleteDoc(doc(db, "pets", id));
 
