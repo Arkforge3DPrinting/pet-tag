@@ -18,28 +18,24 @@
     .container {
       max-width: 420px;
       margin: auto;
-
       background: white;
       padding: 14px;
-
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-
       text-align: center;
     }
 
     h1 {
       font-size: 24px;
       margin-top: 0;
-      margin-bottom: 2px;
-      line-height: 1.15;
+      margin-bottom: 4px;
     }
 
     p {
-      font-size: 16px;
+      font-size: 15px;
       color: #666;
       margin-top: 0;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     #petPhoto {
@@ -47,73 +43,54 @@
       max-width: 240px;
       aspect-ratio: 1 / 1;
       object-fit: cover;
-
       border-radius: 18px;
-      margin: 8px auto;
-
+      margin: 10px auto;
       display: none;
-
-      border: 4px solid #ffffff;
+      border: 4px solid #fff;
       box-shadow: 0 0 0 3px #3b82f6, 0 6px 18px rgba(0,0,0,0.15);
     }
 
-    /* SECTION HEADERS */
-    .section-title {
-      text-align: left;
-      font-size: 13px;
-      font-weight: bold;
-      margin-top: 16px;
-      margin-bottom: 6px;
-      color: #333;
-    }
-
-    .section-title.secondary {
-      color: #777;
-      margin-top: 18px;
-    }
-
-    /* BUTTON LAYOUT */
-    .button-row {
-      display: flex;
-      flex-direction: column;
+    /* GRID SYSTEM */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
+      margin-top: 14px;
+    }
+
+    .label {
+      text-align: left;
+      font-size: 12px;
+      font-weight: bold;
+      color: #444;
+      margin-top: 12px;
     }
 
     button {
       width: 100%;
       padding: 14px;
-
       border: none;
-      border-radius: 14px;
-
-      font-size: 16px;
+      border-radius: 12px;
+      font-size: 14px;
       font-weight: bold;
-
       cursor: pointer;
-
-      transition: transform 0.15s ease, opacity 0.15s ease;
-
+      transition: transform 0.15s ease;
       color: white;
     }
 
     button:active {
-      transform: scale(0.98);
-    }
-
-    button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
+      transform: scale(0.97);
     }
 
     /* PRIMARY */
-    #callBtn { background: #28c76f; }
-    #textBtn { background: #3b82f6; }
-    #locBtn  { background: #ff9f43; }
+    .p1 { background: #28c76f; }
+    .p2 { background: #3b82f6; }
+    .p3 { background: #ff9f43; }
 
     /* SECONDARY */
-    #callBtn2 { background: #1f9d55; opacity: 0.9; }
-    #textBtn2 { background: #2563eb; opacity: 0.9; }
-    #locBtn2  { background: #f59e0b; opacity: 0.9; }
+    .s1 { background: #1f9d55; opacity: 0.9; }
+    .s2 { background: #2563eb; opacity: 0.9; }
+    .s3 { background: #f59e0b; opacity: 0.9; }
 
     .footer {
       margin-top: 14px;
@@ -133,20 +110,23 @@
 
   <img id="petPhoto">
 
-  <!-- PRIMARY -->
-  <div class="section-title">Primary Contact</div>
-  <div class="button-row">
-    <button id="callBtn">📞 Call Owner</button>
-    <button id="textBtn">💬 Text Owner</button>
-    <button id="locBtn">📍 Share Location</button>
+  <!-- GRID HEADERS -->
+  <div class="label">Call</div>
+  <div class="grid">
+    <button id="callBtn" class="p1">📞 Primary</button>
+    <button id="callBtn2" class="s1">📞 Secondary</button>
   </div>
 
-  <!-- SECONDARY -->
-  <div class="section-title secondary">Backup Contact</div>
-  <div class="button-row">
-    <button id="callBtn2">📞 Call Backup</button>
-    <button id="textBtn2">💬 Text Backup</button>
-    <button id="locBtn2">📍 Share Location</button>
+  <div class="label">Text</div>
+  <div class="grid">
+    <button id="textBtn" class="p2">💬 Primary</button>
+    <button id="textBtn2" class="s2">💬 Secondary</button>
+  </div>
+
+  <div class="label">Send Location</div>
+  <div class="grid">
+    <button id="locBtn" class="p3">📍 Primary</button>
+    <button id="locBtn2" class="s3">📍 Secondary</button>
   </div>
 
   <div class="footer">
@@ -174,8 +154,7 @@ const db = getFirestore(app);
 
 async function loadPet() {
 
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
+  const id = new URLSearchParams(window.location.search).get("id");
 
   if (!id) {
     document.getElementById("title").innerText = "No pet ID found";
@@ -185,17 +164,14 @@ async function loadPet() {
   const snap = await getDoc(doc(db, "pets", id));
 
   if (!snap.exists()) {
-    document.getElementById("title").innerText = "Error loading pet information";
+    document.getElementById("title").innerText = "Error loading pet";
     return;
   }
 
   const pet = snap.data();
 
-  document.getElementById("title").innerText =
-    "🐾 You found " + pet.name;
-
-  document.getElementById("message").innerText =
-    "Help me get home safely";
+  document.getElementById("title").innerText = "🐾 You found " + pet.name;
+  document.getElementById("message").innerText = "Help me get home safely";
 
   if (pet.photo) {
     const img = document.getElementById("petPhoto");
@@ -203,40 +179,26 @@ async function loadPet() {
     img.style.display = "block";
   }
 
-  // =========================
-  // PRIMARY CONTACT
-  // =========================
-
-  document.getElementById("callBtn").onclick = () => {
+  // ===== PRIMARY =====
+  document.getElementById("callBtn").onclick = () =>
     window.location.href = "tel:" + pet.phone;
-  };
 
   document.getElementById("textBtn").onclick = () => {
-    const msg = "Hi, I found your pet " + pet.name;
-
     window.open(
-      `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
+      `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
       "_self"
     );
   };
 
   document.getElementById("locBtn").onclick = () => {
 
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported.");
-      return;
-    }
-
     navigator.geolocation.getCurrentPosition((pos) => {
 
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-
       const msg =
-        "Hi, I found your pet " +
+        "I found your pet " +
         pet.name +
-        ". My location: https://maps.google.com/?q=" +
-        lat + "," + lon;
+        ". Location: https://maps.google.com/?q=" +
+        pos.coords.latitude + "," + pos.coords.longitude;
 
       window.open(
         `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
@@ -247,52 +209,35 @@ async function loadPet() {
 
   };
 
-  // =========================
-  // SECONDARY CONTACT (FIXED SAFE VERSION)
-  // =========================
-
+  // ===== SECONDARY =====
   const hasBackup = pet.phone2 && pet.phone2.trim() !== "";
 
-  if (!hasBackup) {
+  const safeSecondary = (fn) => {
+    if (!hasBackup) return;
+    fn();
+  };
 
-    // hide backup section entirely if not used
-    document.querySelectorAll("#callBtn2, #textBtn2, #locBtn2")
-      .forEach(btn => btn.style.display = "none");
+  document.getElementById("callBtn2").onclick = () =>
+    safeSecondary(() => window.location.href = "tel:" + pet.phone2);
 
-  } else {
-
-    document.getElementById("callBtn2").onclick = () => {
-      window.location.href = "tel:" + pet.phone2;
-    };
-
-    document.getElementById("textBtn2").onclick = () => {
-
-      const msg =
-        "Hi, I found your pet " + pet.name + " (backup contact)";
-
+  document.getElementById("textBtn2").onclick = () =>
+    safeSecondary(() =>
       window.open(
-        `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
+        `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
         "_self"
-      );
-    };
+      )
+    );
 
-    document.getElementById("locBtn2").onclick = () => {
-
-      if (!navigator.geolocation) {
-        alert("Geolocation not supported.");
-        return;
-      }
+  document.getElementById("locBtn2").onclick = () =>
+    safeSecondary(() => {
 
       navigator.geolocation.getCurrentPosition((pos) => {
 
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-
         const msg =
-          "Hi, I found your pet " +
+          "I found your pet " +
           pet.name +
-          ". My location: https://maps.google.com/?q=" +
-          lat + "," + lon;
+          ". Location: https://maps.google.com/?q=" +
+          pos.coords.latitude + "," + pos.coords.longitude;
 
         window.open(
           `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
@@ -301,8 +246,7 @@ async function loadPet() {
 
       });
 
-    };
-  }
+    });
 
 }
 
