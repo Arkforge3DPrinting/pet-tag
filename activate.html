@@ -49,7 +49,9 @@
       border-color: #3b82f6;
     }
 
-    #photoInput { display: none; }
+    #photoInput {
+      display: none;
+    }
 
     .btn {
       width: 100%;
@@ -60,11 +62,26 @@
       cursor: pointer;
       color: white;
       margin-bottom: 10px;
+      transition: opacity 0.15s ease;
     }
 
-    .camera { background: #ff9f43; }
-    .gallery { background: #3b82f6; }
-    .activate { background: #3b82f6; font-size: 18px; }
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .camera {
+      background: #ff9f43;
+    }
+
+    .gallery {
+      background: #3b82f6;
+    }
+
+    .activate {
+      background: #3b82f6;
+      font-size: 18px;
+    }
 
     .tos-box {
       text-align: left;
@@ -91,26 +108,37 @@
   <h2>Activate Pet Tag</h2>
 
   <div class="tagid">
-    Tag ID: <span id="tagIdDisplay"></span>
+    Tag ID:
+    <span id="tagIdDisplay"></span>
   </div>
 
   <input id="name" placeholder="Pet Name">
+
   <input id="phone" placeholder="Primary Contact Number">
+
   <input id="phone2" placeholder="Secondary Contact (optional)">
 
   <input type="file" id="photoInput" accept="image/*">
 
-  <button class="btn camera" id="cameraBtn">📷 Take Photo</button>
-  <button class="btn gallery" id="galleryBtn">📁 Choose Photo</button>
+  <button class="btn camera" id="cameraBtn">
+    📷 Take Photo
+  </button>
+
+  <button class="btn gallery" id="galleryBtn">
+    📁 Choose Photo
+  </button>
 
   <div class="tos-box">
     <label>
       <input type="checkbox" id="tosCheckbox">
+
       I agree to Terms of Service and understand this profile may be publicly visible when scanned.
     </label>
   </div>
 
-  <button class="btn activate" id="activateBtn">Activate</button>
+  <button class="btn activate" id="activateBtn">
+    Activate
+  </button>
 
   <div id="status"></div>
 
@@ -118,8 +146,15 @@
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc }
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+}
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -134,99 +169,229 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ID FROM URL
-const urlId = new URLSearchParams(window.location.search).get("id");
+/* ID FROM URL */
 
-const status = document.getElementById("status");
+const urlId =
+  new URLSearchParams(window.location.search).get("id");
+
+const status =
+  document.getElementById("status");
+
+const activateBtn =
+  document.getElementById("activateBtn");
+
+/* ANTI SPAM LOCK */
+
+let isActivating = false;
 
 if (!urlId) {
-  status.innerText = "❌ Invalid activation link";
+
+  status.innerText =
+    "❌ Invalid activation link";
+
   throw new Error("Missing ID");
 }
 
-document.getElementById("tagIdDisplay").innerText = urlId;
+document.getElementById("tagIdDisplay")
+  .innerText = urlId;
 
-const photoInput = document.getElementById("photoInput");
+const photoInput =
+  document.getElementById("photoInput");
+
+/* CAMERA BUTTON */
 
 document.getElementById("cameraBtn").onclick = () => {
-  photoInput.setAttribute("capture", "environment");
+
+  photoInput.setAttribute(
+    "capture",
+    "environment"
+  );
+
   photoInput.click();
 };
 
+/* GALLERY BUTTON */
+
 document.getElementById("galleryBtn").onclick = () => {
+
   photoInput.removeAttribute("capture");
+
   photoInput.click();
 };
+
+/* ACTIVATE */
 
 document.getElementById("activateBtn").onclick = async () => {
 
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const phone2 = document.getElementById("phone2").value.trim();
-  const tos = document.getElementById("tosCheckbox").checked;
+  /* 🚫 BLOCK SPAM CLICKS */
+
+  if (isActivating) return;
+
+  isActivating = true;
+
+  activateBtn.disabled = true;
+  activateBtn.innerText = "⏳ Activating...";
+
+  status.innerText = "⏳ Preparing activation...";
+
+  const name =
+    document.getElementById("name")
+    .value.trim();
+
+  const phone =
+    document.getElementById("phone")
+    .value.trim();
+
+  const phone2 =
+    document.getElementById("phone2")
+    .value.trim();
+
+  const tos =
+    document.getElementById("tosCheckbox")
+    .checked;
+
+  /* VALIDATION */
 
   if (!name || !phone) {
-    status.innerText = "⚠ Fill required fields";
+
+    status.innerText =
+      "⚠ Fill required fields";
+
+    isActivating = false;
+
+    activateBtn.disabled = false;
+    activateBtn.innerText = "Activate";
+
     return;
   }
 
   if (!tos) {
-    status.innerText = "⚠ Accept Terms of Service";
+
+    status.innerText =
+      "⚠ Accept Terms of Service";
+
+    isActivating = false;
+
+    activateBtn.disabled = false;
+    activateBtn.innerText = "Activate";
+
     return;
   }
 
   try {
 
+    status.innerText =
+      "🔎 Verifying tag...";
+
     const ref = doc(db, "pets", urlId);
-    const existingSnap = await getDoc(ref);
+
+    const existingSnap =
+      await getDoc(ref);
 
     if (!existingSnap.exists()) {
-      status.innerText = "❌ Tag not registered in system";
+
+      status.innerText =
+        "❌ Tag not registered in system";
+
+      isActivating = false;
+
+      activateBtn.disabled = false;
+      activateBtn.innerText = "Activate";
+
       return;
     }
 
-    const existing = existingSnap.data();
+    const existing =
+      existingSnap.data();
 
     let photoURL = "";
-    const file = photoInput.files[0];
+
+    const file =
+      photoInput.files[0];
+
+    /* PHOTO UPLOAD */
 
     if (file) {
+
+      status.innerText =
+        "📤 Uploading pet photo...";
+
       const form = new FormData();
+
       form.append("file", file);
-      form.append("upload_preset", "arkforge-pets");
+
+      form.append(
+        "upload_preset",
+        "arkforge-pets"
+      );
 
       const res = await fetch(
         "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",
-        { method: "POST", body: form }
+        {
+          method: "POST",
+          body: form
+        }
       );
 
-      const data = await res.json();
-      photoURL = data.secure_url;
+      const data =
+        await res.json();
+
+      photoURL =
+        data.secure_url;
     }
 
-    // 🔥 FINAL FIX: SINGLE SOURCE OF TRUTH
-    const payload = {
-      name,
-      phone,
-      phone2: phone2 || existing.phone2 || "",
+    status.innerText =
+      "💾 Saving pet profile...";
 
-      photo: photoURL || existing.photo ||
+    /* FINAL PAYLOAD */
+
+    const payload = {
+
+      name,
+
+      phone,
+
+      phone2:
+        phone2 ||
+        existing.phone2 ||
+        "",
+
+      photo:
+        photoURL ||
+        existing.photo ||
         "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
 
       tosAccepted: true,
 
-      // ✅ THIS IS WHAT FIXES YOUR FIND-PET BUG
       status: "active",
 
-      activatedAt: new Date().toISOString()
+      activatedAt:
+        new Date().toISOString()
     };
 
-    await setDoc(ref, payload, { merge: true });
+    await setDoc(
+      ref,
+      payload,
+      { merge: true }
+    );
 
-    status.innerText = "✅ Activated successfully!";
+    status.innerText =
+      "✅ Activated successfully!";
+
+    activateBtn.innerText =
+      "✅ Activated";
 
   } catch (e) {
-    status.innerText = "❌ " + e.message;
+
+    status.innerText =
+      "❌ " + e.message;
+
+    isActivating = false;
+
+    activateBtn.disabled = false;
+
+    activateBtn.innerText =
+      "Activate";
   }
 
 };
