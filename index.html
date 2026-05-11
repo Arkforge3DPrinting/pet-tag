@@ -71,6 +71,12 @@
       font-weight: bold;
       cursor: pointer;
       color: white;
+      transition: opacity 0.15s ease;
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
 
     #callBtn,
@@ -248,12 +254,15 @@ if (!id) {
   throw new Error("Missing ID");
 }
 
-/* SHOW TAG INFO */
+/* TAG DISPLAY */
+
 document.getElementById("tagCode").innerText = id;
 
 const btn = document.getElementById("tagLinkBtn");
 
 btn.href = baseUrl;
+
+/* UI HELPERS */
 
 function showLocked() {
   locked.style.display = "block";
@@ -291,6 +300,8 @@ function showEl(id) {
   }
 }
 
+/* LOAD PET */
+
 async function loadPet() {
 
   const snap = await getDoc(doc(db, "pets", id));
@@ -305,6 +316,7 @@ async function loadPet() {
   const pet = snap.data();
 
   /* BLOCK INACTIVE TAGS */
+
   if (pet.status !== "active") {
 
     showLocked();
@@ -320,6 +332,8 @@ async function loadPet() {
   document.getElementById("message").innerText =
     `Help get ${pet.name} home safely.`;
 
+  /* PHOTO */
+
   if (pet.photo) {
 
     const img = document.getElementById("petPhoto");
@@ -333,7 +347,7 @@ async function loadPet() {
     pet.phone2 &&
     pet.phone2.trim() !== "";
 
-  /* PRIMARY BUTTON LABELS */
+  /* BUTTON LABELS */
 
   document.getElementById("callBtn").innerText =
     "📞 Call";
@@ -344,10 +358,12 @@ async function loadPet() {
   document.getElementById("locBtn").innerText =
     "📍 Send Location";
 
-  /* PRIMARY ACTIONS */
+  /* PRIMARY CALL */
 
   document.getElementById("callBtn").onclick = () =>
     window.location.href = "tel:" + pet.phone;
+
+  /* PRIMARY TEXT */
 
   document.getElementById("textBtn").onclick = () =>
     window.open(
@@ -355,23 +371,54 @@ async function loadPet() {
       "_self"
     );
 
+  /* PRIMARY GPS */
+
   document.getElementById("locBtn").onclick = () => {
 
-    navigator.geolocation.getCurrentPosition((pos) => {
+    const btn = document.getElementById("locBtn");
 
-      const msg =
-        "I found " + pet.name +
-        ". Location: https://maps.google.com/?q=" +
-        pos.coords.latitude +
-        "," +
-        pos.coords.longitude;
+    btn.disabled = true;
+    btn.innerText = "📡 Acquiring GPS...";
 
-      window.open(
-        `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
-        "_self"
-      );
+    navigator.geolocation.getCurrentPosition(
 
-    });
+      (pos) => {
+
+        const msg =
+          "I found " + pet.name +
+          ". Location: https://maps.google.com/?q=" +
+          pos.coords.latitude +
+          "," +
+          pos.coords.longitude;
+
+        btn.disabled = false;
+        btn.innerText = "📍 Send Location";
+
+        window.open(
+          `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
+          "_self"
+        );
+
+      },
+
+      (err) => {
+
+        btn.disabled = false;
+        btn.innerText = "📍 Send Location";
+
+        alert("Unable to get GPS location.");
+
+        console.error(err);
+
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+
+    );
 
   };
 
@@ -405,8 +452,12 @@ async function loadPet() {
   document.getElementById("locBtn2").innerText =
     "📍 Send Location Secondary";
 
+  /* SECONDARY CALL */
+
   document.getElementById("callBtn2").onclick = () =>
     window.location.href = "tel:" + pet.phone2;
+
+  /* SECONDARY TEXT */
 
   document.getElementById("textBtn2").onclick = () =>
     window.open(
@@ -414,23 +465,54 @@ async function loadPet() {
       "_self"
     );
 
+  /* SECONDARY GPS */
+
   document.getElementById("locBtn2").onclick = () => {
 
-    navigator.geolocation.getCurrentPosition((pos) => {
+    const btn = document.getElementById("locBtn2");
 
-      const msg =
-        "I found " + pet.name +
-        ". Location: https://maps.google.com/?q=" +
-        pos.coords.latitude +
-        "," +
-        pos.coords.longitude;
+    btn.disabled = true;
+    btn.innerText = "📡 Acquiring GPS...";
 
-      window.open(
-        `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
-        "_self"
-      );
+    navigator.geolocation.getCurrentPosition(
 
-    });
+      (pos) => {
+
+        const msg =
+          "I found " + pet.name +
+          ". Location: https://maps.google.com/?q=" +
+          pos.coords.latitude +
+          "," +
+          pos.coords.longitude;
+
+        btn.disabled = false;
+        btn.innerText = "📍 Send Location Secondary";
+
+        window.open(
+          `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
+          "_self"
+        );
+
+      },
+
+      (err) => {
+
+        btn.disabled = false;
+        btn.innerText = "📍 Send Location Secondary";
+
+        alert("Unable to get GPS location.");
+
+        console.error(err);
+
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+
+    );
 
   };
 
