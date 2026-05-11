@@ -1,0 +1,298 @@
+# Arkforge Unified Utility Dashboard
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Arkforge Utility Dashboard</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* TOP BAR */
+
+    .topbar {
+      background: #111827;
+      color: white;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+      z-index: 100;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* NAV */
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .nav button {
+      border: none;
+      background: #e5e7eb;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.15s ease;
+    }
+
+    .nav button.active {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .nav button:hover {
+      opacity: 0.9;
+    }
+
+    /* CONTENT AREA */
+
+    .content {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* IFRAMES */
+
+    .toolframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #f4f6f8;
+      display: none;
+    }
+
+    .toolframe.active {
+      display: block;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 700px) {
+
+      .title {
+        font-size: 16px;
+      }
+
+      .nav {
+        padding: 8px;
+      }
+
+      .nav button {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+
+  <div class="topbar">
+
+    <div class="title">
+      🐾 Arkforge Utility Dashboard
+    </div>
+
+  </div>
+
+  <!-- NAVIGATION -->
+
+  <div class="nav">
+
+    <button class="active"
+      onclick="showTool('createTag', this)">
+      ➕ Create Tag
+    </button>
+
+    <button
+      onclick="showTool('adminDb', this)">
+      🗂 Admin Database
+    </button>
+
+    <button
+      onclick="showTool('activateTag', this)">
+      🏷 Activate Tag
+    </button>
+
+    <button
+      onclick="showTool('foundPet', this)">
+      🐶 Found Pet
+    </button>
+
+  </div>
+
+  <!-- CONTENT -->
+
+  <div class="content">
+
+    <!-- CREATE TAG -->
+
+    <iframe
+      id="createTag"
+      class="toolframe active"
+      src="create-tag.html">
+    </iframe>
+
+    <!-- ADMIN DATABASE -->
+
+    <iframe
+      id="adminDb"
+      class="toolframe"
+      src="admin-dashboard.html">
+    </iframe>
+
+    <!-- ACTIVATE TAG -->
+
+    <iframe
+      id="activateTag"
+      class="toolframe"
+      src="activate.html?id=test123">
+    </iframe>
+
+    <!-- FOUND PET -->
+
+    <iframe
+      id="foundPet"
+      class="toolframe"
+      src="found.html?id=test123">
+    </iframe>
+
+  </div>
+
+<script>
+
+  function showTool(id, btn) {
+
+    // REMOVE ACTIVE FROM BUTTONS
+
+    document
+      .querySelectorAll('.nav button')
+      .forEach(b => b.classList.remove('active'));
+
+    // REMOVE ACTIVE FROM IFRAMES
+
+    document
+      .querySelectorAll('.toolframe')
+      .forEach(f => f.classList.remove('active'));
+
+    // ACTIVATE SELECTED
+
+    btn.classList.add('active');
+
+    document
+      .getElementById(id)
+      .classList.add('active');
+  }
+
+</script>
+
+</body>
+</html>
+```
+
+---
+
+# REQUIRED FILE STRUCTURE
+
+Put all files together in the SAME folder:
+
+```text
+/dashboard.html
+/create-tag.html
+/admin-dashboard.html
+/activate.html
+/found.html
+```
+
+Then:
+
+* Rename this master file to:
+
+```text
+/dashboard.html
+```
+
+---
+
+# IMPORTANT NOTES
+
+## This DOES NOT rewrite your logic.
+
+Each page stays fully independent.
+
+That means:
+
+* Firebase remains isolated
+* No merged scripts
+* No import conflicts
+* No broken functions
+* Easier debugging
+* Easier future upgrades
+
+---
+
+# HOW IT WORKS
+
+The navigation buttons simply:
+
+* hide all embedded pages
+* show the selected embedded page
+
+So the user experiences:
+
+* one unified application
+* without actual page navigation.
+
+---
+
+# IMPORTANT
+
+Your PUBLIC pages should still remain independently accessible:
+
+```text
+activate.html?id=XXXX
+found.html?id=XXXX
+```
+
+because NFC/QR scanning depends on direct URLs.
+
+The dashboard is mainly for:
+
+* internal/admin workflow
+* utility access
+* centralized management.
