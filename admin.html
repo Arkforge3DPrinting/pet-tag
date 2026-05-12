@@ -1,3 +1,6 @@
+# admin.html (FULL UPDATED CODE)
+
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -90,6 +93,11 @@
     .orange { background: #ffedd5; color: #9a3412; }
     .blue { background: #dbeafe; color: #1d4ed8; }
 
+    .purple {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
     .row {
       display: flex;
       flex-wrap: wrap;
@@ -132,7 +140,11 @@
       color: white;
     }
 
-    /* QR RIGHT ALIGN */
+    .disableBtn {
+      background: #7c3aed;
+      color: white;
+    }
+
     .footer {
       display: flex;
       justify-content: space-between;
@@ -176,7 +188,6 @@
   <button onclick="setFilter('missingPhoto', this)">No Photo</button>
   <button onclick="setFilter('missingSecondary', this)">No Secondary</button>
 
-  <!-- ⚡ WORK MODE -->
   <button onclick="toggleWorkMode(this)">
     ⚡ Work Mode (Unactivated Only)
   </button>
@@ -188,6 +199,7 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -222,34 +234,43 @@ let currentSearch = "";
 let currentFilter = "all";
 let workMode = false;
 
-// AUTH
 onAuthStateChanged(auth, (user) => {
+
   if (!user) {
     window.location.href = "login.html";
     return;
   }
+
   listenForPets();
 });
 
-// DATA
 function listenForPets() {
+
   onSnapshot(collection(db, "pets"), (snap) => {
+
     allPets = [];
+
     snap.forEach((docSnap) => {
-      allPets.push({ id: docSnap.id, ...docSnap.data() });
+      allPets.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
     });
+
     render();
   });
 }
 
-// SEARCH
-document.getElementById("search").addEventListener("input", (e) => {
+document.getElementById("search")
+.addEventListener("input", (e) => {
+
   currentSearch = e.target.value.toLowerCase();
+
   render();
 });
 
-// FILTER
 window.setFilter = (filter, btn) => {
+
   currentFilter = filter;
 
   document.querySelectorAll(".filters button")
@@ -260,8 +281,8 @@ window.setFilter = (filter, btn) => {
   render();
 };
 
-// ⚡ WORK MODE TOGGLE
 window.toggleWorkMode = (btn) => {
+
   workMode = !workMode;
 
   btn.classList.toggle("active");
@@ -273,8 +294,8 @@ window.toggleWorkMode = (btn) => {
   render();
 };
 
-// QR
 function makeQR(id, el) {
+
   const url =
     `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
@@ -285,7 +306,6 @@ function makeQR(id, el) {
   });
 }
 
-// RENDER
 function render() {
 
   listDiv.innerHTML = "";
@@ -298,7 +318,6 @@ function render() {
 
     if (!matchesSearch) return false;
 
-    // ⚡ WORK MODE OVERRIDE
     if (workMode) {
       return !p.activatedAt;
     }
@@ -326,11 +345,22 @@ function render() {
 
     const badges = [];
 
-    // STATUS INTELLIGENCE LAYER
-    if (p.activatedAt) {
-      badges.push(`<span class="badge green">Activated</span>`);
+    if (p.status === "disabled") {
+
+      badges.push(`
+        <span class="badge purple">
+          Disabled
+        </span>
+      `);
+
     } else {
-      badges.push(`<span class="badge red">Unactivated</span>`);
+
+      if (p.activatedAt) {
+        badges.push(`<span class="badge green">Activated</span>`);
+      } else {
+        badges.push(`<span class="badge red">Unactivated</span>`);
+      }
+
     }
 
     if (!p.photo || p.photo.includes("placeholderpaw")) {
@@ -342,18 +372,36 @@ function render() {
     }
 
     const div = document.createElement("div");
+
     div.className = "card";
 
     div.innerHTML = `
 
-      <div class="meta"><b>Tag ID:</b> ${p.id}</div>
+      <div class="meta">
+        <b>Tag ID:</b> ${p.id}
+      </div>
 
-      <div class="badges">${badges.join("")}</div>
+      <div class="badges">
+        ${badges.join("")}
+      </div>
 
       <div class="row">
-        <input id="name-${p.id}" value="${p.name || ""}" placeholder="Pet Name">
-        <input id="phone-${p.id}" value="${p.phone || ""}" placeholder="Primary">
-        <input id="phone2-${p.id}" value="${p.phone2 || ""}" placeholder="Secondary">
+
+        <input
+          id="name-${p.id}"
+          value="${p.name || ""}"
+          placeholder="Pet Name">
+
+        <input
+          id="phone-${p.id}"
+          value="${p.phone || ""}"
+          placeholder="Primary">
+
+        <input
+          id="phone2-${p.id}"
+          value="${p.phone2 || ""}"
+          placeholder="Secondary">
+
       </div>
 
       <div class="footer">
@@ -369,8 +417,31 @@ function render() {
       </div>
 
       <div class="buttons">
-        <button class="saveBtn" onclick="savePet('${p.id}')">💾 Save</button>
-        <button class="deleteBtn" onclick="deletePet('${p.id}')">🗑 Delete</button>
+
+        <button
+          class="saveBtn"
+          onclick="savePet('${p.id}')">
+          💾 Save
+        </button>
+
+        <button
+          class="disableBtn"
+          onclick="toggleDisable('${p.id}', '${p.status || ""}')">
+
+          ${
+            p.status === "disabled"
+              ? "✅ Re-enable"
+              : "⛔ Disable"
+          }
+
+        </button>
+
+        <button
+          class="deleteBtn"
+          onclick="deletePet('${p.id}')">
+          🗑 Delete
+        </button>
+
       </div>
 
     `;
@@ -378,28 +449,67 @@ function render() {
     listDiv.appendChild(div);
 
     setTimeout(() => {
-      const qr = document.getElementById("qr-" + p.id);
+
+      const qr =
+        document.getElementById("qr-" + p.id);
+
       if (qr) {
+
         qr.innerHTML = "";
+
         makeQR(p.id, qr);
       }
+
     }, 0);
 
   });
 }
 
-// SAVE
 window.savePet = async (id) => {
+
   await updateDoc(doc(db, "pets", id), {
-    name: document.getElementById("name-" + id).value,
-    phone: document.getElementById("phone-" + id).value,
-    phone2: document.getElementById("phone2-" + id).value
+
+    name:
+      document.getElementById("name-" + id).value,
+
+    phone:
+      document.getElementById("phone-" + id).value,
+
+    phone2:
+      document.getElementById("phone2-" + id).value
+
   });
 };
 
-// DELETE
+window.toggleDisable = async (id, currentStatus) => {
+
+  const disabling =
+    currentStatus !== "disabled";
+
+  const confirmed = confirm(
+
+    disabling
+      ? "Disable this pet tag?"
+      : "Re-enable this pet tag?"
+
+  );
+
+  if (!confirmed) return;
+
+  await updateDoc(doc(db, "pets", id), {
+
+    status:
+      disabling
+        ? "disabled"
+        : "active"
+
+  });
+};
+
 window.deletePet = async (id) => {
+
   if (!confirm("Delete this pet tag?")) return;
+
   await deleteDoc(doc(db, "pets", id));
 };
 
