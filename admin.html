@@ -1,33 +1,24 @@
-# admin.html (FULL UPDATED CODE)
-
-```html
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard v4</title>
-
+  <title>Admin Dashboard v5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       background: #f4f6f8;
       margin: 0;
       padding: 20px;
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
     }
 
-    h2 {
-      margin-bottom: 12px;
-    }
+    h2 { margin-bottom: 10px; }
 
     #search {
       width: 100%;
@@ -35,14 +26,13 @@
       border-radius: 10px;
       border: 1px solid #ccc;
       margin-bottom: 12px;
-      font-size: 14px;
     }
 
     .filters {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .filters button {
@@ -61,9 +51,9 @@
 
     .card {
       background: white;
-      border-radius: 14px;
       padding: 14px;
-      margin-bottom: 14px;
+      border-radius: 14px;
+      margin-bottom: 12px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     }
 
@@ -74,47 +64,38 @@
       word-break: break-word;
     }
 
-    .badges {
-      margin-bottom: 10px;
-    }
+    .badges { margin-bottom: 10px; }
 
     .badge {
       display: inline-block;
       padding: 4px 8px;
       border-radius: 999px;
       font-size: 11px;
-      font-weight: bold;
       margin-right: 5px;
-      margin-bottom: 5px;
     }
 
     .green { background: #dcfce7; color: #166534; }
     .red { background: #fee2e2; color: #991b1b; }
     .orange { background: #ffedd5; color: #9a3412; }
     .blue { background: #dbeafe; color: #1d4ed8; }
-
-    .purple {
-      background: #ede9fe;
-      color: #5b21b6;
-    }
+    .purple { background: #ede9fe; color: #5b21b6; }
 
     .row {
       display: flex;
-      flex-wrap: wrap;
       gap: 10px;
+      flex-wrap: wrap;
       margin-bottom: 10px;
     }
 
     .row input {
       flex: 1;
-      min-width: 220px;
+      min-width: 200px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
     }
 
     .buttons {
-      margin-top: 10px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
@@ -126,49 +107,26 @@
       padding: 10px;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
       font-weight: bold;
+      cursor: pointer;
     }
 
-    .saveBtn {
-      background: #3b82f6;
-      color: white;
+    .saveBtn { background: #3b82f6; color: white; }
+    .disableBtn { background: #7c3aed; color: white; }
+    .deleteBtn { background: #ef4444; color: white; }
+    .undoBtn { background: #16a34a; color: white; }
+
+    .auditPanel {
+      margin-top: 30px;
+      background: white;
+      padding: 14px;
+      border-radius: 14px;
     }
 
-    .deleteBtn {
-      background: #ef4444;
-      color: white;
-    }
-
-    .disableBtn {
-      background: #7c3aed;
-      color: white;
-    }
-
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 12px;
-      gap: 10px;
-    }
-
-    .leftSide {
-      display: flex;
-      align-items: center;
-    }
-
-    .leftSide img {
-      max-width: 110px;
-      border-radius: 10px;
-      border: 2px solid #eee;
-    }
-
-    .qrSide {
-      margin-left: auto;
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-end;
+    .auditItem {
+      font-size: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
     }
 
   </style>
@@ -183,30 +141,33 @@
 <div class="filters">
 
   <button class="active" onclick="setFilter('all', this)">All</button>
-  <button onclick="setFilter('inactive', this)">Unactivated</button>
-  <button onclick="setFilter('active', this)">Activated</button>
-  <button onclick="setFilter('missingPhoto', this)">No Photo</button>
-  <button onclick="setFilter('missingSecondary', this)">No Secondary</button>
+  <button onclick="setFilter('inactive', this)">Inactive</button>
+  <button onclick="setFilter('active', this)">Active</button>
+  <button onclick="setFilter('disabled', this)">Disabled</button>
 
-  <button onclick="toggleWorkMode(this)">
-    ⚡ Work Mode (Unactivated Only)
-  </button>
+  <button onclick="toggleWorkMode(this)">⚡ Work Mode</button>
 
 </div>
 
 <div id="list"></div>
 
+<div class="auditPanel">
+  <h3>📜 Audit Log</h3>
+  <div id="auditList">Loading...</div>
+</div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
 import {
   getFirestore,
   collection,
   onSnapshot,
   doc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -214,303 +175,164 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
-  storageBucket: "arkforge-pets.firebasestorage.app",
-  messagingSenderId: "517154779272",
-  appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
-};
+});
 
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const listDiv = document.getElementById("list");
-
-let allPets = [];
-let currentSearch = "";
-let currentFilter = "all";
+let pets = [];
+let audit = [];
+let filter = "all";
+let search = "";
 let workMode = false;
 
-onAuthStateChanged(auth, (user) => {
+const list = document.getElementById("list");
+const auditList = document.getElementById("auditList");
 
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  listenForPets();
+onAuthStateChanged(auth, u => {
+  if (!u) return (location.href = "login.html");
+  listen();
+  listenAudit();
 });
 
-function listenForPets() {
-
-  onSnapshot(collection(db, "pets"), (snap) => {
-
-    allPets = [];
-
-    snap.forEach((docSnap) => {
-      allPets.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
-    });
-
+function listen() {
+  onSnapshot(collection(db, "pets"), snap => {
+    pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
   });
 }
 
-document.getElementById("search")
-.addEventListener("input", (e) => {
+function listenAudit() {
+  onSnapshot(collection(db, "audit_logs"), snap => {
+    audit = snap.docs.map(d => d.data());
+    renderAudit();
+  });
+}
 
-  currentSearch = e.target.value.toLowerCase();
+function log(action, id) {
+  addDoc(collection(db, "audit_logs"), {
+    action,
+    tagId: id,
+    time: serverTimestamp()
+  });
+}
 
-  render();
-});
-
-window.setFilter = (filter, btn) => {
-
-  currentFilter = filter;
-
-  document.querySelectorAll(".filters button")
-    .forEach(b => b.classList.remove("active"));
-
+window.setFilter = (f, btn) => {
+  filter = f;
+  document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-
   render();
 };
 
 window.toggleWorkMode = (btn) => {
-
   workMode = !workMode;
-
   btn.classList.toggle("active");
-
-  btn.innerText = workMode
-    ? "⚡ Work Mode: ON"
-    : "⚡ Work Mode (Unactivated Only)";
-
-  render();
 };
-
-function makeQR(id, el) {
-
-  const url =
-    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
-
-  new QRCode(el, {
-    text: url,
-    width: 90,
-    height: 90
-  });
-}
 
 function render() {
 
-  listDiv.innerHTML = "";
+  list.innerHTML = "";
 
-  const filtered = allPets.filter((p) => {
+  pets
+    .filter(p => {
+      if (search &&
+        !p.id.toLowerCase().includes(search) &&
+        !(p.name || "").toLowerCase().includes(search)) return false;
 
-    const matchesSearch =
-      p.id.toLowerCase().includes(currentSearch) ||
-      (p.name || "").toLowerCase().includes(currentSearch);
+      if (workMode) return !p.activatedAt;
 
-    if (!matchesSearch) return false;
+      if (filter === "disabled") return p.status === "disabled";
+      if (filter === "active") return p.activatedAt;
+      if (filter === "inactive") return !p.activatedAt;
 
-    if (workMode) {
-      return !p.activatedAt;
-    }
+      return true;
+    })
+    .forEach(p => {
 
-    switch (currentFilter) {
+      const div = document.createElement("div");
+      div.className = "card";
 
-      case "inactive":
-        return !p.activatedAt;
+      const status =
+        p.status === "disabled"
+          ? `<span class="badge purple">Disabled</span>`
+          : p.activatedAt
+            ? `<span class="badge green">Active</span>`
+            : `<span class="badge red">Inactive</span>`;
 
-      case "active":
-        return !!p.activatedAt;
+      div.innerHTML = `
+        <div class="meta"><b>${p.id}</b></div>
+        <div class="badges">${status}</div>
 
-      case "missingPhoto":
-        return !p.photo || p.photo.includes("placeholderpaw");
-
-      case "missingSecondary":
-        return !p.phone2;
-
-      default:
-        return true;
-    }
-  });
-
-  filtered.forEach((p) => {
-
-    const badges = [];
-
-    if (p.status === "disabled") {
-
-      badges.push(`
-        <span class="badge purple">
-          Disabled
-        </span>
-      `);
-
-    } else {
-
-      if (p.activatedAt) {
-        badges.push(`<span class="badge green">Activated</span>`);
-      } else {
-        badges.push(`<span class="badge red">Unactivated</span>`);
-      }
-
-    }
-
-    if (!p.photo || p.photo.includes("placeholderpaw")) {
-      badges.push(`<span class="badge orange">No Photo</span>`);
-    }
-
-    if (!p.phone2) {
-      badges.push(`<span class="badge blue">No Secondary</span>`);
-    }
-
-    const div = document.createElement("div");
-
-    div.className = "card";
-
-    div.innerHTML = `
-
-      <div class="meta">
-        <b>Tag ID:</b> ${p.id}
-      </div>
-
-      <div class="badges">
-        ${badges.join("")}
-      </div>
-
-      <div class="row">
-
-        <input
-          id="name-${p.id}"
-          value="${p.name || ""}"
-          placeholder="Pet Name">
-
-        <input
-          id="phone-${p.id}"
-          value="${p.phone || ""}"
-          placeholder="Primary">
-
-        <input
-          id="phone2-${p.id}"
-          value="${p.phone2 || ""}"
-          placeholder="Secondary">
-
-      </div>
-
-      <div class="footer">
-
-        <div class="leftSide">
-          ${p.photo ? `<img src="${p.photo}">` : ""}
+        <div class="row">
+          <input id="n-${p.id}" value="${p.name || ""}">
+          <input id="p-${p.id}" value="${p.phone || ""}">
         </div>
 
-        <div class="qrSide">
-          <div id="qr-${p.id}"></div>
+        <div class="buttons">
+
+          <button class="saveBtn" onclick="save('${p.id}')">Save</button>
+
+          <button class="disableBtn" onclick="toggle('${p.id}', '${p.status || ""}')">
+            ${p.status === "disabled" ? "Enable" : "Disable"}
+          </button>
+
+          <button class="undoBtn" onclick="restore('${p.id}')">Undo</button>
+
+          <button class="deleteBtn" onclick="remove('${p.id}')">Delete</button>
+
         </div>
+      `;
 
-      </div>
-
-      <div class="buttons">
-
-        <button
-          class="saveBtn"
-          onclick="savePet('${p.id}')">
-          💾 Save
-        </button>
-
-        <button
-          class="disableBtn"
-          onclick="toggleDisable('${p.id}', '${p.status || ""}')">
-
-          ${
-            p.status === "disabled"
-              ? "✅ Re-enable"
-              : "⛔ Disable"
-          }
-
-        </button>
-
-        <button
-          class="deleteBtn"
-          onclick="deletePet('${p.id}')">
-          🗑 Delete
-        </button>
-
-      </div>
-
-    `;
-
-    listDiv.appendChild(div);
-
-    setTimeout(() => {
-
-      const qr =
-        document.getElementById("qr-" + p.id);
-
-      if (qr) {
-
-        qr.innerHTML = "";
-
-        makeQR(p.id, qr);
-      }
-
-    }, 0);
-
-  });
+      list.appendChild(div);
+    });
 }
 
-window.savePet = async (id) => {
+function renderAudit() {
+  auditList.innerHTML = audit.slice(-20).reverse().map(a =>
+    `<div class="auditItem">
+      ${a.action} → ${a.tagId}
+    </div>`
+  ).join("");
+}
 
+window.save = async (id) => {
   await updateDoc(doc(db, "pets", id), {
-
-    name:
-      document.getElementById("name-" + id).value,
-
-    phone:
-      document.getElementById("phone-" + id).value,
-
-    phone2:
-      document.getElementById("phone2-" + id).value
-
+    name: document.getElementById("n-" + id).value,
+    phone: document.getElementById("p-" + id).value
   });
+  log("update", id);
 };
 
-window.toggleDisable = async (id, currentStatus) => {
-
-  const disabling =
-    currentStatus !== "disabled";
-
-  const confirmed = confirm(
-
-    disabling
-      ? "Disable this pet tag?"
-      : "Re-enable this pet tag?"
-
-  );
-
-  if (!confirmed) return;
+window.toggle = async (id, status) => {
+  const disabling = status !== "disabled";
 
   await updateDoc(doc(db, "pets", id), {
-
-    status:
-      disabling
-        ? "disabled"
-        : "active"
-
+    status: disabling ? "disabled" : "active"
   });
+
+  log(disabling ? "disabled" : "enabled", id);
 };
 
-window.deletePet = async (id) => {
+window.restore = async (id) => {
+  await updateDoc(doc(db, "pets", id), {
+    status: "active"
+  });
+  log("restore", id);
+};
 
-  if (!confirm("Delete this pet tag?")) return;
-
+window.remove = async (id) => {
+  if (!confirm("Delete?")) return;
   await deleteDoc(doc(db, "pets", id));
+  log("delete", id);
+};
+
+document.getElementById("search").oninput = e => {
+  search = e.target.value.toLowerCase();
+  render();
 };
 
 </script>
