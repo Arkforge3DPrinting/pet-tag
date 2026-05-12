@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard v6</title>
+  <title>Admin Dashboard v7</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -30,8 +30,8 @@
 
     .filters {
       display: flex;
-      flex-wrap: wrap;
       gap: 8px;
+      flex-wrap: wrap;
       margin-bottom: 14px;
     }
 
@@ -82,8 +82,6 @@
 
     .green { background: #dcfce7; color: #166534; }
     .red { background: #fee2e2; color: #991b1b; }
-    .orange { background: #ffedd5; color: #9a3412; }
-    .blue { background: #dbeafe; color: #1d4ed8; }
     .purple { background: #ede9fe; color: #5b21b6; }
 
     .row {
@@ -138,9 +136,9 @@
       background: white;
       padding: 12px;
       border-radius: 14px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
       height: 80vh;
       overflow: auto;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     }
 
     .auditItem {
@@ -148,6 +146,7 @@
       border-bottom: 1px solid #eee;
       padding: 6px 0;
     }
+
   </style>
 </head>
 
@@ -186,9 +185,7 @@ import {
   updateDoc,
   deleteDoc,
   setDoc,
-  getDoc,
-  query,
-  orderBy
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -258,15 +255,29 @@ function makeQR(id, el) {
   new QRCode(el, { text: url, width: 90, height: 90 });
 }
 
-/* AUDIT */
-async function log(action, petId, before, after) {
+/* AUDIT LOG */
+async function log(action, petId, before, after, field = null) {
   const ref = doc(collection(db, "audit"));
+
   await setDoc(ref, {
     action,
     petId,
+    field,
     before,
     after,
     timestamp: new Date().toISOString()
+  });
+}
+
+/* FIELD DIFF LOGGER */
+function diffLog(id, before, after) {
+
+  const fields = ["name", "phone", "phone2", "photo", "status", "activatedAt"];
+
+  fields.forEach(async (f) => {
+    if ((before?.[f] ?? "") !== (after?.[f] ?? "")) {
+      await log("field_change", id, before?.[f], after?.[f], f);
+    }
   });
 }
 
@@ -284,7 +295,7 @@ window.savePet = async (id) => {
 
   await updateDoc(ref, after);
 
-  await log("updated", id, before, after);
+  diffLog(id, before, after);
 };
 
 /* DISABLE */
@@ -295,17 +306,19 @@ window.toggleDisable = async (id, status) => {
 
   const disabling = status !== "disabled";
 
-  const after = { status: disabling ? "disabled" : "active" };
+  const after = {
+    status: disabling ? "disabled" : "active"
+  };
 
   await updateDoc(ref, after);
 
-  await log(after.status, id, before, after);
+  await log("status_change", id, before, after, "status");
 };
 
-/* DELETE (RESTORED HARD DELETE) */
+/* DELETE */
 window.deletePet = async (id) => {
 
-  if (!confirm("Delete this pet permanently?")) return;
+  if (!confirm("Delete permanently?")) return;
 
   const before = (await getDoc(doc(db, "pets", id))).data();
 
@@ -324,7 +337,7 @@ function render() {
     const s = search;
 
     const match =
-      p.id.toLowerCase().includes(s) ||
+      p.id.includes(s) ||
       (p.name || "").toLowerCase().includes(s) ||
       (p.phone || "").includes(s) ||
       (p.phone2 || "").includes(s);
@@ -382,7 +395,6 @@ function render() {
       const qr = document.getElementById("qr-" + p.id);
       if (qr) makeQR(p.id, qr);
     }, 0);
-
   });
 }
 
@@ -397,7 +409,7 @@ function renderAudit() {
     div.className = "auditItem";
 
     div.innerHTML = `
-      <b>${a.action}</b><br>
+      <b>${a.action}</b> ${a.field ? `(${a.field})` : ""}<br>
       ${a.petId}<br>
       <small>${a.timestamp}</small>
     `;
