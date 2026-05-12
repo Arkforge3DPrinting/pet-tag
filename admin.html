@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard v5</title>
+  <title>Admin Dashboard v6</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -14,7 +14,7 @@
       background: #f4f6f8;
       margin: 0;
       padding: 20px;
-      max-width: 1100px;
+      max-width: 1200px;
       margin: auto;
     }
 
@@ -26,23 +26,6 @@
       border-radius: 10px;
       border: 1px solid #ccc;
       margin-bottom: 12px;
-    }
-
-    .topActions {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .topActions button {
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      background: #111827;
-      color: white;
     }
 
     .filters {
@@ -99,6 +82,8 @@
 
     .green { background: #dcfce7; color: #166534; }
     .red { background: #fee2e2; color: #991b1b; }
+    .orange { background: #ffedd5; color: #9a3412; }
+    .blue { background: #dbeafe; color: #1d4ed8; }
     .purple { background: #ede9fe; color: #5b21b6; }
 
     .row {
@@ -109,7 +94,7 @@
 
     .row input {
       flex: 1;
-      min-width: 180px;
+      min-width: 160px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
@@ -134,16 +119,19 @@
 
     .saveBtn { background: #3b82f6; color: white; }
     .disableBtn { background: #7c3aed; color: white; }
+    .deleteBtn { background: #ef4444; color: white; }
 
     .footer {
       display: flex;
       justify-content: space-between;
       margin-top: 10px;
+      align-items: flex-end;
     }
 
     .footer img {
       width: 90px;
       border-radius: 10px;
+      border: 1px solid #ddd;
     }
 
     .auditBox {
@@ -158,7 +146,7 @@
     .auditItem {
       font-size: 12px;
       border-bottom: 1px solid #eee;
-      padding: 8px 0;
+      padding: 6px 0;
     }
   </style>
 </head>
@@ -168,12 +156,6 @@
 <h2>🐾 Admin Dashboard</h2>
 
 <input id="search" placeholder="Search ID, name, phone...">
-
-<!-- NEW EXPORT BUTTONS -->
-<div class="topActions">
-  <button onclick="exportPetsCSV()">📤 Export Pets CSV</button>
-  <button onclick="exportAuditCSV()">📤 Export Audit CSV</button>
-</div>
 
 <div class="filters">
   <button class="active" onclick="setFilter('all', this)">All</button>
@@ -202,9 +184,11 @@ import {
   onSnapshot,
   doc,
   updateDoc,
-  getDoc,
+  deleteDoc,
   setDoc,
-  query
+  getDoc,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -228,6 +212,7 @@ const auth = getAuth(app);
 let pets = [];
 let audit = [];
 let filter = "all";
+let search = "";
 
 const listDiv = document.getElementById("list");
 const auditDiv = document.getElementById("auditList");
@@ -248,10 +233,16 @@ function listen() {
 
   onSnapshot(collection(db, "audit"), snap => {
     audit = snap.docs.map(d => d.data());
-    audit.sort((a,b) => b.timestamp.localeCompare(a.timestamp));
+    audit.sort((a,b) => (b.timestamp || "").localeCompare(a.timestamp || ""));
     renderAudit();
   });
 }
+
+/* SEARCH */
+document.getElementById("search").addEventListener("input", e => {
+  search = e.target.value.toLowerCase();
+  render();
+});
 
 /* FILTER */
 window.setFilter = (f, btn) => {
@@ -261,49 +252,109 @@ window.setFilter = (f, btn) => {
   render();
 };
 
+/* QR */
+function makeQR(id, el) {
+  const url = `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+  new QRCode(el, { text: url, width: 90, height: 90 });
+}
+
+/* AUDIT */
+async function log(action, petId, before, after) {
+  const ref = doc(collection(db, "audit"));
+  await setDoc(ref, {
+    action,
+    petId,
+    before,
+    after,
+    timestamp: new Date().toISOString()
+  });
+}
+
 /* SAVE */
 window.savePet = async (id) => {
-  const ref = doc(db, "pets", id);
-  const snap = await getDoc(ref);
 
-  await updateDoc(ref, {
+  const ref = doc(db, "pets", id);
+  const before = (await getDoc(ref)).data();
+
+  const after = {
     name: document.getElementById("name-" + id).value,
     phone: document.getElementById("phone-" + id).value,
     phone2: document.getElementById("phone2-" + id).value
-  });
+  };
+
+  await updateDoc(ref, after);
+
+  await log("updated", id, before, after);
 };
 
 /* DISABLE */
 window.toggleDisable = async (id, status) => {
 
   const ref = doc(db, "pets", id);
+  const before = (await getDoc(ref)).data();
 
-  await updateDoc(ref, {
-    status: status === "disabled" ? "active" : "disabled"
-  });
+  const disabling = status !== "disabled";
+
+  const after = { status: disabling ? "disabled" : "active" };
+
+  await updateDoc(ref, after);
+
+  await log(after.status, id, before, after);
 };
 
-/* RENDER */
+/* DELETE (RESTORED HARD DELETE) */
+window.deletePet = async (id) => {
+
+  if (!confirm("Delete this pet permanently?")) return;
+
+  const before = (await getDoc(doc(db, "pets", id))).data();
+
+  await deleteDoc(doc(db, "pets", id));
+
+  await log("deleted", id, before, null);
+};
+
+/* RENDER PETS */
 function render() {
 
   listDiv.innerHTML = "";
 
-  const filtered = pets.filter(p => {
+  const f = pets.filter(p => {
 
-    if (filter === "active") return p.status !== "disabled" && p.activatedAt;
+    const s = search;
+
+    const match =
+      p.id.toLowerCase().includes(s) ||
+      (p.name || "").toLowerCase().includes(s) ||
+      (p.phone || "").includes(s) ||
+      (p.phone2 || "").includes(s);
+
+    if (!match) return false;
+
+    if (filter === "active") return p.activatedAt && p.status !== "disabled";
     if (filter === "inactive") return !p.activatedAt;
     if (filter === "disabled") return p.status === "disabled";
 
     return true;
   });
 
-  filtered.forEach(p => {
+  f.forEach(p => {
 
     const div = document.createElement("div");
     div.className = "card";
 
     div.innerHTML = `
-      <div class="meta">${p.id}</div>
+      <div class="meta"><b>${p.id}</b></div>
+
+      <div class="badges">
+        ${
+          p.status === "disabled"
+            ? `<span class="badge purple">Disabled</span>`
+            : p.activatedAt
+              ? `<span class="badge green">Active</span>`
+              : `<span class="badge red">Inactive</span>`
+        }
+      </div>
 
       <div class="row">
         <input id="name-${p.id}" value="${p.name || ""}">
@@ -311,15 +362,27 @@ function render() {
         <input id="phone2-${p.id}" value="${p.phone2 || ""}">
       </div>
 
+      <div class="footer">
+        ${p.photo ? `<img src="${p.photo}">` : ""}
+        <div id="qr-${p.id}"></div>
+      </div>
+
       <div class="buttons">
         <button class="saveBtn" onclick="savePet('${p.id}')">Save</button>
         <button class="disableBtn" onclick="toggleDisable('${p.id}','${p.status || ""}')">
           ${p.status === "disabled" ? "Re-enable" : "Disable"}
         </button>
+        <button class="deleteBtn" onclick="deletePet('${p.id}')">Delete</button>
       </div>
     `;
 
     listDiv.appendChild(div);
+
+    setTimeout(() => {
+      const qr = document.getElementById("qr-" + p.id);
+      if (qr) makeQR(p.id, qr);
+    }, 0);
+
   });
 }
 
@@ -328,60 +391,19 @@ function renderAudit() {
 
   auditDiv.innerHTML = "";
 
-  audit.forEach(a => {
+  audit.slice(0, 200).forEach(a => {
+
     const div = document.createElement("div");
     div.className = "auditItem";
-    div.innerHTML = `<b>${a.action}</b> — ${a.petId}<br>${a.timestamp}`;
+
+    div.innerHTML = `
+      <b>${a.action}</b><br>
+      ${a.petId}<br>
+      <small>${a.timestamp}</small>
+    `;
+
     auditDiv.appendChild(div);
   });
-}
-
-/* =========================
-   CSV EXPORT (NEW)
-========================= */
-
-window.exportPetsCSV = () => {
-
-  const headers = ["id","name","phone","phone2","status","activatedAt"];
-
-  const rows = pets.map(p =>
-    [
-      p.id,
-      p.name || "",
-      p.phone || "",
-      p.phone2 || "",
-      p.status || "",
-      p.activatedAt || ""
-    ].join(",")
-  );
-
-  downloadCSV(["header",...rows].join("\n"), "pets.csv", headers);
-};
-
-window.exportAuditCSV = () => {
-
-  const rows = audit.map(a =>
-    [
-      a.timestamp,
-      a.action,
-      a.petId
-    ].join(",")
-  );
-
-  downloadCSV(["timestamp,action,petId",...rows].join("\n"), "audit.csv");
-};
-
-function downloadCSV(data, filename) {
-
-  const blob = new Blob([data], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-
-  URL.revokeObjectURL(url);
 }
 
 </script>
