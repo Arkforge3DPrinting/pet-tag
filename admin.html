@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard v5</title>
+  <title>Arkforge Admin Dashboard v5</title>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -10,15 +11,15 @@
     * { box-sizing: border-box; }
 
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: #f4f6f8;
       margin: 0;
       padding: 20px;
-      max-width: 1100px;
+      max-width: 1000px;
       margin: auto;
     }
 
-    h2 { margin-bottom: 10px; }
+    h2 { margin-bottom: 12px; }
 
     #search {
       width: 100%;
@@ -26,13 +27,14 @@
       border-radius: 10px;
       border: 1px solid #ccc;
       margin-bottom: 12px;
+      font-size: 14px;
     }
 
     .filters {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
 
     .filters button {
@@ -51,9 +53,9 @@
 
     .card {
       background: white;
-      padding: 14px;
       border-radius: 14px;
-      margin-bottom: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     }
 
@@ -61,7 +63,6 @@
       font-size: 12px;
       color: #666;
       margin-bottom: 8px;
-      word-break: break-word;
     }
 
     .badges { margin-bottom: 10px; }
@@ -71,6 +72,7 @@
       padding: 4px 8px;
       border-radius: 999px;
       font-size: 11px;
+      font-weight: bold;
       margin-right: 5px;
     }
 
@@ -82,8 +84,8 @@
 
     .row {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 10px;
       margin-bottom: 10px;
     }
 
@@ -99,6 +101,7 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      margin-top: 10px;
     }
 
     .buttons button {
@@ -107,26 +110,25 @@
       padding: 10px;
       border: none;
       border-radius: 8px;
-      font-weight: bold;
       cursor: pointer;
+      font-weight: bold;
     }
 
     .saveBtn { background: #3b82f6; color: white; }
     .disableBtn { background: #7c3aed; color: white; }
     .deleteBtn { background: #ef4444; color: white; }
-    .undoBtn { background: #16a34a; color: white; }
 
-    .auditPanel {
-      margin-top: 30px;
-      background: white;
-      padding: 14px;
-      border-radius: 14px;
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 12px;
     }
 
-    .auditItem {
-      font-size: 12px;
-      padding: 6px 0;
-      border-bottom: 1px solid #eee;
+    .leftSide img {
+      max-width: 110px;
+      border-radius: 10px;
+      border: 2px solid #eee;
     }
 
   </style>
@@ -141,20 +143,15 @@
 <div class="filters">
 
   <button class="active" onclick="setFilter('all', this)">All</button>
-  <button onclick="setFilter('inactive', this)">Inactive</button>
-  <button onclick="setFilter('active', this)">Active</button>
+  <button onclick="setFilter('inactive', this)">Unactivated</button>
+  <button onclick="setFilter('active', this)">Activated</button>
   <button onclick="setFilter('disabled', this)">Disabled</button>
-
-  <button onclick="toggleWorkMode(this)">⚡ Work Mode</button>
+  <button onclick="setFilter('missingPhoto', this)">No Photo</button>
+  <button onclick="setFilter('missingSecondary', this)">No Secondary</button>
 
 </div>
 
 <div id="list"></div>
-
-<div class="auditPanel">
-  <h3>📜 Audit Log</h3>
-  <div id="auditList">Loading...</div>
-</div>
 
 <script type="module">
 
@@ -164,10 +161,11 @@ import {
   collection,
   onSnapshot,
   doc,
-  updateDoc,
-  deleteDoc,
-  addDoc,
-  serverTimestamp
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import {
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -175,164 +173,172 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const app = initializeApp({
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+const firebaseConfig = {
+  apiKey: "AIza...",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
-});
+  storageBucket: "arkforge-pets.firebasestorage.app",
+  messagingSenderId: "517154779272",
+  appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
+};
 
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let pets = [];
-let audit = [];
-let filter = "all";
-let search = "";
-let workMode = false;
+let allPets = [];
+let currentFilter = "all";
+let currentSearch = "";
 
-const list = document.getElementById("list");
-const auditList = document.getElementById("auditList");
+const listDiv = document.getElementById("list");
 
-onAuthStateChanged(auth, u => {
-  if (!u) return (location.href = "login.html");
+/* AUTH */
+onAuthStateChanged(auth, (user) => {
+  if (!user) return (window.location.href = "login.html");
   listen();
-  listenAudit();
 });
 
+/* DATA */
 function listen() {
-  onSnapshot(collection(db, "pets"), snap => {
-    pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  onSnapshot(collection(db, "pets"), (snap) => {
+    allPets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
   });
 }
 
-function listenAudit() {
-  onSnapshot(collection(db, "audit_logs"), snap => {
-    audit = snap.docs.map(d => d.data());
-    renderAudit();
-  });
-}
+/* SEARCH */
+document.getElementById("search").addEventListener("input", (e) => {
+  currentSearch = e.target.value.toLowerCase();
+  render();
+});
 
-function log(action, id) {
-  addDoc(collection(db, "audit_logs"), {
-    action,
-    tagId: id,
-    time: serverTimestamp()
-  });
-}
-
+/* FILTER */
 window.setFilter = (f, btn) => {
-  filter = f;
+  currentFilter = f;
   document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
   render();
 };
 
-window.toggleWorkMode = (btn) => {
-  workMode = !workMode;
-  btn.classList.toggle("active");
-};
+/* AUDIT LOG */
+async function audit(action, petId, details = "") {
+  await addDoc(collection(db, "auditLogs"), {
+    action,
+    petId,
+    details,
+    timestamp: new Date().toISOString()
+  });
+}
 
+/* QR */
+function makeQR(id, el) {
+  new QRCode(el, {
+    text: `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`,
+    width: 90,
+    height: 90
+  });
+}
+
+/* RENDER */
 function render() {
+  listDiv.innerHTML = "";
 
-  list.innerHTML = "";
+  const filtered = allPets.filter(p => {
 
-  pets
-    .filter(p => {
-      if (search &&
-        !p.id.toLowerCase().includes(search) &&
-        !(p.name || "").toLowerCase().includes(search)) return false;
+    const match =
+      p.id.toLowerCase().includes(currentSearch) ||
+      (p.name || "").toLowerCase().includes(currentSearch);
 
-      if (workMode) return !p.activatedAt;
+    if (!match) return false;
 
-      if (filter === "disabled") return p.status === "disabled";
-      if (filter === "active") return p.activatedAt;
-      if (filter === "inactive") return !p.activatedAt;
+    switch (currentFilter) {
+      case "inactive": return !p.activatedAt;
+      case "active": return !!p.activatedAt;
+      case "disabled": return p.status === "disabled";
+      case "missingPhoto": return !p.photo;
+      case "missingSecondary": return !p.phone2;
+      default: return true;
+    }
+  });
 
-      return true;
-    })
-    .forEach(p => {
+  filtered.forEach(p => {
 
-      const div = document.createElement("div");
-      div.className = "card";
+    const badges = [];
 
-      const status =
-        p.status === "disabled"
-          ? `<span class="badge purple">Disabled</span>`
-          : p.activatedAt
-            ? `<span class="badge green">Active</span>`
-            : `<span class="badge red">Inactive</span>`;
+    if (p.status === "disabled") {
+      badges.push(`<span class="badge purple">Disabled</span>`);
+    } else if (p.activatedAt) {
+      badges.push(`<span class="badge green">Active</span>`);
+    } else {
+      badges.push(`<span class="badge red">Inactive</span>`);
+    }
 
-      div.innerHTML = `
-        <div class="meta"><b>${p.id}</b></div>
-        <div class="badges">${status}</div>
+    const div = document.createElement("div");
+    div.className = "card";
 
-        <div class="row">
-          <input id="n-${p.id}" value="${p.name || ""}">
-          <input id="p-${p.id}" value="${p.phone || ""}">
+    div.innerHTML = `
+      <div class="meta"><b>${p.id}</b></div>
+
+      <div class="badges">${badges.join("")}</div>
+
+      <div class="row">
+        <input id="name-${p.id}" value="${p.name || ""}" placeholder="Pet Name">
+        <input id="phone-${p.id}" value="${p.phone || ""}" placeholder="Primary">
+        <input id="phone2-${p.id}" value="${p.phone2 || ""}" placeholder="Secondary">
+      </div>
+
+      <div class="footer">
+        <div class="leftSide">
+          ${p.photo ? `<img src="${p.photo}">` : ""}
         </div>
+        <div id="qr-${p.id}"></div>
+      </div>
 
-        <div class="buttons">
+      <div class="buttons">
+        <button class="saveBtn" onclick="save('${p.id}')">Save</button>
 
-          <button class="saveBtn" onclick="save('${p.id}')">Save</button>
+        <button class="disableBtn" onclick="toggle('${p.id}', '${p.status || ""}')">
+          ${p.status === "disabled" ? "Re-enable" : "Disable"}
+        </button>
+      </div>
+    `;
 
-          <button class="disableBtn" onclick="toggle('${p.id}', '${p.status || ""}')">
-            ${p.status === "disabled" ? "Enable" : "Disable"}
-          </button>
+    listDiv.appendChild(div);
 
-          <button class="undoBtn" onclick="restore('${p.id}')">Undo</button>
-
-          <button class="deleteBtn" onclick="remove('${p.id}')">Delete</button>
-
-        </div>
-      `;
-
-      list.appendChild(div);
+    setTimeout(() => {
+      const el = document.getElementById("qr-" + p.id);
+      if (el) {
+        el.innerHTML = "";
+        makeQR(p.id, el);
+      }
     });
+
+  });
 }
 
-function renderAudit() {
-  auditList.innerHTML = audit.slice(-20).reverse().map(a =>
-    `<div class="auditItem">
-      ${a.action} → ${a.tagId}
-    </div>`
-  ).join("");
-}
-
+/* SAVE */
 window.save = async (id) => {
+  const p = allPets.find(x => x.id === id);
+
   await updateDoc(doc(db, "pets", id), {
-    name: document.getElementById("n-" + id).value,
-    phone: document.getElementById("p-" + id).value
+    name: document.getElementById("name-" + id).value,
+    phone: document.getElementById("phone-" + id).value,
+    phone2: document.getElementById("phone2-" + id).value
   });
-  log("update", id);
+
+  await audit("edit", id);
 };
 
+/* DISABLE / RESTORE */
 window.toggle = async (id, status) => {
-  const disabling = status !== "disabled";
+
+  const disable = status !== "disabled";
 
   await updateDoc(doc(db, "pets", id), {
-    status: disabling ? "disabled" : "active"
+    status: disable ? "disabled" : "active"
   });
 
-  log(disabling ? "disabled" : "enabled", id);
-};
-
-window.restore = async (id) => {
-  await updateDoc(doc(db, "pets", id), {
-    status: "active"
-  });
-  log("restore", id);
-};
-
-window.remove = async (id) => {
-  if (!confirm("Delete?")) return;
-  await deleteDoc(doc(db, "pets", id));
-  log("delete", id);
-};
-
-document.getElementById("search").oninput = e => {
-  search = e.target.value.toLowerCase();
-  render();
+  await audit(disable ? "disabled" : "enabled", id);
 };
 
 </script>
