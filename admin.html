@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Arkforge Admin Dashboard v5</title>
-
+  <title>Admin Dashboard v5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -27,7 +26,6 @@
       border-radius: 10px;
       border: 1px solid #ccc;
       margin-bottom: 12px;
-      font-size: 14px;
     }
 
     .filters {
@@ -65,72 +63,78 @@
       margin-bottom: 8px;
     }
 
-    .badges { margin-bottom: 10px; }
-
     .badge {
       display: inline-block;
       padding: 4px 8px;
       border-radius: 999px;
       font-size: 11px;
-      font-weight: bold;
       margin-right: 5px;
     }
 
-    .green { background: #dcfce7; color: #166534; }
-    .red { background: #fee2e2; color: #991b1b; }
-    .orange { background: #ffedd5; color: #9a3412; }
-    .blue { background: #dbeafe; color: #1d4ed8; }
-    .purple { background: #ede9fe; color: #5b21b6; }
+    .green { background:#dcfce7; color:#166534; }
+    .red { background:#fee2e2; color:#991b1b; }
+    .orange { background:#ffedd5; color:#9a3412; }
+    .blue { background:#dbeafe; color:#1d4ed8; }
+    .purple { background:#ede9fe; color:#5b21b6; }
 
     .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
     }
 
     .row input {
-      flex: 1;
-      min-width: 200px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      flex:1;
+      min-width:200px;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #ccc;
     }
 
     .buttons {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 10px;
+      display:flex;
+      gap:8px;
+      margin-top:10px;
+      flex-wrap:wrap;
     }
 
     .buttons button {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
+      flex:1;
+      min-width:120px;
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      font-weight:bold;
+      cursor:pointer;
     }
 
-    .saveBtn { background: #3b82f6; color: white; }
-    .disableBtn { background: #7c3aed; color: white; }
-    .deleteBtn { background: #ef4444; color: white; }
+    .saveBtn { background:#3b82f6; color:white; }
+    .disableBtn { background:#7c3aed; color:white; }
+    .restoreBtn { background:#10b981; color:white; }
+    .deleteBtn { background:#ef4444; color:white; }
 
     .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 12px;
+      display:flex;
+      justify-content:space-between;
+      margin-top:12px;
     }
 
     .leftSide img {
-      max-width: 110px;
-      border-radius: 10px;
-      border: 2px solid #eee;
+      width:100px;
+      border-radius:10px;
     }
 
+    .audit {
+      font-size:11px;
+      background:#111827;
+      color:white;
+      padding:10px;
+      border-radius:10px;
+      margin-top:20px;
+      max-height:200px;
+      overflow:auto;
+    }
   </style>
 </head>
 
@@ -143,15 +147,19 @@
 <div class="filters">
 
   <button class="active" onclick="setFilter('all', this)">All</button>
-  <button onclick="setFilter('inactive', this)">Unactivated</button>
-  <button onclick="setFilter('active', this)">Activated</button>
+  <button onclick="setFilter('active', this)">Active</button>
+  <button onclick="setFilter('inactive', this)">Inactive</button>
   <button onclick="setFilter('disabled', this)">Disabled</button>
+  <button onclick="setFilter('deleted', this)">Deleted</button>
   <button onclick="setFilter('missingPhoto', this)">No Photo</button>
   <button onclick="setFilter('missingSecondary', this)">No Secondary</button>
 
 </div>
 
 <div id="list"></div>
+
+<h3>📜 Audit Log</h3>
+<div class="audit" id="audit"></div>
 
 <script type="module">
 
@@ -165,16 +173,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
-  addDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import {
   getAuth,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIza...",
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -186,51 +190,45 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let allPets = [];
-let currentFilter = "all";
-let currentSearch = "";
+let pets = [];
+let filter = "all";
+let search = "";
 
-const listDiv = document.getElementById("list");
+const list = document.getElementById("list");
+const audit = document.getElementById("audit");
 
-/* AUTH */
+function log(msg) {
+  audit.innerHTML = msg + "<br>" + audit.innerHTML;
+}
+
+/* AUTH FIX (no loop) */
 onAuthStateChanged(auth, (user) => {
-  if (!user) return (window.location.href = "login.html");
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
   listen();
 });
 
-/* DATA */
 function listen() {
   onSnapshot(collection(db, "pets"), (snap) => {
-    allPets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
   });
 }
 
-/* SEARCH */
-document.getElementById("search").addEventListener("input", (e) => {
-  currentSearch = e.target.value.toLowerCase();
-  render();
-});
-
-/* FILTER */
 window.setFilter = (f, btn) => {
-  currentFilter = f;
+  filter = f;
   document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
   render();
 };
 
-/* AUDIT LOG */
-async function audit(action, petId, details = "") {
-  await addDoc(collection(db, "auditLogs"), {
-    action,
-    petId,
-    details,
-    timestamp: new Date().toISOString()
-  });
-}
+document.getElementById("search").oninput = (e) => {
+  search = e.target.value.toLowerCase();
+  render();
+};
 
-/* QR */
 function makeQR(id, el) {
   new QRCode(el, {
     text: `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`,
@@ -239,52 +237,47 @@ function makeQR(id, el) {
   });
 }
 
-/* RENDER */
 function render() {
-  listDiv.innerHTML = "";
+  list.innerHTML = "";
 
-  const filtered = allPets.filter(p => {
+  const filtered = pets.filter(p => {
 
-    const match =
-      p.id.toLowerCase().includes(currentSearch) ||
-      (p.name || "").toLowerCase().includes(currentSearch);
+    if (!p.id.includes(search) && !(p.name||"").toLowerCase().includes(search))
+      return false;
 
-    if (!match) return false;
+    if (filter === "active") return p.status === "active";
+    if (filter === "inactive") return !p.activatedAt;
+    if (filter === "disabled") return p.status === "disabled";
+    if (filter === "deleted") return p.status === "deleted";
+    if (filter === "missingPhoto") return !p.photo;
+    if (filter === "missingSecondary") return !p.phone2;
 
-    switch (currentFilter) {
-      case "inactive": return !p.activatedAt;
-      case "active": return !!p.activatedAt;
-      case "disabled": return p.status === "disabled";
-      case "missingPhoto": return !p.photo;
-      case "missingSecondary": return !p.phone2;
-      default: return true;
-    }
+    return true;
   });
 
   filtered.forEach(p => {
 
-    const badges = [];
-
-    if (p.status === "disabled") {
-      badges.push(`<span class="badge purple">Disabled</span>`);
-    } else if (p.activatedAt) {
-      badges.push(`<span class="badge green">Active</span>`);
-    } else {
-      badges.push(`<span class="badge red">Inactive</span>`);
-    }
-
     const div = document.createElement("div");
     div.className = "card";
+
+    const statusBadge =
+      p.status === "disabled"
+        ? `<span class="badge purple">Disabled</span>`
+        : p.status === "deleted"
+        ? `<span class="badge red">Deleted</span>`
+        : p.activatedAt
+        ? `<span class="badge green">Active</span>`
+        : `<span class="badge orange">Inactive</span>`;
 
     div.innerHTML = `
       <div class="meta"><b>${p.id}</b></div>
 
-      <div class="badges">${badges.join("")}</div>
+      ${statusBadge}
 
       <div class="row">
-        <input id="name-${p.id}" value="${p.name || ""}" placeholder="Pet Name">
-        <input id="phone-${p.id}" value="${p.phone || ""}" placeholder="Primary">
-        <input id="phone2-${p.id}" value="${p.phone2 || ""}" placeholder="Secondary">
+        <input id="n-${p.id}" value="${p.name||""}">
+        <input id="p-${p.id}" value="${p.phone||""}">
+        <input id="p2-${p.id}" value="${p.phone2||""}">
       </div>
 
       <div class="footer">
@@ -297,48 +290,56 @@ function render() {
       <div class="buttons">
         <button class="saveBtn" onclick="save('${p.id}')">Save</button>
 
-        <button class="disableBtn" onclick="toggle('${p.id}', '${p.status || ""}')">
-          ${p.status === "disabled" ? "Re-enable" : "Disable"}
+        <button class="disableBtn" onclick="toggle('${p.id}','${p.status||""}')">
+          ${p.status==="disabled"?"Re-enable":"Disable"}
+        </button>
+
+        <button class="restoreBtn" onclick="restore('${p.id}')">
+          Undo Delete
+        </button>
+
+        <button class="deleteBtn" onclick="softDelete('${p.id}')">
+          Delete
         </button>
       </div>
     `;
 
-    listDiv.appendChild(div);
+    list.appendChild(div);
 
     setTimeout(() => {
-      const el = document.getElementById("qr-" + p.id);
-      if (el) {
-        el.innerHTML = "";
-        makeQR(p.id, el);
-      }
-    });
-
+      makeQR(p.id, document.getElementById("qr-"+p.id));
+    },0);
   });
 }
 
-/* SAVE */
 window.save = async (id) => {
-  const p = allPets.find(x => x.id === id);
-
-  await updateDoc(doc(db, "pets", id), {
-    name: document.getElementById("name-" + id).value,
-    phone: document.getElementById("phone-" + id).value,
-    phone2: document.getElementById("phone2-" + id).value
+  await updateDoc(doc(db,"pets",id),{
+    name:document.getElementById("n-"+id).value,
+    phone:document.getElementById("p-"+id).value,
+    phone2:document.getElementById("p2-"+id).value
   });
-
-  await audit("edit", id);
+  log("Saved "+id);
 };
 
-/* DISABLE / RESTORE */
 window.toggle = async (id, status) => {
-
-  const disable = status !== "disabled";
-
-  await updateDoc(doc(db, "pets", id), {
-    status: disable ? "disabled" : "active"
+  await updateDoc(doc(db,"pets",id),{
+    status: status==="disabled" ? "active" : "disabled"
   });
+  log("Toggled "+id);
+};
 
-  await audit(disable ? "disabled" : "enabled", id);
+window.softDelete = async (id) => {
+  await updateDoc(doc(db,"pets",id),{
+    status:"deleted"
+  });
+  log("Soft deleted "+id);
+};
+
+window.restore = async (id) => {
+  await updateDoc(doc(db,"pets",id),{
+    status:"active"
+  });
+  log("Restored "+id);
 };
 
 </script>
