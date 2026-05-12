@@ -314,7 +314,40 @@ async function loadPet() {
   }
 
   const pet = snap.data();
+if (pet.status === "disabled") {
 
+  document.body.innerHTML = `
+
+    <div style="
+      max-width:420px;
+      margin:auto;
+      margin-top:40px;
+      background:white;
+      padding:24px;
+      border-radius:18px;
+      text-align:center;
+      font-family:Arial;
+      box-shadow:0 6px 20px rgba(0,0,0,0.08);
+    ">
+
+      <h2>⚠ Profile Disabled</h2>
+
+      <p>
+        This pet profile has been disabled
+        for violating Arkforge Terms of Service.
+      </p>
+
+      <p>
+        Please contact Arkforge 3D Printing
+        if you believe this is an error.
+      </p>
+
+    </div>
+
+  `;
+
+  return;
+}
   /* BLOCK INACTIVE TAGS */
 
   if (pet.status !== "active") {
