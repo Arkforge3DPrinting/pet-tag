@@ -5,6 +5,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
 
     * {
@@ -80,7 +82,8 @@
 
     /* IFRAMES */
 
-    .toolframe {
+    .toolframe,
+    .toolpanel {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -90,8 +93,59 @@
       display: none;
     }
 
-    .toolframe.active {
+    .toolframe.active,
+    .toolpanel.active {
       display: block;
+    }
+
+    /* QR TOOL */
+
+    .qrWrap {
+      max-width: 500px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .qrWrap h2 {
+      margin-top: 0;
+    }
+
+    .qrWrap input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
+
+    .qrWrap button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #3b82f6;
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    #qrOutput {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    #qrLink {
+      margin-top: 12px;
+      font-size: 13px;
+      word-break: break-word;
+      color: #555;
     }
 
     /* MOBILE */
@@ -131,24 +185,32 @@
 
   <div class="nav">
 
+    <!-- 1 DATABASE -->
+
     <button class="active"
-      onclick="showTool('createTag', this)">
-      ➕ Create Tag
+      onclick="showTool('adminDb', this)">
+      🗂 Database
     </button>
 
+    <!-- 2 CREATE -->
+
     <button
-      onclick="showTool('adminDb', this)">
-      🗂 Admin Database
+      onclick="showTool('createTag', this)">
+      ➕ Create
     </button>
+
+    <!-- 3 ACTIVATE -->
 
     <button
       onclick="showTool('activateTag', this)">
-      🏷 Activate Tag
+      🏷 Activate
     </button>
 
+    <!-- 4 QR TOOL -->
+
     <button
-      onclick="showTool('foundPet', this)">
-      🐶 Found Pet
+      onclick="showTool('qrTool', this)">
+      🔳 QR Generator
     </button>
 
   </div>
@@ -157,20 +219,20 @@
 
   <div class="content">
 
-    <!-- CREATE TAG -->
-
-    <iframe
-      id="createTag"
-      class="toolframe active"
-      src="updatedb.html">
-    </iframe>
-
     <!-- ADMIN DATABASE -->
 
     <iframe
       id="adminDb"
-      class="toolframe"
+      class="toolframe active"
       src="admin.html">
+    </iframe>
+
+    <!-- CREATE TAG -->
+
+    <iframe
+      id="createTag"
+      class="toolframe"
+      src="updatedb.html">
     </iframe>
 
     <!-- ACTIVATE TAG -->
@@ -178,16 +240,34 @@
     <iframe
       id="activateTag"
       class="toolframe"
-      src="activate.html?id=test123">
+      src="activate.html?id=YOUR_TAG_ID">
     </iframe>
 
-    <!-- FOUND PET -->
+    <!-- QR GENERATOR -->
 
-    <iframe
-      id="foundPet"
-      class="toolframe"
-      src="index.html?id=test123">
-    </iframe>
+    <div
+      id="qrTool"
+      class="toolpanel">
+
+      <div class="qrWrap">
+
+        <h2>Generate Pet QR Code</h2>
+
+        <input
+          id="qrId"
+          placeholder="Enter Pet Tag ID">
+
+        <button onclick="generateQR()">
+          Generate QR
+        </button>
+
+        <div id="qrOutput"></div>
+
+        <div id="qrLink"></div>
+
+      </div>
+
+    </div>
 
   </div>
 
@@ -195,25 +275,54 @@
 
   function showTool(id, btn) {
 
-    // REMOVE ACTIVE FROM BUTTONS
+    // REMOVE ACTIVE BUTTONS
 
     document
       .querySelectorAll('.nav button')
       .forEach(b => b.classList.remove('active'));
 
-    // REMOVE ACTIVE FROM IFRAMES
+    // HIDE ALL PANELS
 
     document
-      .querySelectorAll('.toolframe')
+      .querySelectorAll('.toolframe, .toolpanel')
       .forEach(f => f.classList.remove('active'));
 
-    // ACTIVATE SELECTED
+    // SHOW TARGET
 
     btn.classList.add('active');
 
     document
       .getElementById(id)
       .classList.add('active');
+  }
+
+  function generateQR() {
+
+    const id =
+      document.getElementById('qrId')
+      .value
+      .trim();
+
+    if (!id) {
+      alert("Enter a Tag ID");
+      return;
+    }
+
+    const url =
+      `https://arkforge3dprinting.github.io/pet-tag/index.html?id=${id}`;
+
+    const qrOutput =
+      document.getElementById('qrOutput');
+
+    qrOutput.innerHTML = "";
+
+    new QRCode(qrOutput, {
+      text: url,
+      width: 220,
+      height: 220
+    });
+
+    document.getElementById('qrLink').innerText = url;
   }
 
 </script>
