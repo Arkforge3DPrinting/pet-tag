@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard v6</title>
+  <title>Arkforge Admin Dashboard</title>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
-
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
       margin: 0;
       padding: 20px;
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
     }
 
@@ -23,79 +22,49 @@
     #search {
       width: 100%;
       padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
       margin-bottom: 12px;
-      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
 
     .filters {
       display: flex;
-      flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
     }
 
     .filters button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 8px;
-      background: #ddd;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      background: #eee;
       cursor: pointer;
-      font-weight: bold;
+      border-radius: 6px;
     }
 
     .filters button.active {
-      background: #3b82f6;
-      color: white;
+      background: #ddd;
+      font-weight: bold;
     }
 
     .card {
       background: white;
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 14px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
     }
-
-    .meta {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 8px;
-      word-break: break-word;
-    }
-
-    .badges { margin-bottom: 10px; }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: bold;
-      margin-right: 5px;
-      margin-bottom: 5px;
-    }
-
-    .green { background: #dcfce7; color: #166534; }
-    .red { background: #fee2e2; color: #991b1b; }
-    .orange { background: #ffedd5; color: #9a3412; }
-    .blue { background: #dbeafe; color: #1d4ed8; }
-    .purple { background: #ede9fe; color: #5b21b6; }
 
     .row {
       display: flex;
+      gap: 8px;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 10px;
     }
 
-    .row input {
+    input {
+      padding: 8px;
       flex: 1;
-      min-width: 220px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      min-width: 180px;
     }
 
     .buttons {
@@ -105,38 +74,40 @@
       flex-wrap: wrap;
     }
 
-    .buttons button {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
+    button {
+      padding: 8px 10px;
       cursor: pointer;
-      font-weight: bold;
+      border: 1px solid #ccc;
+      background: #eee;
+      border-radius: 6px;
     }
 
-    .saveBtn { background: #3b82f6; color: white; }
-    .deleteBtn { background: #ef4444; color: white; }
-    .restoreBtn { background: #22c55e; color: white; }
+    .danger { background: #f2f2f2; }
+    .warn { background: #f2f2f2; }
+    .ok { background: #f2f2f2; }
 
     .footer {
       display: flex;
       justify-content: space-between;
+      margin-top: 10px;
       align-items: flex-end;
-      margin-top: 12px;
-      gap: 10px;
     }
 
-    .leftSide img {
-      max-width: 110px;
-      border-radius: 10px;
-      border: 2px solid #eee;
-    }
-
-    .qrSide {
+    .qr {
       margin-left: auto;
-      display: flex;
-      justify-content: flex-end;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    td, th {
+      border: 1px solid #ddd;
+      padding: 6px;
+      text-align: left;
     }
 
   </style>
@@ -144,19 +115,31 @@
 
 <body>
 
-<h2>🐾 Arkforge Admin Dashboard</h2>
+<h2>🐾 Admin Dashboard</h2>
 
-<input id="search" placeholder="Search Tag ID or Pet Name...">
+<input id="search" placeholder="Search ID or name...">
 
 <div class="filters">
   <button class="active" onclick="setFilter('all', this)">All</button>
-  <button onclick="setFilter('inactive', this)">Unactivated</button>
-  <button onclick="setFilter('active', this)">Activated</button>
+  <button onclick="setFilter('active', this)">Active</button>
   <button onclick="setFilter('disabled', this)">Disabled</button>
   <button onclick="setFilter('deleted', this)">Deleted</button>
+  <button onclick="setFilter('unactivated', this)">Unactivated</button>
 </div>
 
 <div id="list"></div>
+
+<h3>Audit Log</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Action</th>
+      <th>Tag ID</th>
+    </tr>
+  </thead>
+  <tbody id="audit"></tbody>
+</table>
 
 <script type="module">
 
@@ -168,13 +151,9 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  setDoc
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -187,37 +166,43 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-const listDiv = document.getElementById("list");
+let pets = [];
+let logs = [];
+let filter = "all";
+let search = "";
 
-let allPets = [];
-let currentSearch = "";
-let currentFilter = "all";
+const list = document.getElementById("list");
+const audit = document.getElementById("audit");
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-  listen();
-});
-
-function listen() {
-  onSnapshot(collection(db, "pets"), (snap) => {
-    allPets = [];
-    snap.forEach(d => allPets.push({ id: d.id, ...d.data() }));
-    render();
-  });
-}
-
-document.getElementById("search").addEventListener("input", (e) => {
-  currentSearch = e.target.value.toLowerCase();
+document.getElementById("search").addEventListener("input", e => {
+  search = e.target.value.toLowerCase();
   render();
 });
 
-window.setFilter = (filter, btn) => {
-  currentFilter = filter;
+function log(action, id) {
+  logs.unshift({
+    time: new Date().toLocaleString(),
+    action,
+    id
+  });
+
+  audit.innerHTML = logs.map(l => `
+    <tr>
+      <td>${l.time}</td>
+      <td>${l.action}</td>
+      <td>${l.id}</td>
+    </tr>
+  `).join("");
+}
+
+onSnapshot(collection(db, "pets"), snap => {
+  pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+});
+
+window.setFilter = (f, btn) => {
+  filter = f;
 
   document.querySelectorAll(".filters button")
     .forEach(b => b.classList.remove("active"));
@@ -230,99 +215,68 @@ window.setFilter = (filter, btn) => {
 function qr(id, el) {
   new QRCode(el, {
     text: `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`,
-    width: 90,
-    height: 90
+    width: 80,
+    height: 80
   });
 }
 
 function render() {
 
-  listDiv.innerHTML = "";
+  list.innerHTML = "";
 
-  const filtered = allPets.filter(p => {
+  let filtered = pets.filter(p => {
 
     const match =
-      p.id.toLowerCase().includes(currentSearch) ||
-      (p.name || "").toLowerCase().includes(currentSearch);
+      p.id.toLowerCase().includes(search) ||
+      (p.name || "").toLowerCase().includes(search);
 
     if (!match) return false;
 
-    switch (currentFilter) {
+    if (filter === "active") return !p.status && p.activatedAt;
+    if (filter === "disabled") return p.status === "disabled";
+    if (filter === "deleted") return p.status === "deleted";
+    if (filter === "unactivated") return !p.activatedAt;
 
-      case "inactive":
-        return !p.activatedAt && !p.status;
-
-      case "active":
-        return !!p.activatedAt && p.status !== "disabled";
-
-      case "disabled":
-        return p.status === "disabled";
-
-      case "deleted":
-        return p.status === "deleted";
-
-      default:
-        return true;
-    }
+    return true;
   });
 
   filtered.forEach(p => {
-
-    const badges = [];
-
-    if (p.status === "disabled") {
-      badges.push(`<span class="badge purple">Disabled</span>`);
-    } else if (p.status === "deleted") {
-      badges.push(`<span class="badge red">Deleted</span>`);
-    } else if (p.activatedAt) {
-      badges.push(`<span class="badge green">Activated</span>`);
-    } else {
-      badges.push(`<span class="badge red">Unactivated</span>`);
-    }
-
-    if (!p.photo || p.photo.includes("placeholderpaw")) {
-      badges.push(`<span class="badge orange">No Photo</span>`);
-    }
-
-    if (!p.phone2) {
-      badges.push(`<span class="badge blue">No Secondary</span>`);
-    }
 
     const div = document.createElement("div");
     div.className = "card";
 
     div.innerHTML = `
-      <div class="meta"><b>Tag ID:</b> ${p.id}</div>
-
-      <div class="badges">${badges.join("")}</div>
+      <div><b>ID:</b> ${p.id}</div>
+      <div><b>Status:</b> ${p.status || "active"}</div>
 
       <div class="row">
-        <input id="name-${p.id}" value="${p.name || ""}" placeholder="Pet Name">
-        <input id="phone-${p.id}" value="${p.phone || ""}" placeholder="Primary">
-        <input id="phone2-${p.id}" value="${p.phone2 || ""}" placeholder="Secondary">
+        <input id="name-${p.id}" value="${p.name || ""}">
+        <input id="phone-${p.id}" value="${p.phone || ""}">
+        <input id="phone2-${p.id}" value="${p.phone2 || ""}">
       </div>
 
       <div class="footer">
-        <div class="leftSide">
-          ${p.photo ? `<img src="${p.photo}">` : ""}
-        </div>
-        <div class="qrSide"><div id="qr-${p.id}"></div></div>
+        <div class="qr"><div id="qr-${p.id}"></div></div>
       </div>
 
       <div class="buttons">
 
-        <button class="saveBtn" onclick="save('${p.id}')">💾 Save</button>
+        <button onclick="save('${p.id}')">Save</button>
+
+        <button onclick="toggleDisable('${p.id}', '${p.status || ""}')">
+          ${p.status === "disabled" ? "Enable" : "Disable"}
+        </button>
 
         ${
           p.status === "deleted"
-          ? `<button class="restoreBtn" onclick="restore('${p.id}')">♻ Restore</button>`
-          : `<button class="deleteBtn" onclick="softDelete('${p.id}')">🗑 Delete</button>`
+          ? `<button onclick="restore('${p.id}')">Restore</button>`
+          : `<button class="danger" onclick="softDelete('${p.id}')">Delete</button>`
         }
 
       </div>
     `;
 
-    listDiv.appendChild(div);
+    list.appendChild(div);
 
     setTimeout(() => {
       const el = document.getElementById("qr-" + p.id);
@@ -331,6 +285,7 @@ function render() {
         qr(p.id, el);
       }
     });
+
   });
 }
 
@@ -340,43 +295,47 @@ window.save = async (id) => {
     phone: document.getElementById("phone-" + id).value,
     phone2: document.getElementById("phone2-" + id).value
   });
+
+  log("EDIT", id);
 };
 
-/* SOFT DELETE */
+window.toggleDisable = async (id, status) => {
+
+  await updateDoc(doc(db, "pets", id), {
+    status: status === "disabled" ? "" : "disabled"
+  });
+
+  log(status === "disabled" ? "ENABLE" : "DISABLE", id);
+};
+
 window.softDelete = async (id) => {
 
-  const confirmDelete = confirm("Move this tag to Deleted?");
-  if (!confirmDelete) return;
-
-  const pet = allPets.find(p => p.id === id);
+  const pet = pets.find(p => p.id === id);
+  if (!pet) return;
 
   await setDoc(doc(db, "deleted", id), {
     ...pet,
-    status: "deleted",
-    deletedAt: new Date().toISOString()
-  });
-
-  await updateDoc(doc(db, "pets", id), {
     status: "deleted"
   });
+
+  await deleteDoc(doc(db, "pets", id));
+
+  log("DELETE", id);
 };
 
-/* RESTORE */
 window.restore = async (id) => {
 
-  const petSnap = await getDoc(doc(db, "deleted", id));
-
-  if (!petSnap.exists()) return;
-
-  const pet = petSnap.data();
+  const snap = await getDoc(doc(db, "deleted", id));
+  if (!snap.exists()) return;
 
   await setDoc(doc(db, "pets", id), {
-    ...pet,
-    status: "",
-    deletedAt: null
+    ...snap.data(),
+    status: ""
   });
 
   await deleteDoc(doc(db, "deleted", id));
+
+  log("RESTORE", id);
 };
 
 </script>
