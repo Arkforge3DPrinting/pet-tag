@@ -28,11 +28,28 @@
       margin-bottom: 12px;
     }
 
+    .topActions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .topActions button {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      background: #111827;
+      color: white;
+    }
+
     .filters {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .filters button {
@@ -49,11 +66,17 @@
       color: white;
     }
 
+    .layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+    }
+
     .card {
       background: white;
       border-radius: 14px;
       padding: 14px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     }
 
@@ -61,7 +84,6 @@
       font-size: 12px;
       color: #666;
       margin-bottom: 8px;
-      word-break: break-word;
     }
 
     .badges { margin-bottom: 10px; }
@@ -75,16 +97,14 @@
       margin-right: 5px;
     }
 
-    .green { background:#dcfce7; color:#166534; }
-    .red { background:#fee2e2; color:#991b1b; }
-    .orange { background:#ffedd5; color:#9a3412; }
-    .blue { background:#dbeafe; color:#1d4ed8; }
-    .purple { background:#ede9fe; color:#5b21b6; }
+    .green { background: #dcfce7; color: #166534; }
+    .red { background: #fee2e2; color: #991b1b; }
+    .purple { background: #ede9fe; color: #5b21b6; }
 
     .row {
       display: flex;
-      flex-wrap: wrap;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .row input {
@@ -95,23 +115,10 @@
       border: 1px solid #ccc;
     }
 
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 12px;
-    }
-
-    .leftSide img {
-      width: 110px;
-      height: 110px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-
     .buttons {
-      margin-top: 10px;
       display: flex;
       gap: 8px;
+      margin-top: 10px;
       flex-wrap: wrap;
     }
 
@@ -119,62 +126,72 @@
       flex: 1;
       min-width: 120px;
       padding: 10px;
-      border: none;
       border-radius: 8px;
+      border: none;
       font-weight: bold;
       cursor: pointer;
     }
 
-    .saveBtn { background:#3b82f6; color:white; }
-    .deleteBtn { background:#ef4444; color:white; }
-    .disableBtn { background:#7c3aed; color:white; }
-    .restoreBtn { background:#10b981; color:white; }
+    .saveBtn { background: #3b82f6; color: white; }
+    .disableBtn { background: #7c3aed; color: white; }
 
-    table {
-      width: 100%;
-      margin-top: 30px;
-      border-collapse: collapse;
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .footer img {
+      width: 90px;
+      border-radius: 10px;
+    }
+
+    .auditBox {
+      background: white;
+      padding: 12px;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      height: 80vh;
+      overflow: auto;
+    }
+
+    .auditItem {
       font-size: 12px;
+      border-bottom: 1px solid #eee;
+      padding: 8px 0;
     }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-
-    th { background: #f3f4f6; }
   </style>
 </head>
 
 <body>
 
-<h2>🐾 Arkforge Admin Dashboard</h2>
+<h2>🐾 Admin Dashboard</h2>
 
 <input id="search" placeholder="Search ID, name, phone...">
+
+<!-- NEW EXPORT BUTTONS -->
+<div class="topActions">
+  <button onclick="exportPetsCSV()">📤 Export Pets CSV</button>
+  <button onclick="exportAuditCSV()">📤 Export Audit CSV</button>
+</div>
 
 <div class="filters">
   <button class="active" onclick="setFilter('all', this)">All</button>
   <button onclick="setFilter('active', this)">Active</button>
   <button onclick="setFilter('inactive', this)">Inactive</button>
   <button onclick="setFilter('disabled', this)">Disabled</button>
-  <button onclick="setFilter('deleted', this)">Deleted</button>
 </div>
 
-<div id="list"></div>
+<div class="layout">
 
-<h3>📜 Audit Log</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Time</th>
-      <th>Action</th>
-      <th>Tag ID</th>
-      <th>Details</th>
-    </tr>
-  </thead>
-  <tbody id="audit"></tbody>
-</table>
+  <div id="list"></div>
+
+  <div class="auditBox">
+    <b>Audit Log</b>
+    <div id="auditList"></div>
+  </div>
+
+</div>
 
 <script type="module">
 
@@ -185,27 +202,58 @@ import {
   onSnapshot,
   doc,
   updateDoc,
-  addDoc
+  getDoc,
+  setDoc,
+  query
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
-  projectId: "arkforge-pets"
+  projectId: "arkforge-pets",
+  storageBucket: "arkforge-pets.firebasestorage.app",
+  messagingSenderId: "517154779272",
+  appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 let pets = [];
+let audit = [];
 let filter = "all";
-let search = "";
 
-document.getElementById("search").addEventListener("input", e => {
-  search = e.target.value.toLowerCase();
-  render();
+const listDiv = document.getElementById("list");
+const auditDiv = document.getElementById("auditList");
+
+/* AUTH */
+onAuthStateChanged(auth, user => {
+  if (!user) location.href = "login.html";
+  listen();
 });
 
+/* LISTEN */
+function listen() {
+
+  onSnapshot(collection(db, "pets"), snap => {
+    pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  });
+
+  onSnapshot(collection(db, "audit"), snap => {
+    audit = snap.docs.map(d => d.data());
+    audit.sort((a,b) => b.timestamp.localeCompare(a.timestamp));
+    renderAudit();
+  });
+}
+
+/* FILTER */
 window.setFilter = (f, btn) => {
   filter = f;
   document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
@@ -213,39 +261,38 @@ window.setFilter = (f, btn) => {
   render();
 };
 
-onSnapshot(collection(db, "pets"), snap => {
-  pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  render();
-});
+/* SAVE */
+window.savePet = async (id) => {
+  const ref = doc(db, "pets", id);
+  const snap = await getDoc(ref);
 
-function log(action, id, details="") {
-  addDoc(collection(db, "audit"), {
-    action,
-    id,
-    details,
-    time: new Date().toISOString()
+  await updateDoc(ref, {
+    name: document.getElementById("name-" + id).value,
+    phone: document.getElementById("phone-" + id).value,
+    phone2: document.getElementById("phone2-" + id).value
   });
-}
+};
 
+/* DISABLE */
+window.toggleDisable = async (id, status) => {
+
+  const ref = doc(db, "pets", id);
+
+  await updateDoc(ref, {
+    status: status === "disabled" ? "active" : "disabled"
+  });
+};
+
+/* RENDER */
 function render() {
 
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+  listDiv.innerHTML = "";
 
   const filtered = pets.filter(p => {
 
-    const matchSearch =
-      p.id.toLowerCase().includes(search) ||
-      (p.name || "").toLowerCase().includes(search) ||
-      (p.phone || "").includes(search) ||
-      (p.phone2 || "").includes(search);
-
-    if (!matchSearch) return false;
-
-    if (filter === "active") return p.status === "active" && !p.deleted;
-    if (filter === "inactive") return !p.activatedAt && !p.deleted;
+    if (filter === "active") return p.status !== "disabled" && p.activatedAt;
+    if (filter === "inactive") return !p.activatedAt;
     if (filter === "disabled") return p.status === "disabled";
-    if (filter === "deleted") return p.deleted === true;
 
     return true;
   });
@@ -256,84 +303,86 @@ function render() {
     div.className = "card";
 
     div.innerHTML = `
-      <div class="meta"><b>ID:</b> ${p.id}</div>
-
-      <div class="badges">
-        ${p.deleted ? `<span class="badge red">Deleted</span>` : ""}
-        ${p.status === "disabled" ? `<span class="badge purple">Disabled</span>` : ""}
-      </div>
+      <div class="meta">${p.id}</div>
 
       <div class="row">
-        <input id="name-${p.id}" value="${p.name||""}">
-        <input id="phone-${p.id}" value="${p.phone||""}">
-        <input id="phone2-${p.id}" value="${p.phone2||""}">
-      </div>
-
-      <div class="footer">
-        <div class="leftSide">
-          ${p.photo ? `<img src="${p.photo}">` : ""}
-        </div>
-        <div id="qr-${p.id}"></div>
+        <input id="name-${p.id}" value="${p.name || ""}">
+        <input id="phone-${p.id}" value="${p.phone || ""}">
+        <input id="phone2-${p.id}" value="${p.phone2 || ""}">
       </div>
 
       <div class="buttons">
-        <button class="saveBtn" onclick="save('${p.id}')">Save</button>
-
-        ${p.deleted
-          ? `<button class="restoreBtn" onclick="restore('${p.id}')">Restore</button>`
-          : `<button class="deleteBtn" onclick="softDelete('${p.id}')">Delete</button>`
-        }
-
-        <button class="disableBtn" onclick="toggleDisable('${p.id}', '${p.status}')">
-          ${p.status === "disabled" ? "Enable" : "Disable"}
+        <button class="saveBtn" onclick="savePet('${p.id}')">Save</button>
+        <button class="disableBtn" onclick="toggleDisable('${p.id}','${p.status || ""}')">
+          ${p.status === "disabled" ? "Re-enable" : "Disable"}
         </button>
       </div>
     `;
 
-    list.appendChild(div);
-
-    setTimeout(() => {
-      new QRCode(document.getElementById("qr-"+p.id), {
-        text: `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${p.id}`,
-        width: 90,
-        height: 90
-      });
-    });
-
+    listDiv.appendChild(div);
   });
 }
 
-window.save = async (id) => {
-  const p = pets.find(x => x.id === id);
-  await updateDoc(doc(db,"pets",id), {
-    name: document.getElementById("name-"+id).value,
-    phone: document.getElementById("phone-"+id).value,
-    phone2: document.getElementById("phone2-"+id).value
+/* AUDIT */
+function renderAudit() {
+
+  auditDiv.innerHTML = "";
+
+  audit.forEach(a => {
+    const div = document.createElement("div");
+    div.className = "auditItem";
+    div.innerHTML = `<b>${a.action}</b> — ${a.petId}<br>${a.timestamp}`;
+    auditDiv.appendChild(div);
   });
-  log("SAVE", id);
+}
+
+/* =========================
+   CSV EXPORT (NEW)
+========================= */
+
+window.exportPetsCSV = () => {
+
+  const headers = ["id","name","phone","phone2","status","activatedAt"];
+
+  const rows = pets.map(p =>
+    [
+      p.id,
+      p.name || "",
+      p.phone || "",
+      p.phone2 || "",
+      p.status || "",
+      p.activatedAt || ""
+    ].join(",")
+  );
+
+  downloadCSV(["header",...rows].join("\n"), "pets.csv", headers);
 };
 
-window.softDelete = async (id) => {
-  await updateDoc(doc(db,"pets",id), {
-    deleted: true,
-    deletedAt: new Date().toISOString()
-  });
-  log("DELETE", id);
+window.exportAuditCSV = () => {
+
+  const rows = audit.map(a =>
+    [
+      a.timestamp,
+      a.action,
+      a.petId
+    ].join(",")
+  );
+
+  downloadCSV(["timestamp,action,petId",...rows].join("\n"), "audit.csv");
 };
 
-window.restore = async (id) => {
-  await updateDoc(doc(db,"pets",id), {
-    deleted: false,
-    deletedAt: null
-  });
-  log("RESTORE", id);
-};
+function downloadCSV(data, filename) {
 
-window.toggleDisable = async (id, status) => {
-  const newStatus = status === "disabled" ? "active" : "disabled";
-  await updateDoc(doc(db,"pets",id), { status: newStatus });
-  log("STATUS", id, newStatus);
-};
+  const blob = new Blob([data], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
 
 </script>
 
