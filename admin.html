@@ -4,6 +4,8 @@
   <title>Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
     * { box-sizing: border-box; }
 
@@ -26,27 +28,33 @@
       margin-bottom: 12px;
     }
 
+    /* FILTERS */
     .filters {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
     .filters button {
-      padding: 8px 12px;
+      padding: 10px 14px;
       border: none;
-      border-radius: 8px;
+      border-radius: 999px;
       cursor: pointer;
-      background: #ddd;
       font-weight: bold;
+      background: #e5e7eb;
     }
 
     .filters button.active {
-      background: #3b82f6;
       color: white;
     }
 
+    .filters button.all.active { background: #374151; }
+    .filters button.active.active { background: #22c55e; }
+    .filters button.inactive.active { background: #f59e0b; }
+    .filters button.disabled.active { background: #ef4444; }
+
+    /* CARD */
     .card {
       background: white;
       padding: 14px;
@@ -58,30 +66,61 @@
     .meta {
       font-size: 12px;
       color: #666;
-      margin-bottom: 8px;
-    }
-
-    .row {
+      margin-bottom: 10px;
       display: flex;
+      justify-content: space-between;
+      align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-      align-items: center;
     }
 
-    input {
-      flex: 1;
-      min-width: 160px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+    /* STATUS BADGE */
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .badge.active { background: #22c55e; }
+    .badge.inactive { background: #f59e0b; }
+    .badge.disabled { background: #ef4444; }
+
+    /* ROW */
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-start;
     }
 
     img {
-      width: 60px;
-      height: 60px;
+      width: 120px;
+      height: 120px;
       object-fit: cover;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 2px solid #eee;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      min-width: 160px;
+      flex: 1;
+    }
+
+    .field label {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 100%;
     }
 
     .buttons {
@@ -106,20 +145,34 @@
     button.disable {
       background: #7c3aed;
     }
+
+    .id-btn {
+      background: #111827;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .qr {
+      margin-top: 10px;
+    }
   </style>
 </head>
 
 <body>
 
-<h2>🐾Dashboard</h2>
+<h2>🐾 Dashboard</h2>
 
 <input id="search" placeholder="Search ID, name, phone...">
 
 <div class="filters">
-  <button class="active" onclick="setFilter('all', this)">All</button>
-  <button onclick="setFilter('active', this)">Active</button>
-  <button onclick="setFilter('inactive', this)">Inactive</button>
-  <button onclick="setFilter('disabled', this)">Disabled</button>
+  <button class="all active" onclick="setFilter('all', this)">📦 All</button>
+  <button class="active" onclick="setFilter('active', this)">🟢 Active</button>
+  <button class="inactive" onclick="setFilter('inactive', this)">🟠 Inactive</button>
+  <button class="disabled" onclick="setFilter('disabled', this)">🔴 Disabled</button>
 </div>
 
 <div id="list"></div>
@@ -142,7 +195,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  apiKey: "AIzaSyCxFKSE6bXM06iVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -188,6 +241,12 @@ window.setFilter = (f, btn) => {
   render();
 };
 
+/* COPY ID */
+window.copyId = async (id) => {
+  await navigator.clipboard.writeText(id);
+  alert("Copied ID: " + id);
+};
+
 /* SAVE */
 window.savePet = async (id) => {
   const ref = doc(db, "pets", id);
@@ -202,13 +261,27 @@ window.savePet = async (id) => {
 /* TOGGLE */
 window.toggleDisable = async (id) => {
   const ref = doc(db, "pets", id);
-
   const pet = pets.find(p => p.id === id);
 
   await updateDoc(ref, {
     status: pet.status === "disabled" ? "active" : "disabled"
   });
 };
+
+/* QR */
+function makeQR(id) {
+  const el = document.getElementById("qr-" + id);
+  el.innerHTML = "";
+
+  const url =
+    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+
+  new QRCode(el, {
+    text: url,
+    width: 90,
+    height: 90
+  });
+}
 
 /* RENDER */
 function render() {
@@ -244,14 +317,33 @@ function render() {
     div.className = "card";
 
     div.innerHTML = `
-      <div class="meta"><b>${p.id}</b></div>
+      <div class="meta">
+        <b>${p.id}</b>
+        <button class="id-btn" onclick="copyId('${p.id}')">Copy ID</button>
+        <span class="badge ${p.status || 'inactive'}">
+          ${p.status || 'inactive'}
+        </span>
+      </div>
 
       <div class="row">
+
         <img src="${p.photo || ''}" onerror="this.style.display='none'">
 
-        <input id="name-${p.id}" value="${p.name || ""}">
-        <input id="phone-${p.id}" value="${p.phone || ""}">
-        <input id="phone2-${p.id}" value="${p.phone2 || ""}">
+        <div class="field">
+          <label>Name</label>
+          <input id="name-${p.id}" value="${p.name || ""}">
+        </div>
+
+        <div class="field">
+          <label>Primary Phone</label>
+          <input id="phone-${p.id}" value="${p.phone || ""}">
+        </div>
+
+        <div class="field">
+          <label>Secondary Phone</label>
+          <input id="phone2-${p.id}" value="${p.phone2 || ""}">
+        </div>
+
       </div>
 
       <div class="buttons">
@@ -260,9 +352,13 @@ function render() {
           ${p.status === "disabled" ? "Re-enable" : "Disable"}
         </button>
       </div>
+
+      <div class="qr" id="qr-${p.id}"></div>
     `;
 
     listDiv.appendChild(div);
+
+    setTimeout(() => makeQR(p.id), 50);
   });
 }
 
