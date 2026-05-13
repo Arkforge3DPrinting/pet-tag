@@ -109,7 +109,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  apiKey: "AIzaSyCxFKSE6bXM06iVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   messagingSenderId: "517154779272",
@@ -120,39 +120,63 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-await setPersistence(auth, browserLocalPersistence);
+/* =========================
+   🔥 AUTH BOOT (FIXED)
+   ========================= */
 
 const loginBox = document.getElementById("loginBox");
 const appBox = document.getElementById("app");
 const loading = document.getElementById("loading");
 
-/* =========================
-   🔥 FIXED AUTH BOOT LOGIC
-   ========================= */
+let authReady = false;
+let currentUser = null;
 
-/* hide UI until Firebase resolves */
+/* default UI state */
 loginBox.style.display = "none";
 appBox.style.display = "none";
 loading.style.display = "block";
 
-const user = await new Promise((resolve) => {
-  const unsub = onAuthStateChanged(auth, (u) => {
-    unsub();           // IMPORTANT: stop multiple triggers
-    resolve(u);        // return first stable auth state
-  });
+/* force persistent login */
+await setPersistence(auth, browserLocalPersistence);
+
+/* main listener (source of truth) */
+onAuthStateChanged(auth, (user) => {
+  authReady = true;
+  currentUser = user;
+
+  loading.style.display = "none";
+
+  if (user) {
+    loginBox.style.display = "none";
+    appBox.style.display = "block";
+  } else {
+    loginBox.style.display = "block";
+    appBox.style.display = "none";
+  }
 });
 
-loading.style.display = "none";
+/* safety fallback (rare slow Firebase init fix) */
+setTimeout(() => {
+  if (!authReady) {
+    const u = auth.currentUser;
 
-if (user) {
-  loginBox.style.display = "none";
-  appBox.style.display = "block";
-} else {
-  loginBox.style.display = "block";
-  appBox.style.display = "none";
-}
+    loading.style.display = "none";
 
-/* LOGIN */
+    if (u) {
+      currentUser = u;
+      loginBox.style.display = "none";
+      appBox.style.display = "block";
+    } else {
+      loginBox.style.display = "block";
+      appBox.style.display = "none";
+    }
+  }
+}, 2500);
+
+/* =========================
+   LOGIN
+   ========================= */
+
 document.getElementById("loginBtn").onclick = async () => {
 
   const email = document.getElementById("email").value.trim();
@@ -160,14 +184,20 @@ document.getElementById("loginBtn").onclick = async () => {
   const status = document.getElementById("loginStatus");
 
   try {
+    status.innerText = "Logging in...";
+
     await signInWithEmailAndPassword(auth, email, password);
+
     status.innerText = "Success...";
   } catch (e) {
     status.innerText = e.message;
   }
 };
 
-/* ID GEN */
+/* =========================
+   ID GENERATOR
+   ========================= */
+
 function idGen(len = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from({ length: len }, () =>
@@ -175,15 +205,20 @@ function idGen(len = 10) {
   ).join("");
 }
 
-/* DEFAULT IMAGE */
+/* default image */
 const defaultPhoto =
   "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
 
-/* CREATE */
+/* =========================
+   CREATE TAG (SAFE GUARD)
+   ========================= */
+
 document.getElementById("createBtn").onclick = async () => {
 
-  if (!auth.currentUser) {
-    alert("Not logged in");
+  const user = auth.currentUser || currentUser;
+
+  if (!authReady || !user) {
+    alert("Auth still loading. Please try again in a moment.");
     return;
   }
 
@@ -191,12 +226,14 @@ document.getElementById("createBtn").onclick = async () => {
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
 
-  if (!name || !phone) return alert("Missing fields");
+  if (!name || !phone) {
+    alert("Missing fields");
+    return;
+  }
 
   const id = idGen();
 
   try {
-
     await setDoc(doc(db, "pets", id), {
       name,
       phone,
