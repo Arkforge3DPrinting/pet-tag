@@ -205,6 +205,7 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -235,44 +236,52 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 /* =========================
-   🔥 FIX: STABLE AUTH BOOT
-   ========================= */
-await setPersistence(auth, browserLocalPersistence);
+   VARIABLES
+========================= */
 
-/* Prevent "instant logout redirect" */
-let authReady = false;
-let currentUser = null;
+let pets = [];
+let filter = "all";
+let search = "";
 
-/* UI elements */
 const listDiv = document.getElementById("list");
 
-/* AUTH BOOT (SAFE) */
+/* =========================
+   AUTH
+========================= */
+
+await setPersistence(auth, browserLocalPersistence);
+
+let started = false;
+
 onAuthStateChanged(auth, (user) => {
 
-  currentUser = user;
-  authReady = true;
-
-  if (!authReady) return;
-
   if (!user) {
-    // small delay prevents flicker + false negative during restore
+
     setTimeout(() => {
+
       if (!auth.currentUser) {
         window.location.href = "login.html";
       }
+
     }, 500);
+
     return;
   }
 
   start();
 });
 
-/* START ONLY ONCE AUTH IS REAL */
-let started = false;
+/* =========================
+   START
+========================= */
 
 function start() {
 
+  if (started) return;
+  started = true;
+
   onSnapshot(
+
     query(collection(db, "pets")),
 
     (snap) => {
@@ -300,25 +309,50 @@ function start() {
   );
 }
 
-/* FILTER */
+/* =========================
+   SEARCH
+========================= */
+
+document.getElementById("search").addEventListener("input", (e) => {
+
+  search = (e.target.value || "").toLowerCase();
+  render();
+
+});
+
+/* =========================
+   FILTER
+========================= */
+
 window.setFilter = (f, btn) => {
+
   filter = f;
 
   document.querySelectorAll(".filters button")
     .forEach(b => b.classList.remove("active"));
 
   btn.classList.add("active");
+
   render();
 };
 
-/* COPY ID */
+/* =========================
+   COPY ID
+========================= */
+
 window.copyId = async (id) => {
+
   await navigator.clipboard.writeText(id);
   alert("Copied: " + id);
+
 };
 
-/* SAVE */
+/* =========================
+   SAVE
+========================= */
+
 window.savePet = async (id) => {
+
   const ref = doc(db, "pets", id);
 
   await updateDoc(ref, {
@@ -326,24 +360,38 @@ window.savePet = async (id) => {
     phone: document.getElementById("phone-" + id).value,
     phone2: document.getElementById("phone2-" + id).value
   });
+
 };
 
-/* TOGGLE */
+/* =========================
+   TOGGLE
+========================= */
+
 window.toggleDisable = async (id) => {
+
   const ref = doc(db, "pets", id);
   const pet = pets.find(p => p.id === id);
 
   await updateDoc(ref, {
-    status: pet.status === "disabled" ? "active" : "disabled"
+    status: pet.status === "disabled"
+      ? "active"
+      : "disabled"
   });
+
 };
 
-/* QR */
+/* =========================
+   QR
+========================= */
+
 function makeQR(id) {
+
   const el = document.getElementById("qr-" + id);
+
   el.innerHTML = "";
 
-  const url = `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+  const url =
+    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
   new QRCode(el, {
     text: url,
@@ -352,7 +400,10 @@ function makeQR(id) {
   });
 }
 
-/* RENDER */
+/* =========================
+   RENDER
+========================= */
+
 function render() {
 
   listDiv.innerHTML = "";
@@ -380,12 +431,16 @@ function render() {
 
     if (filter === "noprimary") return !p.phone;
     if (filter === "nosecondary") return !p.phone2;
-    if (filter === "defaultimg") return !p.photo || p.photo.includes("placeholderpaw");
+
+    if (filter === "defaultimg") {
+      return !p.photo || p.photo.includes("placeholderpaw");
+    }
 
     return true;
   });
 
   if (!filtered.length) {
+
     listDiv.innerHTML = "<p>No pets found.</p>";
     return;
   }
@@ -393,38 +448,53 @@ function render() {
   filtered.forEach(p => {
 
     const div = document.createElement("div");
+
     div.className = "card";
 
     div.innerHTML = `
       <div class="meta">
+
         <div class="idline">
           <b>${p.id}</b>
-          <button class="id-btn" onclick="copyId('${p.id}')">Copy</button>
+
+          <button class="id-btn"
+            onclick="copyId('${p.id}')">
+            Copy
+          </button>
         </div>
 
         <span class="badge ${p.status || 'inactive'}">
           ${p.status || 'inactive'}
         </span>
+
       </div>
 
       <div class="row">
+
         <div class="left">
 
-          <img src="${p.photo || ''}" onerror="this.style.display='none'">
+          <img src="${p.photo || ''}"
+            onerror="this.style.display='none'">
 
           <div class="field">
             <label>Name</label>
-            <input id="name-${p.id}" value="${p.name || ""}">
+
+            <input id="name-${p.id}"
+              value="${p.name || ""}">
           </div>
 
           <div class="field">
             <label>Primary Phone</label>
-            <input id="phone-${p.id}" value="${p.phone || ""}">
+
+            <input id="phone-${p.id}"
+              value="${p.phone || ""}">
           </div>
 
           <div class="field">
             <label>Secondary Phone</label>
-            <input id="phone2-${p.id}" value="${p.phone2 || ""}">
+
+            <input id="phone2-${p.id}"
+              value="${p.phone2 || ""}">
           </div>
 
         </div>
@@ -432,21 +502,36 @@ function render() {
         <div class="right">
           <div id="qr-${p.id}" class="qr"></div>
         </div>
+
       </div>
 
       <div class="buttons">
-        <button class="action" onclick="savePet('${p.id}')">Save</button>
-        <button class="action disable" onclick="toggleDisable('${p.id}')">
-          ${p.status === "disabled" ? "Re-enable" : "Disable"}
+
+        <button class="action"
+          onclick="savePet('${p.id}')">
+          Save
         </button>
+
+        <button class="action disable"
+          onclick="toggleDisable('${p.id}')">
+
+          ${p.status === "disabled"
+            ? "Re-enable"
+            : "Disable"}
+
+        </button>
+
       </div>
     `;
 
     listDiv.appendChild(div);
+
     setTimeout(() => makeQR(p.id), 50);
+
   });
 }
 
 </script>
+
 </body>
 </html>
