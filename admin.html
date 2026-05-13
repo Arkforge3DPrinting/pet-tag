@@ -1,3 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    h2 { margin-bottom: 12px; }
+
+    #search {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 12px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filters button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #ddd;
+      font-weight: bold;
+    }
+
+    .filters button.active {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .card {
+      background: white;
+      padding: 14px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+
+    .meta {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input {
+      flex: 1;
+      min-width: 160px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .buttons {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button.action {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #3b82f6;
+      color: white;
+    }
+
+    button.disable {
+      background: #7c3aed;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🐾 Admin Dashboard</h2>
+
+<input id="search" placeholder="Search ID, name, phone...">
+
+<div class="filters">
+  <button class="active" onclick="setFilter('all', this)">All</button>
+  <button onclick="setFilter('active', this)">Active</button>
+  <button onclick="setFilter('inactive', this)">Inactive</button>
+  <button onclick="setFilter('disabled', this)">Disabled</button>
+</div>
+
+<div id="list"></div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -8,7 +125,6 @@ import {
   doc,
   updateDoc,
   getDoc,
-  setDoc,
   query
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -17,9 +133,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* =========================
-   FIREBASE INIT
-========================= */
+/* ================= FIREBASE ================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -34,20 +148,16 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* =========================
-   STATE
-========================= */
+/* ================= STATE ================= */
 
 let pets = [];
 let filter = "all";
 let search = "";
-let currentUser = null;
+let started = false;
 
 const listDiv = document.getElementById("list");
 
-/* =========================
-   AUTH GATE (CRITICAL FIX)
-========================= */
+/* ================= AUTH GATE (CRITICAL) ================= */
 
 onAuthStateChanged(auth, (user) => {
 
@@ -56,21 +166,19 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  currentUser = user;
-
-  // ONLY START FIRESTORE AFTER AUTH IS CONFIRMED
-  startFirestore();
+  if (!started) {
+    started = true;
+    startFirestore();
+  }
 });
 
-/* =========================
-   FIRESTORE STARTER
-========================= */
+/* ================= FIRESTORE ================= */
 
 function startFirestore() {
 
-  const petsQuery = query(collection(db, "pets"));
+  const q = query(collection(db, "pets"));
 
-  onSnapshot(petsQuery, (snap) => {
+  onSnapshot(q, (snap) => {
 
     pets = [];
 
@@ -82,20 +190,17 @@ function startFirestore() {
   });
 }
 
-/* =========================
-   SEARCH
-========================= */
+/* ================= SEARCH ================= */
 
 document.getElementById("search").addEventListener("input", (e) => {
   search = (e.target.value || "").toLowerCase();
   render();
 });
 
-/* =========================
-   FILTER
-========================= */
+/* ================= FILTER ================= */
 
 window.setFilter = (f, btn) => {
+
   filter = f;
 
   document.querySelectorAll(".filters button")
@@ -106,16 +211,12 @@ window.setFilter = (f, btn) => {
   render();
 };
 
-/* =========================
-   SAVE PET
-========================= */
+/* ================= SAVE ================= */
 
 window.savePet = async (id) => {
 
   const ref = doc(db, "pets", id);
   const snap = await getDoc(ref);
-
-  const before = snap.data();
 
   const after = {
     name: document.getElementById("name-" + id).value,
@@ -126,9 +227,7 @@ window.savePet = async (id) => {
   await updateDoc(ref, after);
 };
 
-/* =========================
-   DISABLE / ENABLE
-========================= */
+/* ================= DISABLE / ENABLE ================= */
 
 window.toggleDisable = async (id) => {
 
@@ -143,9 +242,7 @@ window.toggleDisable = async (id) => {
   await updateDoc(ref, { status: newStatus });
 };
 
-/* =========================
-   RENDER
-========================= */
+/* ================= RENDER ================= */
 
 function render() {
 
@@ -195,8 +292,8 @@ function render() {
       </div>
 
       <div class="buttons">
-        <button onclick="savePet('${p.id}')">Save</button>
-        <button onclick="toggleDisable('${p.id}')">
+        <button class="action" onclick="savePet('${p.id}')">Save</button>
+        <button class="action disable" onclick="toggleDisable('${p.id}')">
           ${p.status === "disabled" ? "Re-enable" : "Disable"}
         </button>
       </div>
@@ -207,3 +304,6 @@ function render() {
 }
 
 </script>
+
+</body>
+</html>
