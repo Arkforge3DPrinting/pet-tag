@@ -28,6 +28,7 @@
       margin-bottom: 12px;
     }
 
+    /* FILTER PILLS */
     .filters {
       display: flex;
       gap: 10px;
@@ -42,13 +43,15 @@
       cursor: pointer;
       font-weight: bold;
       background: #e5e7eb;
+      transition: 0.2s;
     }
 
+    .filters button.active.all { background: #374151; color: white; }
     .filters button.active.active { background: #22c55e; color: white; }
-    .filters button.inactive.active { background: #f59e0b; color: white; }
-    .filters button.disabled.active { background: #ef4444; color: white; }
-    .filters button.all.active { background: #374151; color: white; }
+    .filters button.active.inactive { background: #f59e0b; color: white; }
+    .filters button.active.disabled { background: #ef4444; color: white; }
 
+    /* CARD */
     .card {
       background: white;
       padding: 14px;
@@ -63,9 +66,19 @@
       margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .id-btn {
+      background: #111827;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
     }
 
     .badge {
@@ -80,6 +93,7 @@
     .badge.inactive { background: #f59e0b; }
     .badge.disabled { background: #ef4444; }
 
+    /* ROW */
     .row {
       display: flex;
       gap: 12px;
@@ -87,9 +101,10 @@
       align-items: flex-start;
     }
 
+    /* BIGGER IMAGE (your request) */
     img {
-      width: 120px;
-      height: 120px;
+      width: 140px;
+      height: 140px;
       object-fit: cover;
       border-radius: 12px;
       border: 2px solid #eee;
@@ -112,7 +127,6 @@
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      width: 100%;
     }
 
     .buttons {
@@ -136,16 +150,6 @@
 
     button.disable {
       background: #7c3aed;
-    }
-
-    .id-btn {
-      background: #111827;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-size: 11px;
     }
 
     .qr {
@@ -183,9 +187,7 @@ import {
 
 import {
   getAuth,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -201,35 +203,21 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* ✅ FIX: stable auth boot (prevents bounce-back login loop) */
-let authReady = false;
-
-await setPersistence(auth, browserLocalPersistence);
-
-await new Promise((resolve) => {
-  const unsub = onAuthStateChanged(auth, (user) => {
-
-    authReady = true;
-
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    start();
-    unsub();
-    resolve();
-  });
-});
-
-/* DATA */
 let pets = [];
 let filter = "all";
 let search = "";
 
 const listDiv = document.getElementById("list");
 
-/* START DB */
+/* SIMPLE, STABLE AUTH (NO FLASH BUGS) */
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  start();
+});
+
 function start() {
   onSnapshot(query(collection(db, "pets")), (snap) => {
     pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -255,7 +243,7 @@ window.setFilter = (f, btn) => {
 /* COPY ID */
 window.copyId = async (id) => {
   await navigator.clipboard.writeText(id);
-  alert("Copied ID: " + id);
+  alert("Copied: " + id);
 };
 
 /* SAVE */
@@ -286,11 +274,8 @@ function makeQR(id) {
 
   el.innerHTML = "";
 
-  const url =
-    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
-
   new QRCode(el, {
-    text: url,
+    text: `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`,
     width: 90,
     height: 90
   });
@@ -319,11 +304,6 @@ function render() {
     return true;
   });
 
-  if (!filtered.length) {
-    listDiv.innerHTML = "<p>No pets found.</p>";
-    return;
-  }
-
   filtered.forEach(p => {
 
     const div = document.createElement("div");
@@ -332,7 +312,7 @@ function render() {
     div.innerHTML = `
       <div class="meta">
         <b>${p.id}</b>
-        <button class="id-btn" onclick="copyId('${p.id}')">Copy ID</button>
+        <button class="id-btn" onclick="copyId('${p.id}')">Copy</button>
         <span class="badge ${p.status || 'inactive'}">
           ${p.status || 'inactive'}
         </span>
@@ -371,7 +351,7 @@ function render() {
 
     listDiv.appendChild(div);
 
-    setTimeout(() => makeQR(p.id), 60);
+    setTimeout(() => makeQR(p.id), 50);
   });
 }
 
