@@ -222,7 +222,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  apiKey: "AIzaSyCxFKSE6bXM06iVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -234,44 +234,46 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* ✅ FIX 1: persistence must be set BEFORE auth listener stabilises */
+/* =========================
+   🔥 FIX: STABLE AUTH BOOT
+   ========================= */
 await setPersistence(auth, browserLocalPersistence);
 
-let pets = [];
-let filter = "all";
-let search = "";
+/* Prevent "instant logout redirect" */
+let authReady = false;
+let currentUser = null;
 
+/* UI elements */
 const listDiv = document.getElementById("list");
 
-/* =========================
-   🔥 FIXED AUTH FLOW (NO FLICKER)
-   ========================= */
-
-let authInitialized = false;
-
+/* AUTH BOOT (SAFE) */
 onAuthStateChanged(auth, (user) => {
 
-  // FIRST CALLBACK = Firebase restore phase → DO NOT redirect
-  if (!authInitialized) {
-    authInitialized = true;
+  currentUser = user;
+  authReady = true;
 
-    if (user) {
-      start();
-    }
+  if (!authReady) return;
 
+  if (!user) {
+    // small delay prevents flicker + false negative during restore
+    setTimeout(() => {
+      if (!auth.currentUser) {
+        window.location.href = "login.html";
+      }
+    }, 500);
     return;
   }
 
-  // AFTER INIT: safe routing
-  if (user) {
-    start();
-  } else {
-    window.location.href = "login.html";
-  }
+  start();
 });
 
-/* DATA START */
+/* START ONLY ONCE AUTH IS REAL */
+let started = false;
+
 function start() {
+  if (started) return;
+  started = true;
+
   onSnapshot(query(collection(db, "pets")), (snap) => {
     pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
@@ -353,8 +355,8 @@ function render() {
     const match =
       id.includes(s) ||
       name.includes(s) ||
-      phone.includes(s) ||
-      phone2.includes(s);
+      phone.includes(search) ||
+      phone2.includes(search);
 
     if (!match) return false;
 
@@ -381,7 +383,6 @@ function render() {
 
     div.innerHTML = `
       <div class="meta">
-
         <div class="idline">
           <b>${p.id}</b>
           <button class="id-btn" onclick="copyId('${p.id}')">Copy</button>
@@ -390,11 +391,9 @@ function render() {
         <span class="badge ${p.status || 'inactive'}">
           ${p.status || 'inactive'}
         </span>
-
       </div>
 
       <div class="row">
-
         <div class="left">
 
           <img src="${p.photo || ''}" onerror="this.style.display='none'">
@@ -419,7 +418,6 @@ function render() {
         <div class="right">
           <div id="qr-${p.id}" class="qr"></div>
         </div>
-
       </div>
 
       <div class="buttons">
@@ -431,12 +429,10 @@ function render() {
     `;
 
     listDiv.appendChild(div);
-
     setTimeout(() => makeQR(p.id), 50);
   });
 }
 
 </script>
-
 </body>
 </html>
