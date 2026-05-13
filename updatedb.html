@@ -66,9 +66,6 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
-    }
-
-    #generateBtn {
       background: #3b82f6;
       color: white;
     }
@@ -93,19 +90,6 @@
       display: flex;
       justify-content: center;
     }
-
-    #downloadSection button {
-      background: #111;
-      color: white;
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 13px;
-    }
-
-    .meta {
-      font-size: 12px;
-      color: #555;
-    }
   </style>
 </head>
 
@@ -128,11 +112,7 @@
   <div id="result"></div>
 
   <div class="bottom">
-
     <div id="qrBox"></div>
-
-    <div id="downloadSection"></div>
-
   </div>
 
 </div>
@@ -141,7 +121,12 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -157,22 +142,22 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let currentUser = null;
+let authReady = false;
 
-/* WAIT FOR AUTH BEFORE ANYTHING */
+/* 🔥 FIX: persist login across pages */
+await setPersistence(auth, browserLocalPersistence);
+
+/* ✅ WAIT FOR AUTH PROPERLY */
 await new Promise((resolve) => {
-  onAuthStateChanged(auth, (user) => {
+  const unsub = onAuthStateChanged(auth, (user) => {
     currentUser = user;
+    authReady = true;
+    unsub();
     resolve(user);
   });
 });
 
-/* BLOCK IF NOT LOGGED IN */
-if (!currentUser) {
-  alert("You must be logged in to create tags.");
-  throw new Error("No auth");
-}
-
-/* ID GENERATOR */
+/* 🔧 ID GENERATOR */
 function idGen(len = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from({ length: len }, () =>
@@ -182,6 +167,16 @@ function idGen(len = 10) {
 
 /* CREATE TAG */
 document.getElementById("generateBtn").onclick = async () => {
+
+  if (!authReady) {
+    alert("Auth still loading, try again in a second.");
+    return;
+  }
+
+  if (!currentUser) {
+    alert("You are not logged in.");
+    return;
+  }
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
@@ -197,19 +192,26 @@ document.getElementById("generateBtn").onclick = async () => {
   const url =
     `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
 
-  await setDoc(doc(db, "pets", id), {
-    name,
-    phone,
-    phone2: phone2 || "",
-    photo: "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
-    status: "inactive"
-  });
+  try {
 
-  document.getElementById("result").innerHTML =
-    `<b>ID:</b> ${id}<br>${url}`;
+    await setDoc(doc(db, "pets", id), {
+      name,
+      phone,
+      phone2: phone2 || "",
+      photo: "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
+      status: "inactive",
+      createdAt: new Date().toISOString()
+    });
 
+    document.getElementById("result").innerHTML =
+      `<b>ID:</b> ${id}<br>${url}`;
+
+  } catch (err) {
+    alert("Create failed: " + err.message);
+  }
 };
 
 </script>
+
 </body>
 </html>
