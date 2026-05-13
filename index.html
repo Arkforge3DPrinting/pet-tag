@@ -45,9 +45,7 @@
       margin: 10px auto;
       display: none;
       border: 4px solid #fff;
-      box-shadow:
-        0 0 0 3px #3b82f6,
-        0 6px 18px rgba(0,0,0,0.15);
+      box-shadow: 0 0 0 3px #3b82f6, 0 6px 18px rgba(0,0,0,0.15);
     }
 
     .grid {
@@ -71,27 +69,14 @@
       font-weight: bold;
       cursor: pointer;
       color: white;
-      transition: opacity 0.15s ease;
     }
+
+    #callBtn, #callBtn2 { background: #28c76f; }
+    #textBtn, #textBtn2 { background: #3b82f6; }
+    #locBtn, #locBtn2 { background: #ff9f43; }
 
     button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    #callBtn,
-    #callBtn2 {
-      background: #28c76f;
-    }
-
-    #textBtn,
-    #textBtn2 {
-      background: #3b82f6;
-    }
-
-    #locBtn,
-    #locBtn2 {
-      background: #ff9f43;
+      opacity: 0.6;
     }
 
     .footer {
@@ -100,7 +85,6 @@
       color: #999;
     }
 
-    /* LOCK SCREEN */
     #locked {
       max-width: 420px;
       margin: auto;
@@ -112,7 +96,6 @@
       display: none;
     }
 
-    /* TAG BOX */
     .tagbox {
       margin-top: 14px;
       padding: 14px;
@@ -122,12 +105,6 @@
       text-align: left;
     }
 
-    .tagbox-title {
-      font-weight: bold;
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-
     .tagcode {
       font-family: monospace;
       font-size: 15px;
@@ -135,66 +112,31 @@
       padding: 10px;
       border-radius: 10px;
       border: 1px solid #ddd;
-      word-break: break-all;
-    }
-
-    .tagbtn {
-      display: block;
-      margin-top: 10px;
-      padding: 12px;
-      text-align: center;
-      background: #3b82f6;
-      color: white;
-      border-radius: 10px;
-      font-weight: bold;
-      text-decoration: none;
-      transition: background 0.15s ease;
-    }
-
-    .tagbtn:hover {
-      background: #2563eb;
     }
   </style>
 </head>
 
 <body>
 
-<!-- LOCK SCREEN -->
 <div id="locked">
-
   <h2>🐾 Tag Not Activated</h2>
-
-  <p>
-    This pet tag must be activated before contact details are available.
-  </p>
+  <p>This pet tag must be activated before contact details are available.</p>
 
   <div class="tagbox">
-
-    <div class="tagbox-title">
-      🆔 Tag Code
-    </div>
-
+    <div><b>Tag Code</b></div>
     <div class="tagcode" id="tagCode"></div>
 
-    <a id="tagLinkBtn" class="tagbtn" target="_blank">
-      🔗 Activate This Tag
-    </a>
-
+    <a id="tagLinkBtn" target="_blank">Activate This Tag</a>
   </div>
-
 </div>
 
-<!-- MAIN VIEW -->
 <div class="container" id="main">
-
   <h1 id="title">Loading...</h1>
-
   <p id="message"></p>
 
   <img id="petPhoto">
 
   <div id="btnGrid" class="grid">
-
     <button id="callBtn"></button>
     <button id="callBtn2"></button>
 
@@ -203,26 +145,16 @@
 
     <button id="locBtn"></button>
     <button id="locBtn2"></button>
-
   </div>
 
   <div class="footer">
     Powered by Arkforge 3D Printing ®
   </div>
-
 </div>
 
 <script type="module">
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -236,33 +168,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const id =
-  new URLSearchParams(window.location.search).get("id");
+const id = new URLSearchParams(window.location.search).get("id");
 
 const main = document.getElementById("main");
 const locked = document.getElementById("locked");
 
-const baseUrl =
-  "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
-
 if (!id) {
-
   locked.style.display = "block";
-
   document.getElementById("tagCode").innerText = "INVALID";
-
   throw new Error("Missing ID");
 }
 
-/* TAG DISPLAY */
-
 document.getElementById("tagCode").innerText = id;
-
-const btn = document.getElementById("tagLinkBtn");
-
-btn.href = baseUrl;
-
-/* UI HELPERS */
+document.getElementById("tagLinkBtn").href =
+  "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
 
 function showLocked() {
   locked.style.display = "block";
@@ -273,286 +192,155 @@ function showMain() {
 }
 
 function setSingleMode() {
-  document.getElementById("btnGrid")
-    .classList.add("single");
+  document.getElementById("btnGrid").classList.add("single");
 }
 
-function unsetSingleMode() {
-  document.getElementById("btnGrid")
-    .classList.remove("single");
-}
-
-function hideEl(id) {
-
+function hide(id) {
   const el = document.getElementById(id);
-
-  if (el) {
-    el.style.display = "none";
-  }
+  if (el) el.style.display = "none";
 }
 
-function showEl(id) {
-
+function show(id) {
   const el = document.getElementById(id);
-
-  if (el) {
-    el.style.display = "";
-  }
+  if (el) el.style.display = "";
 }
 
-/* LOAD PET */
-
+/* =========================
+   LOAD PET (FIXED FLOW)
+   ========================= */
 async function loadPet() {
 
   const snap = await getDoc(doc(db, "pets", id));
 
   if (!snap.exists()) {
-
     showLocked();
-
     return;
   }
 
   const pet = snap.data();
-if (pet.status === "disabled") {
 
-  document.body.innerHTML = `
-
-    <div style="
-      max-width:420px;
-      margin:auto;
-      margin-top:40px;
-      background:white;
-      padding:24px;
-      border-radius:18px;
-      text-align:center;
-      font-family:Arial;
-      box-shadow:0 6px 20px rgba(0,0,0,0.08);
-    ">
-
-      <h2>⚠ Profile Disabled</h2>
-
-      <p>
-        This pet profile has been disabled
-        for violating Arkforge Terms of Service.
-      </p>
-
-      <p>
-        Please contact Arkforge 3D Printing
-        if you believe this is an error.
-      </p>
-
-    </div>
-
-  `;
-
-  return;
-}
-  /* BLOCK INACTIVE TAGS */
-
-  if (pet.status !== "active") {
-
-    showLocked();
-
+  /* 1. DISABLED (HIGHEST PRIORITY) */
+  if (pet.status === "disabled") {
+    document.body.innerHTML = `
+      <div style="
+        max-width:420px;
+        margin:auto;
+        margin-top:40px;
+        background:white;
+        padding:24px;
+        border-radius:18px;
+        text-align:center;
+        font-family:Arial;
+        box-shadow:0 6px 20px rgba(0,0,0,0.08);
+      ">
+        <h2>⚠ Profile Disabled</h2>
+        <p>This pet profile has been disabled.</p>
+        <p>Please contact Arkforge if this is an error.</p>
+      </div>
+    `;
     return;
   }
 
+  /* 2. NOT ACTIVE */
+  if (pet.status !== "active") {
+    showLocked();
+    return;
+  }
+
+  /* 3. ACTIVE */
   showMain();
 
   document.getElementById("title").innerText =
-    "🐾 You found " + pet.name;
+    "🐾 You found " + (pet.name || "a pet");
 
   document.getElementById("message").innerText =
-    `Help get ${pet.name} home safely.`;
+    "Help get " + (pet.name || "this pet") + " home safely.";
 
-  /* PHOTO */
+  const img = document.getElementById("petPhoto");
 
   if (pet.photo) {
-
-    const img = document.getElementById("petPhoto");
-
     img.src = pet.photo;
-
     img.style.display = "block";
   }
 
-  const secondaryExists =
-    pet.phone2 &&
-    pet.phone2.trim() !== "";
+  const secondary = pet.phone2 && pet.phone2.trim() !== "";
 
-  /* BUTTON LABELS */
+  document.getElementById("callBtn").onclick =
+    () => window.location.href = "tel:" + pet.phone;
 
-  document.getElementById("callBtn").innerText =
-    "📞 Call";
-
-  document.getElementById("textBtn").innerText =
-    "💬 Text";
-
-  document.getElementById("locBtn").innerText =
-    "📍 Send Location";
-
-  /* PRIMARY CALL */
-
-  document.getElementById("callBtn").onclick = () =>
-    window.location.href = "tel:" + pet.phone;
-
-  /* PRIMARY TEXT */
-
-  document.getElementById("textBtn").onclick = () =>
-    window.open(
-      `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-      "_self"
-    );
-
-  /* PRIMARY GPS */
+  document.getElementById("textBtn").onclick =
+    () => window.open(`sms:${pet.phone}?body=I found your pet ${pet.name}`, "_self");
 
   document.getElementById("locBtn").onclick = () => {
 
     const btn = document.getElementById("locBtn");
 
     btn.disabled = true;
-    btn.innerText = "📡 Acquiring GPS...";
+    btn.innerText = "📡 Getting GPS...";
 
-    navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.getCurrentPosition(pos => {
 
-      (pos) => {
+      const msg =
+        `I found ${pet.name}. Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
 
-        const msg =
-          "I found " + pet.name +
-          ". Location: https://maps.google.com/?q=" +
-          pos.coords.latitude +
-          "," +
-          pos.coords.longitude;
+      btn.disabled = false;
+      btn.innerText = "📍 Send Location";
 
-        btn.disabled = false;
-        btn.innerText = "📍 Send Location";
+      window.open(`sms:${pet.phone}?body=${encodeURIComponent(msg)}`, "_self");
 
-        window.open(
-          `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
-          "_self"
-        );
-
-      },
-
-      (err) => {
-
-        btn.disabled = false;
-        btn.innerText = "📍 Send Location";
-
-        alert("Unable to get GPS location.");
-
-        console.error(err);
-
-      },
-
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-      }
-
-    );
+    }, () => {
+      btn.disabled = false;
+      btn.innerText = "📍 Send Location";
+      alert("GPS failed");
+    });
 
   };
 
-  /* NO SECONDARY */
-
-  if (!secondaryExists) {
-
-    hideEl("callBtn2");
-    hideEl("textBtn2");
-    hideEl("locBtn2");
-
+  if (!secondary) {
+    hide("callBtn2");
+    hide("textBtn2");
+    hide("locBtn2");
     setSingleMode();
-
     return;
   }
 
-  /* SECONDARY EXISTS */
+  document.getElementById("callBtn2").onclick =
+    () => window.location.href = "tel:" + pet.phone2;
 
-  showEl("callBtn2");
-  showEl("textBtn2");
-  showEl("locBtn2");
-
-  unsetSingleMode();
-
-  document.getElementById("callBtn2").innerText =
-    "📞 Call Secondary";
-
-  document.getElementById("textBtn2").innerText =
-    "💬 Text Secondary";
-
-  document.getElementById("locBtn2").innerText =
-    "📍 Send Location Secondary";
-
-  /* SECONDARY CALL */
-
-  document.getElementById("callBtn2").onclick = () =>
-    window.location.href = "tel:" + pet.phone2;
-
-  /* SECONDARY TEXT */
-
-  document.getElementById("textBtn2").onclick = () =>
-    window.open(
-      `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-      "_self"
-    );
-
-  /* SECONDARY GPS */
+  document.getElementById("textBtn2").onclick =
+    () => window.open(`sms:${pet.phone2}?body=I found your pet ${pet.name}`, "_self");
 
   document.getElementById("locBtn2").onclick = () => {
 
     const btn = document.getElementById("locBtn2");
 
     btn.disabled = true;
-    btn.innerText = "📡 Acquiring GPS...";
+    btn.innerText = "📡 Getting GPS...";
 
-    navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.getCurrentPosition(pos => {
 
-      (pos) => {
+      const msg =
+        `I found ${pet.name}. Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
 
-        const msg =
-          "I found " + pet.name +
-          ". Location: https://maps.google.com/?q=" +
-          pos.coords.latitude +
-          "," +
-          pos.coords.longitude;
+      btn.disabled = false;
+      btn.innerText = "📍 Send Location Secondary";
 
-        btn.disabled = false;
-        btn.innerText = "📍 Send Location Secondary";
+      window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
 
-        window.open(
-          `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
-          "_self"
-        );
-
-      },
-
-      (err) => {
-
-        btn.disabled = false;
-        btn.innerText = "📍 Send Location Secondary";
-
-        alert("Unable to get GPS location.");
-
-        console.error(err);
-
-      },
-
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-      }
-
-    );
+    }, () => {
+      btn.disabled = false;
+      btn.innerText = "📍 Send Location Secondary";
+      alert("GPS failed");
+    });
 
   };
 
+  show("callBtn2");
+  show("textBtn2");
+  show("locBtn2");
 }
 
 loadPet();
-
 </script>
 
 </body>
