@@ -1,30 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Arkforge Admin Dashboard</title>
-
+  <title>Admin Dashboard v6</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
       margin: 0;
       padding: 20px;
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
     }
 
-    h2 {
-      margin-bottom: 12px;
-    }
+    h2 { margin-bottom: 12px; }
 
     #search {
       width: 100%;
@@ -32,7 +26,6 @@
       border-radius: 10px;
       border: 1px solid #ccc;
       margin-bottom: 12px;
-      font-size: 14px;
     }
 
     .filters {
@@ -68,7 +61,6 @@
       font-size: 12px;
       color: #666;
       margin-bottom: 8px;
-      word-break: break-word;
     }
 
     .badges {
@@ -82,37 +74,40 @@
       font-size: 11px;
       font-weight: bold;
       margin-right: 5px;
-      margin-bottom: 5px;
     }
 
-    .green {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .red {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .purple {
-      background: #ede9fe;
-      color: #5b21b6;
-    }
+    .green { background:#dcfce7; color:#166534; }
+    .red { background:#fee2e2; color:#991b1b; }
+    .orange { background:#ffedd5; color:#9a3412; }
+    .blue { background:#dbeafe; color:#1d4ed8; }
+    .purple { background:#ede9fe; color:#5b21b6; }
 
     .row {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 10px;
     }
 
     .row input {
       flex: 1;
-      min-width: 220px;
+      min-width: 180px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      align-items: center;
+    }
+
+    .leftSide img {
+      width: 110px;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 10px;
     }
 
     .buttons {
@@ -128,38 +123,26 @@
       padding: 10px;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
       font-weight: bold;
+      cursor: pointer;
     }
 
-    .saveBtn {
-      background: #3b82f6;
-      color: white;
+    .saveBtn { background:#3b82f6; color:white; }
+    .disableBtn { background:#7c3aed; color:white; }
+
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+      font-size: 12px;
     }
 
-    .disableBtn {
-      background: #7c3aed;
-      color: white;
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
     }
 
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 12px;
-      gap: 10px;
-    }
-
-    .leftSide img {
-      max-width: 110px;
-      border-radius: 10px;
-      border: 2px solid #eee;
-    }
-
-    .qrSide {
-      margin-left: auto;
-    }
-
+    th { background:#f3f4f6; }
   </style>
 </head>
 
@@ -167,362 +150,226 @@
 
 <h2>🐾 Arkforge Admin Dashboard</h2>
 
-<input id="search" placeholder="Search Tag ID, Name, Phone...">
+<input id="search" placeholder="Search ID, name, phone...">
 
 <div class="filters">
-
-  <button class="active" onclick="setFilter('all', this)">
-    All
-  </button>
-
-  <button onclick="setFilter('active', this)">
-    Active
-  </button>
-
-  <button onclick="setFilter('inactive', this)">
-    Inactive
-  </button>
-
-  <button onclick="setFilter('disabled', this)">
-    Disabled
-  </button>
-
+  <button class="active" onclick="setFilter('all', this)">All</button>
+  <button onclick="setFilter('active', this)">Active</button>
+  <button onclick="setFilter('inactive', this)">Inactive</button>
+  <button onclick="setFilter('disabled', this)">Disabled</button>
 </div>
 
 <div id="list"></div>
 
+<h3>📜 Audit Log</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Action</th>
+      <th>Tag ID</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody id="audit"></tbody>
+</table>
+
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore,
   collection,
   onSnapshot,
   doc,
-  updateDoc
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import {
-  getAuth,
-  onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  updateDoc,
+  addDoc,
+  query
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  apiKey: "YOUR_KEY",
   authDomain: "arkforge-pets.firebaseapp.com",
-  projectId: "arkforge-pets",
-  storageBucket: "arkforge-pets.firebasestorage.app",
-  messagingSenderId: "517154779272",
-  appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
+  projectId: "arkforge-pets"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-const listDiv = document.getElementById("list");
+let pets = [];
+let filter = "all";
+let search = "";
 
-let allPets = [];
-let currentSearch = "";
-let currentFilter = "all";
-
-/* AUTH */
-
-onAuthStateChanged(auth, (user) => {
-
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  listenForPets();
-});
-
-/* LISTEN */
-
-function listenForPets() {
-
-  onSnapshot(collection(db, "pets"), (snap) => {
-
-    allPets = [];
-
-    snap.forEach((docSnap) => {
-
-      allPets.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
-
-    });
-
-    render();
-  });
-}
-
-/* SEARCH */
-
-document.getElementById("search")
-.addEventListener("input", (e) => {
-
-  currentSearch =
-    e.target.value.toLowerCase();
-
+document.getElementById("search").addEventListener("input", e => {
+  search = e.target.value.toLowerCase();
   render();
 });
 
-/* FILTER */
-
-window.setFilter = (filter, btn) => {
-
-  currentFilter = filter;
-
-  document
-    .querySelectorAll(".filters button")
-    .forEach(b => b.classList.remove("active"));
-
+window.setFilter = (f, btn) => {
+  filter = f;
+  document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-
   render();
 };
 
-/* QR */
+/* =========================
+   LOAD PETS
+========================= */
 
-function makeQR(id, el) {
+onSnapshot(collection(db, "pets"), snap => {
+  pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+});
 
-  const url =
-    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+/* =========================
+   AUDIT LOG (FIXED)
+========================= */
 
-  new QRCode(el, {
-    text: url,
-    width: 90,
-    height: 90
+onSnapshot(collection(db, "audit"), snap => {
+
+  const tbody = document.getElementById("audit");
+  tbody.innerHTML = "";
+
+  const logs = snap.docs.map(d => d.data());
+
+  logs.sort((a,b) =>
+    (b.time || "").localeCompare(a.time || "")
+  );
+
+  logs.slice(0, 50).forEach(log => {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${log.time || ""}</td>
+      <td>${log.action || ""}</td>
+      <td>${log.id || ""}</td>
+      <td>${log.details || ""}</td>
+    `;
+
+    tbody.appendChild(row);
+  });
+
+});
+
+/* =========================
+   LOG HELPER
+========================= */
+
+async function log(action, id, details="") {
+  await addDoc(collection(db, "audit"), {
+    action,
+    id,
+    details,
+    time: new Date().toISOString()
   });
 }
 
-/* RENDER */
+/* =========================
+   RENDER
+========================= */
 
 function render() {
 
-  listDiv.innerHTML = "";
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
-  const filtered = allPets.filter((p) => {
+  const filtered = pets.filter(p => {
 
-    const matchesSearch =
+    const match =
+      p.id.toLowerCase().includes(search) ||
+      (p.name || "").toLowerCase().includes(search) ||
+      (p.phone || "").includes(search) ||
+      (p.phone2 || "").includes(search);
 
-      p.id.toLowerCase().includes(currentSearch) ||
+    if (!match) return false;
 
-      (p.name || "")
-      .toLowerCase()
-      .includes(currentSearch) ||
+    if (filter === "active") return p.status === "active";
+    if (filter === "inactive") return !p.activatedAt;
+    if (filter === "disabled") return p.status === "disabled";
 
-      (p.phone || "")
-      .toLowerCase()
-      .includes(currentSearch) ||
-
-      (p.phone2 || "")
-      .toLowerCase()
-      .includes(currentSearch);
-
-    if (!matchesSearch) return false;
-
-    switch (currentFilter) {
-
-      case "active":
-        return !!p.activatedAt &&
-               p.status !== "disabled";
-
-      case "inactive":
-        return !p.activatedAt &&
-               p.status !== "disabled";
-
-      case "disabled":
-        return p.status === "disabled";
-
-      default:
-        return true;
-    }
+    return true;
   });
 
-  filtered.forEach((p) => {
-
-    const badges = [];
-
-    if (p.status === "disabled") {
-
-      badges.push(`
-        <span class="badge purple">
-          Disabled
-        </span>
-      `);
-
-    } else if (p.activatedAt) {
-
-      badges.push(`
-        <span class="badge green">
-          Active
-        </span>
-      `);
-
-    } else {
-
-      badges.push(`
-        <span class="badge red">
-          Inactive
-        </span>
-      `);
-    }
+  filtered.forEach(p => {
 
     const div = document.createElement("div");
-
     div.className = "card";
 
     div.innerHTML = `
-
-      <div class="meta">
-        <b>Tag ID:</b> ${p.id}
-      </div>
+      <div class="meta"><b>ID:</b> ${p.id}</div>
 
       <div class="badges">
-        ${badges.join("")}
+        ${p.status === "disabled"
+          ? `<span class="badge purple">Disabled</span>`
+          : `<span class="badge green">Active</span>`}
       </div>
 
       <div class="row">
-
-        <input
-          id="name-${p.id}"
-          value="${p.name || ""}"
-          placeholder="Pet Name">
-
-        <input
-          id="phone-${p.id}"
-          value="${p.phone || ""}"
-          placeholder="Primary Phone">
-
-        <input
-          id="phone2-${p.id}"
-          value="${p.phone2 || ""}"
-          placeholder="Secondary Phone">
-
+        <input id="name-${p.id}" value="${p.name||""}">
+        <input id="phone-${p.id}" value="${p.phone||""}">
+        <input id="phone2-${p.id}" value="${p.phone2||""}">
       </div>
 
       <div class="footer">
-
         <div class="leftSide">
-
-          ${
-            p.photo
-            ? `<img src="${p.photo}">`
-            : ""
-          }
-
+          ${p.photo ? `<img src="${p.photo}">` : ""}
         </div>
-
-        <div class="qrSide">
-          <div id="qr-${p.id}"></div>
-        </div>
-
+        <div id="qr-${p.id}"></div>
       </div>
 
       <div class="buttons">
 
-        <button
-          class="saveBtn"
-          onclick="savePet('${p.id}')">
+        <button class="saveBtn" onclick="save('${p.id}')">Save</button>
 
-          💾 Save
-
-        </button>
-
-        <button
-          class="disableBtn"
-          onclick="toggleDisable('${p.id}', '${p.status || ""}')">
-
-          ${
-            p.status === "disabled"
-            ? "✅ Re-enable"
-            : "⛔ Disable"
-          }
-
+        <button class="disableBtn" onclick="toggle('${p.id}', '${p.status}')">
+          ${p.status === "disabled" ? "Enable" : "Disable"}
         </button>
 
       </div>
-
     `;
 
-    listDiv.appendChild(div);
+    list.appendChild(div);
 
     setTimeout(() => {
-
-      const qr =
-        document.getElementById("qr-" + p.id);
-
-      if (qr) {
-
-        qr.innerHTML = "";
-
-        makeQR(p.id, qr);
-      }
-
-    }, 0);
+      new QRCode(document.getElementById("qr-"+p.id), {
+        text: `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${p.id}`,
+        width: 90,
+        height: 90
+      });
+    });
 
   });
 }
 
-/* SAVE */
+/* =========================
+   SAVE
+========================= */
 
-window.savePet = async (id) => {
+window.save = async (id) => {
 
-  await updateDoc(doc(db, "pets", id), {
-
-    name:
-      document.getElementById("name-" + id).value,
-
-    phone:
-      document.getElementById("phone-" + id).value,
-
-    phone2:
-      document.getElementById("phone2-" + id).value
-
+  await updateDoc(doc(db,"pets",id), {
+    name: document.getElementById("name-"+id).value,
+    phone: document.getElementById("phone-"+id).value,
+    phone2: document.getElementById("phone2-"+id).value
   });
 
-  alert("Saved.");
+  log("SAVE", id);
 };
 
-/* DISABLE */
+/* =========================
+   DISABLE / ENABLE
+========================= */
 
-window.toggleDisable = async (id, currentStatus) => {
+window.toggle = async (id, status) => {
 
-  const disabling =
-    currentStatus !== "disabled";
+  const newStatus = status === "disabled" ? "active" : "disabled";
 
-  const confirmed = confirm(
-
-    disabling
-      ? "Disable this pet tag?"
-      : "Re-enable this pet tag?"
-
-  );
-
-  if (!confirmed) return;
-
-  await updateDoc(doc(db, "pets", id), {
-
-    status:
-      disabling
-        ? "disabled"
-        : "active"
-
+  await updateDoc(doc(db,"pets",id), {
+    status: newStatus
   });
 
-  alert(
-    disabling
-      ? "Tag disabled."
-      : "Tag re-enabled."
-  );
+  log("STATUS", id, newStatus);
 };
 
 </script>
