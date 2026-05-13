@@ -28,7 +28,6 @@
       margin-bottom: 12px;
     }
 
-    /* FILTERS */
     .filters {
       display: flex;
       gap: 10px;
@@ -45,16 +44,11 @@
       background: #e5e7eb;
     }
 
-    .filters button.active {
-      color: white;
-    }
+    .filters button.active.active { background: #22c55e; color: white; }
+    .filters button.inactive.active { background: #f59e0b; color: white; }
+    .filters button.disabled.active { background: #ef4444; color: white; }
+    .filters button.all.active { background: #374151; color: white; }
 
-    .filters button.all.active { background: #374151; }
-    .filters button.active.active { background: #22c55e; }
-    .filters button.inactive.active { background: #f59e0b; }
-    .filters button.disabled.active { background: #ef4444; }
-
-    /* CARD */
     .card {
       background: white;
       padding: 14px;
@@ -69,12 +63,11 @@
       margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
       gap: 10px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
-    /* STATUS BADGE */
     .badge {
       padding: 4px 10px;
       border-radius: 999px;
@@ -87,7 +80,6 @@
     .badge.inactive { background: #f59e0b; }
     .badge.disabled { background: #ef4444; }
 
-    /* ROW */
     .row {
       display: flex;
       gap: 12px;
@@ -191,11 +183,13 @@ import {
 
 import {
   getAuth,
-  onAuthStateChanged
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06iVVswiRN_S9FO2NpDKEHc",
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -207,18 +201,35 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+/* ✅ FIX: stable auth boot (prevents bounce-back login loop) */
+let authReady = false;
+
+await setPersistence(auth, browserLocalPersistence);
+
+await new Promise((resolve) => {
+  const unsub = onAuthStateChanged(auth, (user) => {
+
+    authReady = true;
+
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    start();
+    unsub();
+    resolve();
+  });
+});
+
+/* DATA */
 let pets = [];
 let filter = "all";
 let search = "";
 
 const listDiv = document.getElementById("list");
 
-/* AUTH */
-onAuthStateChanged(auth, (user) => {
-  if (!user) window.location.href = "login.html";
-  else start();
-});
-
+/* START DB */
 function start() {
   onSnapshot(query(collection(db, "pets")), (snap) => {
     pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -271,6 +282,8 @@ window.toggleDisable = async (id) => {
 /* QR */
 function makeQR(id) {
   const el = document.getElementById("qr-" + id);
+  if (!el) return;
+
   el.innerHTML = "";
 
   const url =
@@ -358,7 +371,7 @@ function render() {
 
     listDiv.appendChild(div);
 
-    setTimeout(() => makeQR(p.id), 50);
+    setTimeout(() => makeQR(p.id), 60);
   });
 }
 
