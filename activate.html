@@ -24,9 +24,7 @@
       text-align: center;
     }
 
-    h2 {
-      margin-bottom: 4px;
-    }
+    h2 { margin-bottom: 4px; }
 
     .tagid {
       font-size: 12px;
@@ -49,9 +47,7 @@
       border-color: #3b82f6;
     }
 
-    #photoInput {
-      display: none;
-    }
+    #photoInput { display: none; }
 
     .btn {
       width: 100%;
@@ -62,26 +58,11 @@
       cursor: pointer;
       color: white;
       margin-bottom: 10px;
-      transition: opacity 0.15s ease;
     }
 
-    .btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    .camera {
-      background: #ff9f43;
-    }
-
-    .gallery {
-      background: #3b82f6;
-    }
-
-    .activate {
-      background: #3b82f6;
-      font-size: 18px;
-    }
+    .camera { background: #ff9f43; }
+    .gallery { background: #3b82f6; }
+    .activate { background: #3b82f6; font-size: 18px; }
 
     .tos-box {
       text-align: left;
@@ -98,6 +79,14 @@
       font-weight: bold;
       min-height: 20px;
     }
+
+    .error {
+      color: #d11a2a;
+    }
+
+    .ok {
+      color: #0a7a2f;
+    }
   </style>
 </head>
 
@@ -113,32 +102,22 @@
   </div>
 
   <input id="name" placeholder="Pet Name">
-
   <input id="phone" placeholder="Primary Contact Number">
-
   <input id="phone2" placeholder="Secondary Contact (optional)">
 
   <input type="file" id="photoInput" accept="image/*">
 
-  <button class="btn camera" id="cameraBtn">
-    📷 Take Photo
-  </button>
-
-  <button class="btn gallery" id="galleryBtn">
-    📁 Choose Photo
-  </button>
+  <button class="btn camera" id="cameraBtn">📷 Take Photo</button>
+  <button class="btn gallery" id="galleryBtn">📁 Choose Photo</button>
 
   <div class="tos-box">
     <label>
       <input type="checkbox" id="tosCheckbox">
-
       I agree to Terms of Service and understand this profile may be publicly visible when scanned.
     </label>
   </div>
 
-  <button class="btn activate" id="activateBtn">
-    Activate
-  </button>
+  <button class="btn activate" id="activateBtn">Activate</button>
 
   <div id="status"></div>
 
@@ -147,8 +126,12 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -161,64 +144,132 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-/* WAIT FOR AUTH (IMPORTANT FIX) */
-let currentUser = null;
+/* =========================
+   SAFE ELEMENT ACCESS
+========================= */
 
-await new Promise((resolve) => {
-  onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    resolve(user);
-  });
-});
+const statusEl = document.getElementById("status");
+const activateBtn = document.getElementById("activateBtn");
+const photoInput = document.getElementById("photoInput");
 
 const urlId = new URLSearchParams(window.location.search).get("id");
-const status = document.getElementById("status");
-const activateBtn = document.getElementById("activateBtn");
 
-if (!urlId) {
-  status.innerText = "❌ Invalid link";
-  throw new Error("Missing ID");
+/* =========================
+   FAIL SAFE INIT
+========================= */
+
+function setStatus(msg, type = "") {
+  statusEl.innerText = msg;
+  statusEl.className = type;
 }
 
-/* ACTIVATE */
-activateBtn.onclick = async () => {
+if (!urlId) {
+  setStatus("❌ Invalid activation link", "error");
+} else {
+  const tagEl = document.getElementById("tagIdDisplay");
+  if (tagEl) tagEl.innerText = urlId;
+}
 
-  activateBtn.disabled = true;
-  activateBtn.innerText = "Activating...";
+/* =========================
+   CAMERA / GALLERY
+========================= */
+
+document.getElementById("cameraBtn").onclick = () => {
+  photoInput.setAttribute("capture", "environment");
+  photoInput.click();
+};
+
+document.getElementById("galleryBtn").onclick = () => {
+  photoInput.removeAttribute("capture");
+  photoInput.click();
+};
+
+/* =========================
+   ACTIVATE FLOW
+========================= */
+
+let isRunning = false;
+
+document.getElementById("activateBtn").onclick = async () => {
+
+  if (isRunning) return;
+  if (!urlId) return setStatus("❌ Missing tag ID", "error");
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
+  const tos = document.getElementById("tosCheckbox").checked;
 
+  /* HARD BLOCK FIRST */
   if (!name || !phone) {
-    status.innerText = "Fill required fields";
+    return setStatus("⚠ Fill required fields", "error");
+  }
+
+  if (!tos) {
+    return setStatus("⚠ You must accept Terms of Service", "error");
+  }
+
+  isRunning = true;
+  activateBtn.disabled = true;
+  activateBtn.innerText = "⏳ Activating...";
+
+  try {
+    const ref = doc(db, "pets", urlId);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      setStatus("❌ Tag not found in database", "error");
+      return;
+    }
+
+    const existing = snap.data();
+
+    let photoURL = "";
+
+    const file = photoInput.files[0];
+
+    if (file) {
+      setStatus("📤 Uploading photo...");
+
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", "arkforge-pets");
+
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",
+        { method: "POST", body: form }
+      );
+
+      const data = await res.json();
+      photoURL = data.secure_url;
+    }
+
+    setStatus("💾 Saving profile...");
+
+    const payload = {
+      name,
+      phone,
+      phone2: phone2 || existing.phone2 || "",
+      photo: photoURL || existing.photo || "",
+      status: "active",
+      tosAccepted: true,
+      activatedAt: new Date().toISOString()
+    };
+
+    await setDoc(ref, payload, { merge: true });
+
+    setStatus("✅ Activated successfully!", "ok");
+    activateBtn.innerText = "Activated";
+
+  } catch (err) {
+    console.error(err);
+    setStatus("❌ " + err.message, "error");
+
+    isRunning = false;
     activateBtn.disabled = false;
     activateBtn.innerText = "Activate";
-    return;
   }
-
-  const ref = doc(db, "pets", urlId);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    status.innerText = "Tag not found";
-    return;
-  }
-
-  const existing = snap.data();
-
-  await setDoc(ref, {
-    name,
-    phone,
-    phone2: phone2 || existing.phone2 || "",
-    photo: existing.photo,
-    status: "active",
-    activatedAt: new Date().toISOString()
-  }, { merge: true });
-
-  status.innerText = "✅ Activated!";
 };
 
 </script>
