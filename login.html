@@ -2,15 +2,9 @@
 <html>
 <head>
   <title>Admin Login Portal</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -31,38 +25,12 @@
       text-align: center;
     }
 
-    .brand {
-      margin-bottom: 18px;
-    }
-
-    .brand h1 {
-      font-size: 20px;
-      margin: 0;
-    }
-
-    .brand p {
-      margin: 4px 0 0;
-      font-size: 12px;
-      color: #777;
-    }
-
-    h2 {
-      margin-bottom: 18px;
-      font-size: 18px;
-    }
-
     input {
       width: 100%;
       padding: 12px;
       margin-bottom: 10px;
       border-radius: 10px;
       border: 1px solid #ddd;
-      font-size: 14px;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: #3b82f6;
     }
 
     button {
@@ -74,217 +42,72 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.2s;
-    }
-
-    button:hover {
-      background: #2563eb;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    #togglePw {
-      margin-top: 6px;
-      margin-bottom: 10px;
-      background: #eee;
-      color: #333;
-      font-weight: normal;
     }
 
     #status {
-      margin-top: 14px;
+      margin-top: 12px;
       font-size: 13px;
       color: #555;
-      min-height: 18px;
-      word-break: break-word;
     }
-
   </style>
 </head>
 
 <body>
 
 <div class="card">
-
-  <!-- BRAND -->
-  <div class="brand">
-    <h1>Arkforge 3D Printing</h1>
-    <p>Admin Control Panel</p>
-  </div>
-
   <h2>🔐 Login</h2>
 
-  <input
-    id="email"
-    placeholder="Email"
-  >
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-  <input
-    id="password"
-    type="password"
-    placeholder="Password"
-  >
-
-  <button
-    id="togglePw"
-    type="button"
-  >
-    👁 Show Password
-  </button>
-
-  <button id="loginBtn">
-    Login
-  </button>
-
+  <button id="loginBtn">Login</button>
   <p id="status"></p>
-
 </div>
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
   setPersistence,
-  browserSessionPersistence
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// FIREBASE CONFIG
-const firebaseConfig = {
-
+const app = initializeApp({
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
-
   authDomain: "arkforge-pets.firebaseapp.com",
-
   projectId: "arkforge-pets"
+});
 
-};
+const auth = getAuth(app);
 
-const app =
-  initializeApp(firebaseConfig);
+const status = document.getElementById("status");
 
-const auth =
-  getAuth(app);
+document.getElementById("loginBtn").onclick = async () => {
 
-// ELEMENTS
-const email =
-  document.getElementById("email");
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-const password =
-  document.getElementById("password");
-
-const status =
-  document.getElementById("status");
-
-const btn =
-  document.getElementById("loginBtn");
-
-// LOGIN
-btn.onclick = async () => {
-
-  const em =
-    email.value.trim();
-
-  const pw =
-    password.value;
-
-  if (!em || !pw) {
-
-    status.innerText =
-      "Please enter email and password";
-
+  if (!email || !password) {
+    status.innerText = "Enter email + password";
     return;
   }
 
-  btn.disabled = true;
-
-  btn.innerText =
-    "Logging in...";
-
-  status.innerText =
-    "Authenticating...";
-
   try {
+    await setPersistence(auth, browserLocalPersistence);
 
-    // ✅ SESSION ONLY LOGIN
-    await setPersistence(
-      auth,
-      browserSessionPersistence
-    );
+    await signInWithEmailAndPassword(auth, email, password);
 
-    await signInWithEmailAndPassword(
-      auth,
-      em,
-      pw
-    );
-
-    status.innerText =
-      "Success! Redirecting...";
+    status.innerText = "Success...";
 
     setTimeout(() => {
-
-      window.location.href =
-        "admin.html";
-
-    }, 700);
+      window.location.href = "admin.html";
+    }, 600);
 
   } catch (e) {
-
-    status.innerText =
-      e.code + " - " + e.message;
-
-  } finally {
-
-    btn.disabled = false;
-
-    btn.innerText =
-      "Login";
-
+    status.innerText = e.message;
   }
-
-};
-
-// ENTER KEY SUPPORT
-document.addEventListener("keydown", (e) => {
-
-  if (e.key === "Enter") {
-
-    btn.click();
-
-  }
-
-});
-
-// SHOW/HIDE PASSWORD
-document.getElementById("togglePw").onclick = () => {
-
-  if (password.type === "password") {
-
-    password.type = "text";
-
-    document.getElementById("togglePw").innerText =
-      "🙈 Hide Password";
-
-  } else {
-
-    password.type = "password";
-
-    document.getElementById("togglePw").innerText =
-      "👁 Show Password";
-
-  }
-
 };
 
 </script>
