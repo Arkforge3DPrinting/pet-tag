@@ -146,19 +146,12 @@
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -168,232 +161,64 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-/* ID FROM URL */
+/* WAIT FOR AUTH (IMPORTANT FIX) */
+let currentUser = null;
 
-const urlId =
-  new URLSearchParams(window.location.search).get("id");
+await new Promise((resolve) => {
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    resolve(user);
+  });
+});
 
-const status =
-  document.getElementById("status");
-
-const activateBtn =
-  document.getElementById("activateBtn");
-
-/* ANTI SPAM LOCK */
-
-let isActivating = false;
+const urlId = new URLSearchParams(window.location.search).get("id");
+const status = document.getElementById("status");
+const activateBtn = document.getElementById("activateBtn");
 
 if (!urlId) {
-
-  status.innerText =
-    "❌ Invalid activation link";
-
+  status.innerText = "❌ Invalid link";
   throw new Error("Missing ID");
 }
 
-document.getElementById("tagIdDisplay")
-  .innerText = urlId;
-
-const photoInput =
-  document.getElementById("photoInput");
-
-/* CAMERA BUTTON */
-
-document.getElementById("cameraBtn").onclick = () => {
-
-  photoInput.setAttribute(
-    "capture",
-    "environment"
-  );
-
-  photoInput.click();
-};
-
-/* GALLERY BUTTON */
-
-document.getElementById("galleryBtn").onclick = () => {
-
-  photoInput.removeAttribute("capture");
-
-  photoInput.click();
-};
-
 /* ACTIVATE */
-
-document.getElementById("activateBtn").onclick = async () => {
-
-  /* 🚫 BLOCK SPAM CLICKS */
-
-  if (isActivating) return;
-
-  isActivating = true;
+activateBtn.onclick = async () => {
 
   activateBtn.disabled = true;
-  activateBtn.innerText = "⏳ Activating...";
+  activateBtn.innerText = "Activating...";
 
-  status.innerText = "⏳ Preparing activation...";
-
-  const name =
-    document.getElementById("name")
-    .value.trim();
-
-  const phone =
-    document.getElementById("phone")
-    .value.trim();
-
-  const phone2 =
-    document.getElementById("phone2")
-    .value.trim();
-
-  const tos =
-    document.getElementById("tosCheckbox")
-    .checked;
-
-  /* VALIDATION */
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const phone2 = document.getElementById("phone2").value.trim();
 
   if (!name || !phone) {
-
-    status.innerText =
-      "⚠ Fill required fields";
-
-    isActivating = false;
-
+    status.innerText = "Fill required fields";
     activateBtn.disabled = false;
     activateBtn.innerText = "Activate";
-
     return;
   }
 
-  if (!tos) {
+  const ref = doc(db, "pets", urlId);
+  const snap = await getDoc(ref);
 
-    status.innerText =
-      "⚠ Accept Terms of Service";
-
-    isActivating = false;
-
-    activateBtn.disabled = false;
-    activateBtn.innerText = "Activate";
-
+  if (!snap.exists()) {
+    status.innerText = "Tag not found";
     return;
   }
 
-  try {
+  const existing = snap.data();
 
-    status.innerText =
-      "🔎 Verifying tag...";
+  await setDoc(ref, {
+    name,
+    phone,
+    phone2: phone2 || existing.phone2 || "",
+    photo: existing.photo,
+    status: "active",
+    activatedAt: new Date().toISOString()
+  }, { merge: true });
 
-    const ref = doc(db, "pets", urlId);
-
-    const existingSnap =
-      await getDoc(ref);
-
-    if (!existingSnap.exists()) {
-
-      status.innerText =
-        "❌ Tag not registered in system";
-
-      isActivating = false;
-
-      activateBtn.disabled = false;
-      activateBtn.innerText = "Activate";
-
-      return;
-    }
-
-    const existing =
-      existingSnap.data();
-
-    let photoURL = "";
-
-    const file =
-      photoInput.files[0];
-
-    /* PHOTO UPLOAD */
-
-    if (file) {
-
-      status.innerText =
-        "📤 Uploading pet photo...";
-
-      const form = new FormData();
-
-      form.append("file", file);
-
-      form.append(
-        "upload_preset",
-        "arkforge-pets"
-      );
-
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",
-        {
-          method: "POST",
-          body: form
-        }
-      );
-
-      const data =
-        await res.json();
-
-      photoURL =
-        data.secure_url;
-    }
-
-    status.innerText =
-      "💾 Saving pet profile...";
-
-    /* FINAL PAYLOAD */
-
-    const payload = {
-
-      name,
-
-      phone,
-
-      phone2:
-        phone2 ||
-        existing.phone2 ||
-        "",
-
-      photo:
-        photoURL ||
-        existing.photo ||
-        "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
-
-      tosAccepted: true,
-
-      status: "active",
-
-      activatedAt:
-        new Date().toISOString()
-    };
-
-    await setDoc(
-      ref,
-      payload,
-      { merge: true }
-    );
-
-    status.innerText =
-      "✅ Activated successfully!";
-
-    activateBtn.innerText =
-      "✅ Activated";
-
-  } catch (e) {
-
-    status.innerText =
-      "❌ " + e.message;
-
-    isActivating = false;
-
-    activateBtn.disabled = false;
-
-    activateBtn.innerText =
-      "Activate";
-  }
-
+  status.innerText = "✅ Activated!";
 };
 
 </script>
