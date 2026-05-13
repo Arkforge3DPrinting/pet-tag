@@ -54,7 +54,7 @@
     }
 
     #loginBox {
-      display: block;
+      display: none;
     }
 
     .title {
@@ -62,6 +62,10 @@
       margin-bottom: 12px;
     }
 
+    #loading {
+      font-size: 14px;
+      color: #666;
+    }
   </style>
 </head>
 
@@ -69,10 +73,12 @@
 
 <div class="card">
 
+  <div id="loading">Checking session...</div>
+
   <!-- LOGIN VIEW -->
   <div id="loginBox">
 
-    <div class="title">🔐 Admin Access</div>
+    <div class="title">🔐 Log in - Create Tag</div>
 
     <input id="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password">
@@ -131,32 +137,20 @@ const auth = getAuth(app);
 
 await setPersistence(auth, browserLocalPersistence);
 
-/* UI */
 const loginBox = document.getElementById("loginBox");
 const appBox = document.getElementById("app");
+const loading = document.getElementById("loading");
 
-/* LOGIN */
-document.getElementById("loginBtn").onclick = async () => {
+/*
+  ✅ FIX: we WAIT for FIRST auth event
+  (this removes the "instant weird state" issue)
+*/
+let authReady = false;
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  const status = document.getElementById("loginStatus");
-
-  try {
-
-    await signInWithEmailAndPassword(auth, email, password);
-
-    status.innerText = "Success...";
-
-  } catch (e) {
-    status.innerText = e.message;
-  }
-
-};
-
-/* AUTH LISTENER */
 onAuthStateChanged(auth, (user) => {
+
+  authReady = true;
+  loading.style.display = "none";
 
   if (user) {
     loginBox.style.display = "none";
@@ -168,7 +162,24 @@ onAuthStateChanged(auth, (user) => {
 
 });
 
-/* ID GENERATOR */
+/* LOGIN */
+document.getElementById("loginBtn").onclick = async () => {
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  const status = document.getElementById("loginStatus");
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    status.innerText = "Success...";
+  } catch (e) {
+    status.innerText = e.message;
+  }
+
+};
+
+/* ID GEN */
 function idGen(len = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from({ length: len }, () =>
@@ -180,11 +191,11 @@ function idGen(len = 10) {
 const defaultPhoto =
   "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
 
-/* CREATE TAG */
+/* CREATE */
 document.getElementById("createBtn").onclick = async () => {
 
-  const user = auth.currentUser;
-  if (!user) return alert("Not logged in");
+  if (!authReady) return alert("Auth still loading...");
+  if (!auth.currentUser) return alert("Not logged in");
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
