@@ -94,11 +94,7 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,
-  doc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
   getAuth,
@@ -109,7 +105,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06iVVswiRN_S9FO2NpDKEHc",
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   messagingSenderId: "517154779272",
@@ -120,45 +116,45 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* =========================
-   SIMPLE + STABLE AUTH FLOW
-   ========================= */
+await setPersistence(auth, browserLocalPersistence);
 
 const loginBox = document.getElementById("loginBox");
 const appBox = document.getElementById("app");
 const loading = document.getElementById("loading");
 
-/* initial UI */
+/* =========================
+   🔥 FIXED AUTH BOOT LOGIC
+   ========================= */
+
+/* hide UI until Firebase resolves */
 loginBox.style.display = "none";
 appBox.style.display = "none";
 loading.style.display = "block";
 
-/* persistence */
-await setPersistence(auth, browserLocalPersistence);
-
-/* SINGLE SOURCE OF TRUTH */
-onAuthStateChanged(auth, (user) => {
-
-  loading.style.display = "none";
-
-  if (user) {
-    loginBox.style.display = "none";
-    appBox.style.display = "block";
-  } else {
-    loginBox.style.display = "block";
-    appBox.style.display = "none";
-  }
+const user = await new Promise((resolve) => {
+  const unsub = onAuthStateChanged(auth, (u) => {
+    unsub(); // IMPORTANT: stop multiple triggers
+    resolve(u); // return first stable auth state
+  });
 });
+
+loading.style.display = "none";
+
+if (user) {
+  loginBox.style.display = "none";
+  appBox.style.display = "block";
+} else {
+  loginBox.style.display = "block";
+  appBox.style.display = "none";
+}
 
 /* LOGIN */
 document.getElementById("loginBtn").onclick = async () => {
-
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const status = document.getElementById("loginStatus");
 
   try {
-    status.innerText = "Logging in...";
     await signInWithEmailAndPassword(auth, email, password);
     status.innerText = "Success...";
   } catch (e) {
@@ -181,10 +177,8 @@ const defaultPhoto =
 /* CREATE */
 document.getElementById("createBtn").onclick = async () => {
 
-  const user = auth.currentUser;
-
-  if (!user) {
-    alert("Not logged in yet. Please wait a second and try again.");
+  if (!auth.currentUser) {
+    alert("Not logged in");
     return;
   }
 
@@ -192,10 +186,7 @@ document.getElementById("createBtn").onclick = async () => {
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
 
-  if (!name || !phone) {
-    alert("Missing fields");
-    return;
-  }
+  if (!name || !phone) return alert("Missing fields");
 
   const id = idGen();
 
@@ -217,5 +208,6 @@ document.getElementById("createBtn").onclick = async () => {
 };
 
 </script>
+
 </body>
 </html>
