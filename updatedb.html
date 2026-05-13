@@ -3,19 +3,102 @@
 <head>
   <title>Create Pet Tag</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 18px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: #3b82f6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+    }
+
+    #app {
+      display: none;
+    }
+
+    #loginBox {
+      display: block;
+    }
+
+    .title {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+  </style>
 </head>
 
 <body>
 
-<h2>Create Tag</h2>
+<div class="card">
 
-<input id="name" placeholder="Pet Name">
-<input id="phone" placeholder="Phone">
-<input id="phone2" placeholder="Secondary">
+  <!-- LOGIN VIEW -->
+  <div id="loginBox">
 
-<button id="generateBtn">Create</button>
+    <div class="title">🔐 Admin Access</div>
 
-<p id="result"></p>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+
+    <button id="loginBtn">Login</button>
+
+    <p id="loginStatus"></p>
+
+  </div>
+
+  <!-- CREATE VIEW -->
+  <div id="app">
+
+    <div class="title">🐾 Create Pet Tag</div>
+
+    <input id="name" placeholder="Pet Name">
+    <input id="phone" placeholder="Primary Phone">
+    <input id="phone2" placeholder="Secondary (optional)">
+
+    <button id="createBtn">Create Tag</button>
+
+    <p id="result"></p>
+
+  </div>
+
+</div>
 
 <script type="module">
 
@@ -28,34 +111,64 @@ import {
 
 import {
   getAuth,
+  signInWithEmailAndPassword,
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const app = initializeApp({
+const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
-  projectId: "arkforge-pets"
-});
+  projectId: "arkforge-pets",
+  messagingSenderId: "517154779272",
+  appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
+};
 
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 await setPersistence(auth, browserLocalPersistence);
 
-let user = null;
-let ready = false;
+/* UI */
+const loginBox = document.getElementById("loginBox");
+const appBox = document.getElementById("app");
 
-await new Promise(resolve => {
-  const unsub = onAuthStateChanged(auth, u => {
-    user = u;
-    ready = true;
-    unsub();
-    resolve();
-  });
+/* LOGIN */
+document.getElementById("loginBtn").onclick = async () => {
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  const status = document.getElementById("loginStatus");
+
+  try {
+
+    await signInWithEmailAndPassword(auth, email, password);
+
+    status.innerText = "Success...";
+
+  } catch (e) {
+    status.innerText = e.message;
+  }
+
+};
+
+/* AUTH LISTENER */
+onAuthStateChanged(auth, (user) => {
+
+  if (user) {
+    loginBox.style.display = "none";
+    appBox.style.display = "block";
+  } else {
+    loginBox.style.display = "block";
+    appBox.style.display = "none";
+  }
+
 });
 
+/* ID GENERATOR */
 function idGen(len = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from({ length: len }, () =>
@@ -63,9 +176,14 @@ function idGen(len = 10) {
   ).join("");
 }
 
-document.getElementById("generateBtn").onclick = async () => {
+/* DEFAULT IMAGE */
+const defaultPhoto =
+  "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
 
-  if (!ready) return alert("Auth loading...");
+/* CREATE TAG */
+document.getElementById("createBtn").onclick = async () => {
+
+  const user = auth.currentUser;
   if (!user) return alert("Not logged in");
 
   const name = document.getElementById("name").value.trim();
@@ -76,16 +194,23 @@ document.getElementById("generateBtn").onclick = async () => {
 
   const id = idGen();
 
-  await setDoc(doc(db, "pets", id), {
-    name,
-    phone,
-    phone2: phone2 || "",
-    status: "inactive",
-    createdAt: new Date().toISOString()
-  });
+  try {
 
-  document.getElementById("result").innerText =
-    "Created: " + id;
+    await setDoc(doc(db, "pets", id), {
+      name,
+      phone,
+      phone2: phone2 || "",
+      photo: defaultPhoto,
+      status: "inactive",
+      createdAt: new Date().toISOString()
+    });
+
+    document.getElementById("result").innerText =
+      "Created: " + id;
+
+  } catch (e) {
+    alert(e.message);
+  }
 
 };
 
