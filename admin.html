@@ -53,7 +53,6 @@
     .filters button.inactive.active { background: #f59e0b; }
     .filters button.disabled.active { background: #ef4444; }
 
-    /* NEW FILTER COLORS */
     .filters button.noprimary.active { background: #a855f7; }
     .filters button.nosecondary.active { background: #06b6d4; }
     .filters button.defaultimg.active { background: #f97316; }
@@ -133,7 +132,6 @@
       width: 100%;
     }
 
-    /* RIGHT SIDE QR */
     .right {
       display: flex;
       flex-direction: column;
@@ -222,7 +220,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  apiKey: "AIzaSyCxFKSE6bXM06iVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -320,10 +318,16 @@ function render() {
 
   const filtered = pets.filter(p => {
 
+    const id = (p.id || "").toString().toLowerCase();
+    const name = (p.name || "").toString().toLowerCase();
+    const phone = (p.phone || "").toString();
+    const phone2 = (p.phone2 || "").toString();
+
     const match =
-      (p.id || "").includes(s) ||
-      (p.name || "").toLowerCase().includes(s) ||
-      (p.phone || "").includes(s);
+      id.includes(s) ||
+      name.includes(s) ||
+      phone.includes(search) ||
+      phone2.includes(search);
 
     if (!match) return false;
 
