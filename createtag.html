@@ -45,17 +45,8 @@
       cursor: pointer;
     }
 
-    button:disabled {
-      opacity: 0.6;
-    }
-
-    #app {
-      display: none;
-    }
-
-    #loginBox {
-      display: none;
-    }
+    #app { display: none; }
+    #loginBox { display: none; }
 
     .title {
       font-size: 20px;
@@ -75,23 +66,19 @@
 
   <div id="loading">Checking session...</div>
 
-  <!-- LOGIN VIEW -->
+  <!-- LOGIN -->
   <div id="loginBox">
-
     <div class="title">🔐 Login - Create Tag</div>
 
     <input id="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password">
 
     <button id="loginBtn">Login</button>
-
     <p id="loginStatus"></p>
-
   </div>
 
-  <!-- CREATE VIEW -->
+  <!-- APP -->
   <div id="app">
-
     <div class="title">🐾 Create Pet Tag</div>
 
     <input id="name" placeholder="Pet Name">
@@ -99,9 +86,7 @@
     <input id="phone2" placeholder="Secondary (optional)">
 
     <button id="createBtn">Create Tag</button>
-
     <p id="result"></p>
-
   </div>
 
 </div>
@@ -141,15 +126,12 @@ const loginBox = document.getElementById("loginBox");
 const appBox = document.getElementById("app");
 const loading = document.getElementById("loading");
 
-/*
-  ✅ FIX: we WAIT for FIRST auth event
-  (this removes the "instant weird state" issue)
-*/
-let authReady = false;
+let authResolved = false;
 
+/* 🔥 FIX: proper auth boot sequence */
 onAuthStateChanged(auth, (user) => {
 
-  authReady = true;
+  authResolved = true;
   loading.style.display = "none";
 
   if (user) {
@@ -167,7 +149,6 @@ document.getElementById("loginBtn").onclick = async () => {
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-
   const status = document.getElementById("loginStatus");
 
   try {
@@ -176,7 +157,6 @@ document.getElementById("loginBtn").onclick = async () => {
   } catch (e) {
     status.innerText = e.message;
   }
-
 };
 
 /* ID GEN */
@@ -194,8 +174,15 @@ const defaultPhoto =
 /* CREATE */
 document.getElementById("createBtn").onclick = async () => {
 
-  if (!authReady) return alert("Auth still loading...");
-  if (!auth.currentUser) return alert("Not logged in");
+  if (!authResolved) {
+    alert("Auth still loading...");
+    return;
+  }
+
+  if (!auth.currentUser) {
+    alert("Not logged in");
+    return;
+  }
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
@@ -222,7 +209,6 @@ document.getElementById("createBtn").onclick = async () => {
   } catch (e) {
     alert(e.message);
   }
-
 };
 
 </script>
