@@ -271,20 +271,34 @@ onAuthStateChanged(auth, (user) => {
 let started = false;
 
 function start() {
-  if (started) return;
-  started = true;
 
-  onSnapshot(query(collection(db, "pets")), (snap) => {
-    pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    render();
-  });
+  onSnapshot(
+    query(collection(db, "pets")),
+
+    (snap) => {
+
+      console.log("Pets loaded:", snap.size);
+
+      pets = snap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
+
+      render();
+    },
+
+    (error) => {
+
+      console.error("FIRESTORE ERROR:", error);
+
+      listDiv.innerHTML = `
+        <p style="color:red;">
+          Firestore Error: ${error.message}
+        </p>
+      `;
+    }
+  );
 }
-
-/* SEARCH */
-document.getElementById("search").addEventListener("input", (e) => {
-  search = (e.target.value || "").toLowerCase();
-  render();
-});
 
 /* FILTER */
 window.setFilter = (f, btn) => {
