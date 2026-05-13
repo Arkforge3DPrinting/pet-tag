@@ -126,23 +126,31 @@ const loginBox = document.getElementById("loginBox");
 const appBox = document.getElementById("app");
 const loading = document.getElementById("loading");
 
-let authResolved = false;
+/* =========================
+   🔥 FIXED AUTH BOOT LOGIC
+   ========================= */
 
-/* 🔥 FIX: proper auth boot sequence */
-onAuthStateChanged(auth, (user) => {
+/* hide UI until Firebase resolves */
+loginBox.style.display = "none";
+appBox.style.display = "none";
+loading.style.display = "block";
 
-  authResolved = true;
-  loading.style.display = "none";
-
-  if (user) {
-    loginBox.style.display = "none";
-    appBox.style.display = "block";
-  } else {
-    loginBox.style.display = "block";
-    appBox.style.display = "none";
-  }
-
+const user = await new Promise((resolve) => {
+  const unsub = onAuthStateChanged(auth, (u) => {
+    unsub();           // IMPORTANT: stop multiple triggers
+    resolve(u);        // return first stable auth state
+  });
 });
+
+loading.style.display = "none";
+
+if (user) {
+  loginBox.style.display = "none";
+  appBox.style.display = "block";
+} else {
+  loginBox.style.display = "block";
+  appBox.style.display = "none";
+}
 
 /* LOGIN */
 document.getElementById("loginBtn").onclick = async () => {
@@ -173,11 +181,6 @@ const defaultPhoto =
 
 /* CREATE */
 document.getElementById("createBtn").onclick = async () => {
-
-  if (!authResolved) {
-    alert("Auth still loading...");
-    return;
-  }
 
   if (!auth.currentUser) {
     alert("Not logged in");
