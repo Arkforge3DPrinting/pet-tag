@@ -121,28 +121,23 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 /* =========================
-   🔥 AUTH BOOT (FIXED)
+   SIMPLE + STABLE AUTH FLOW
    ========================= */
 
 const loginBox = document.getElementById("loginBox");
 const appBox = document.getElementById("app");
 const loading = document.getElementById("loading");
 
-let authReady = false;
-let currentUser = null;
-
-/* default UI state */
+/* initial UI */
 loginBox.style.display = "none";
 appBox.style.display = "none";
 loading.style.display = "block";
 
-/* force persistent login */
+/* persistence */
 await setPersistence(auth, browserLocalPersistence);
 
-/* main listener (source of truth) */
+/* SINGLE SOURCE OF TRUTH */
 onAuthStateChanged(auth, (user) => {
-  authReady = true;
-  currentUser = user;
 
   loading.style.display = "none";
 
@@ -155,28 +150,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-/* safety fallback (rare slow Firebase init fix) */
-setTimeout(() => {
-  if (!authReady) {
-    const u = auth.currentUser;
-
-    loading.style.display = "none";
-
-    if (u) {
-      currentUser = u;
-      loginBox.style.display = "none";
-      appBox.style.display = "block";
-    } else {
-      loginBox.style.display = "block";
-      appBox.style.display = "none";
-    }
-  }
-}, 2500);
-
-/* =========================
-   LOGIN
-   ========================= */
-
+/* LOGIN */
 document.getElementById("loginBtn").onclick = async () => {
 
   const email = document.getElementById("email").value.trim();
@@ -185,19 +159,14 @@ document.getElementById("loginBtn").onclick = async () => {
 
   try {
     status.innerText = "Logging in...";
-
     await signInWithEmailAndPassword(auth, email, password);
-
     status.innerText = "Success...";
   } catch (e) {
     status.innerText = e.message;
   }
 };
 
-/* =========================
-   ID GENERATOR
-   ========================= */
-
+/* ID GEN */
 function idGen(len = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from({ length: len }, () =>
@@ -205,20 +174,17 @@ function idGen(len = 10) {
   ).join("");
 }
 
-/* default image */
+/* DEFAULT IMAGE */
 const defaultPhoto =
   "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
 
-/* =========================
-   CREATE TAG (SAFE GUARD)
-   ========================= */
-
+/* CREATE */
 document.getElementById("createBtn").onclick = async () => {
 
-  const user = auth.currentUser || currentUser;
+  const user = auth.currentUser;
 
-  if (!authReady || !user) {
-    alert("Auth still loading. Please try again in a moment.");
+  if (!user) {
+    alert("Not logged in yet. Please wait a second and try again.");
     return;
   }
 
@@ -243,8 +209,7 @@ document.getElementById("createBtn").onclick = async () => {
       createdAt: new Date().toISOString()
     });
 
-    document.getElementById("result").innerText =
-      "Created: " + id;
+    document.getElementById("result").innerText = "Created: " + id;
 
   } catch (e) {
     alert(e.message);
@@ -252,6 +217,5 @@ document.getElementById("createBtn").onclick = async () => {
 };
 
 </script>
-
 </body>
 </html>
