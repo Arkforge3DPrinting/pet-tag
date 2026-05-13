@@ -259,7 +259,15 @@ document.getElementById("activateBtn").onclick = async () => {
 
     await setDoc(ref, payload, { merge: true });
 
-    setStatus("✅ Activated successfully!", "ok");
+  setStatus(
+  "✅ Activated successfully!<br><br>🐾 Now redirecting to your next stop...",
+  "ok"
+);
+
+setTimeout(() => {
+  window.location.href = `index.html?id=${id}`;
+}, 1500);
+    
     activateBtn.innerText = "Activated";
 
   } catch (err) {
