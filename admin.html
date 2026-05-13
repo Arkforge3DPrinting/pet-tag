@@ -28,7 +28,6 @@
       margin-bottom: 12px;
     }
 
-    /* FILTER PILLS */
     .filters {
       display: flex;
       gap: 10px;
@@ -43,15 +42,22 @@
       cursor: pointer;
       font-weight: bold;
       background: #e5e7eb;
-      transition: 0.2s;
     }
 
-    .filters button.active.all { background: #374151; color: white; }
-    .filters button.active.active { background: #22c55e; color: white; }
-    .filters button.active.inactive { background: #f59e0b; color: white; }
-    .filters button.active.disabled { background: #ef4444; color: white; }
+    .filters button.active {
+      color: white;
+    }
 
-    /* CARD */
+    .filters button.all.active { background: #374151; }
+    .filters button.active.active { background: #22c55e; }
+    .filters button.inactive.active { background: #f59e0b; }
+    .filters button.disabled.active { background: #ef4444; }
+
+    /* NEW FILTER COLORS */
+    .filters button.noprimary.active { background: #a855f7; }
+    .filters button.nosecondary.active { background: #06b6d4; }
+    .filters button.defaultimg.active { background: #f97316; }
+
     .card {
       background: white;
       padding: 14px;
@@ -67,18 +73,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
       flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .id-btn {
-      background: #111827;
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 11px;
     }
 
     .badge {
@@ -93,15 +89,22 @@
     .badge.inactive { background: #f59e0b; }
     .badge.disabled { background: #ef4444; }
 
-    /* ROW */
     .row {
       display: flex;
       gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .left {
+      display: flex;
+      gap: 12px;
+      flex: 1;
       flex-wrap: wrap;
       align-items: flex-start;
     }
 
-    /* BIGGER IMAGE (your request) */
     img {
       width: 140px;
       height: 140px;
@@ -127,6 +130,35 @@
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
+      width: 100%;
+    }
+
+    /* RIGHT SIDE QR */
+    .right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      min-width: 120px;
+    }
+
+    .idline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .id-btn {
+      background: #111827;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .qr {
+      margin-top: 8px;
     }
 
     .buttons {
@@ -151,10 +183,6 @@
     button.disable {
       background: #7c3aed;
     }
-
-    .qr {
-      margin-top: 10px;
-    }
   </style>
 </head>
 
@@ -169,6 +197,9 @@
   <button class="active" onclick="setFilter('active', this)">🟢 Active</button>
   <button class="inactive" onclick="setFilter('inactive', this)">🟠 Inactive</button>
   <button class="disabled" onclick="setFilter('disabled', this)">🔴 Disabled</button>
+  <button class="noprimary" onclick="setFilter('noprimary', this)">🟣 No Primary</button>
+  <button class="nosecondary" onclick="setFilter('nosecondary', this)">🔵 No Secondary</button>
+  <button class="defaultimg" onclick="setFilter('defaultimg', this)">🟠 Default Image</button>
 </div>
 
 <div id="list"></div>
@@ -209,13 +240,10 @@ let search = "";
 
 const listDiv = document.getElementById("list");
 
-/* SIMPLE, STABLE AUTH (NO FLASH BUGS) */
+/* AUTH */
 onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-  start();
+  if (!user) window.location.href = "login.html";
+  else start();
 });
 
 function start() {
@@ -234,8 +262,10 @@ document.getElementById("search").addEventListener("input", (e) => {
 /* FILTER */
 window.setFilter = (f, btn) => {
   filter = f;
+
   document.querySelectorAll(".filters button")
     .forEach(b => b.classList.remove("active"));
+
   btn.classList.add("active");
   render();
 };
@@ -270,12 +300,12 @@ window.toggleDisable = async (id) => {
 /* QR */
 function makeQR(id) {
   const el = document.getElementById("qr-" + id);
-  if (!el) return;
-
   el.innerHTML = "";
 
+  const url = `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+
   new QRCode(el, {
-    text: `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`,
+    text: url,
     width: 90,
     height: 90
   });
@@ -301,8 +331,17 @@ function render() {
     if (filter === "inactive") return !p.status || p.status === "inactive";
     if (filter === "disabled") return p.status === "disabled";
 
+    if (filter === "noprimary") return !p.phone;
+    if (filter === "nosecondary") return !p.phone2;
+    if (filter === "defaultimg") return !p.photo || p.photo.includes("placeholderpaw");
+
     return true;
   });
+
+  if (!filtered.length) {
+    listDiv.innerHTML = "<p>No pets found.</p>";
+    return;
+  }
 
   filtered.forEach(p => {
 
@@ -311,30 +350,43 @@ function render() {
 
     div.innerHTML = `
       <div class="meta">
-        <b>${p.id}</b>
-        <button class="id-btn" onclick="copyId('${p.id}')">Copy</button>
+
+        <div class="idline">
+          <b>${p.id}</b>
+          <button class="id-btn" onclick="copyId('${p.id}')">Copy</button>
+        </div>
+
         <span class="badge ${p.status || 'inactive'}">
           ${p.status || 'inactive'}
         </span>
+
       </div>
 
       <div class="row">
 
-        <img src="${p.photo || ''}" onerror="this.style.display='none'">
+        <div class="left">
 
-        <div class="field">
-          <label>Name</label>
-          <input id="name-${p.id}" value="${p.name || ""}">
+          <img src="${p.photo || ''}" onerror="this.style.display='none'">
+
+          <div class="field">
+            <label>Name</label>
+            <input id="name-${p.id}" value="${p.name || ""}">
+          </div>
+
+          <div class="field">
+            <label>Primary Phone</label>
+            <input id="phone-${p.id}" value="${p.phone || ""}">
+          </div>
+
+          <div class="field">
+            <label>Secondary Phone</label>
+            <input id="phone2-${p.id}" value="${p.phone2 || ""}">
+          </div>
+
         </div>
 
-        <div class="field">
-          <label>Primary Phone</label>
-          <input id="phone-${p.id}" value="${p.phone || ""}">
-        </div>
-
-        <div class="field">
-          <label>Secondary Phone</label>
-          <input id="phone2-${p.id}" value="${p.phone2 || ""}">
+        <div class="right">
+          <div id="qr-${p.id}" class="qr"></div>
         </div>
 
       </div>
@@ -345,8 +397,6 @@ function render() {
           ${p.status === "disabled" ? "Re-enable" : "Disable"}
         </button>
       </div>
-
-      <div class="qr" id="qr-${p.id}"></div>
     `;
 
     listDiv.appendChild(div);
