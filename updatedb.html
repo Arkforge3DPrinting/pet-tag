@@ -5,9 +5,6 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
   <style>
     * { box-sizing: border-box; }
 
@@ -47,16 +44,9 @@
       border-radius: 10px;
       border: 1px solid #ddd;
       font-size: 14px;
-      outline: none;
     }
 
-    input:focus {
-      border-color: #3b82f6;
-    }
-
-    .full {
-      grid-column: span 2;
-    }
+    .full { grid-column: span 2; }
 
     button {
       width: 100%;
@@ -76,20 +66,6 @@
       text-align: center;
       word-break: break-word;
     }
-
-    .bottom {
-      display: flex;
-      gap: 14px;
-      margin-top: 14px;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    #qrBox {
-      display: flex;
-      justify-content: center;
-    }
   </style>
 </head>
 
@@ -97,7 +73,7 @@
 
 <div class="card">
 
-  <h2>Create NFC Pet Tag</h2>
+  <h2>Create Pet Tag</h2>
 
   <div class="grid">
 
@@ -111,22 +87,13 @@
 
   <div id="result"></div>
 
-  <div class="bottom">
-    <div id="qrBox"></div>
-  </div>
-
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -142,22 +109,16 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let currentUser = null;
-let authReady = false;
 
-/* 🔥 FIX: persist login across pages */
+/* IMPORTANT: persist session */
 await setPersistence(auth, browserLocalPersistence);
 
-/* ✅ WAIT FOR AUTH PROPERLY */
-await new Promise((resolve) => {
-  const unsub = onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    authReady = true;
-    unsub();
-    resolve(user);
-  });
+/* DO NOT BLOCK PAGE ON LOAD */
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
 });
 
-/* 🔧 ID GENERATOR */
+/* ID GENERATOR */
 function idGen(len = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from({ length: len }, () =>
@@ -165,16 +126,12 @@ function idGen(len = 10) {
   ).join("");
 }
 
-/* CREATE TAG */
+/* CREATE */
 document.getElementById("generateBtn").onclick = async () => {
 
-  if (!authReady) {
-    alert("Auth still loading, try again in a second.");
-    return;
-  }
-
-  if (!currentUser) {
-    alert("You are not logged in.");
+  // 🔥 re-check auth at click time (IMPORTANT FIX)
+  if (!auth.currentUser) {
+    alert("You are not logged in. Please refresh or sign in again.");
     return;
   }
 
