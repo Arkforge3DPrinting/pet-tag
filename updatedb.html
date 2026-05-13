@@ -141,14 +141,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  ImageRun
-} from "https://cdn.jsdelivr.net/npm/docx@8.5.0/+esm";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -161,10 +154,25 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-const defaultPhoto =
-  "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg";
+let currentUser = null;
 
+/* WAIT FOR AUTH BEFORE ANYTHING */
+await new Promise((resolve) => {
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    resolve(user);
+  });
+});
+
+/* BLOCK IF NOT LOGGED IN */
+if (!currentUser) {
+  alert("You must be logged in to create tags.");
+  throw new Error("No auth");
+}
+
+/* ID GENERATOR */
 function idGen(len = 10) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from({ length: len }, () =>
@@ -172,112 +180,36 @@ function idGen(len = 10) {
   ).join("");
 }
 
-function reset() {
-  document.getElementById("qrBox").innerHTML = "";
-  document.getElementById("downloadSection").innerHTML = "";
-}
-
-function qrBase64() {
-  return document.querySelector("#qrBox canvas")?.toDataURL("image/png");
-}
-
+/* CREATE TAG */
 document.getElementById("generateBtn").onclick = async () => {
 
-  try {
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const phone2 = document.getElementById("phone2").value.trim();
 
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const phone2 = document.getElementById("phone2").value.trim();
-
-    reset();
-
-    if (!name || !phone) {
-      alert("Please enter pet name and primary phone");
-      return;
-    }
-
-    const id = idGen();
-
-    const url =
-      `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
-
-    await setDoc(doc(db, "pets", id), {
-
-      name,
-      phone,
-      phone2: phone2 || "",
-      photo: defaultPhoto,
-
-      // 🔐 SAFE STATUS FLAG (does NOT break anything)
-      status: "inactive"
-
-    });
-
-    document.getElementById("result").innerHTML =
-      `<div class="meta"><b>ID:</b> ${id}</div>
-       <div class="meta">${url}</div>`;
-
-    new QRCode(document.getElementById("qrBox"), {
-      text: url,
-      width: 140,
-      height: 140
-    });
-
-    document.getElementById("downloadSection").innerHTML = `
-      <button id="docBtn">Download Letter</button>
-    `;
-
-    document.getElementById("docBtn").onclick = async () => {
-
-      const doc = new Document({
-        sections: [{
-          children: [
-
-            new Paragraph({
-              children: [
-                new TextRun({ text: "Pet Tag Activation", bold: true })
-              ]
-            }),
-
-            new Paragraph(""),
-            new Paragraph(`Pet: ${name}`),
-            new Paragraph(`Link: ${url}`),
-
-            new Paragraph(""),
-            new Paragraph({
-              children: [
-                new TextRun({ text: "Scan QR to access profile", bold: true })
-              ]
-            }),
-
-            new Paragraph({
-              children: [
-                new ImageRun({
-                  data: qrBase64(),
-                  transformation: { width: 140, height: 140 }
-                })
-              ]
-            }),
-
-            new Paragraph(""),
-            new Paragraph("Scan → view profile → contact owner."),
-            new Paragraph("Keep details updated for fast recovery.")
-
-          ]
-        }]
-      });
-
-      const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${name}-tag.docx`);
-    };
-
-  } catch (err) {
-    console.error("CREATE TAG ERROR:", err);
-    alert("Error creating tag: " + err.message);
+  if (!name || !phone) {
+    alert("Enter name + phone");
+    return;
   }
+
+  const id = idGen();
+
+  const url =
+    `https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}`;
+
+  await setDoc(doc(db, "pets", id), {
+    name,
+    phone,
+    phone2: phone2 || "",
+    photo: "https://res.cloudinary.com/ddsp7ps7p/image/upload/v1776062761/placeholderpaw_a29ok1.jpg",
+    status: "inactive"
+  });
+
+  document.getElementById("result").innerHTML =
+    `<b>ID:</b> ${id}<br>${url}`;
+
 };
 
 </script>
-
 </body>
 </html>
