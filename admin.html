@@ -1,147 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Dashboard (Clean)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 20px;
-      max-width: 1100px;
-      margin: auto;
-    }
-
-    h2 { margin-bottom: 12px; }
-
-    #search {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      margin-bottom: 12px;
-    }
-
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-
-    .filters button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 8px;
-      background: #ddd;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .filters button.active {
-      background: #3b82f6;
-      color: white;
-    }
-
-    .card {
-      background: white;
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-    }
-
-    .meta {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 8px;
-    }
-
-    .badges { margin-bottom: 10px; }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: bold;
-      margin-right: 5px;
-    }
-
-    .green { background: #dcfce7; color: #166534; }
-    .red { background: #fee2e2; color: #991b1b; }
-    .orange { background: #ffedd5; color: #9a3412; }
-    .blue { background: #dbeafe; color: #1d4ed8; }
-    .purple { background: #ede9fe; color: #5b21b6; }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .row input {
-      flex: 1;
-      min-width: 180px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .buttons button {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .saveBtn { background: #3b82f6; color: white; }
-    .disableBtn { background: #7c3aed; color: white; }
-
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
-
-    .footer img {
-      width: 90px;
-      border-radius: 10px;
-    }
-  </style>
-</head>
-
-<body>
-
-<h2>🐾 Admin Dashboard</h2>
-
-<input id="search" placeholder="Search ID, name, phone...">
-
-<div class="filters">
-  <button class="active" onclick="setFilter('all', this)">All</button>
-  <button onclick="setFilter('active', this)">Active</button>
-  <button onclick="setFilter('inactive', this)">Inactive</button>
-  <button onclick="setFilter('disabled', this)">Disabled</button>
-</div>
-
-<div id="list"></div>
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -150,13 +6,20 @@ import {
   collection,
   onSnapshot,
   doc,
-  updateDoc
+  updateDoc,
+  getDoc,
+  setDoc,
+  query
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
   getAuth,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+/* =========================
+   FIREBASE INIT
+========================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -171,36 +34,67 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+/* =========================
+   STATE
+========================= */
+
 let pets = [];
 let filter = "all";
+let search = "";
+let currentUser = null;
 
 const listDiv = document.getElementById("list");
 
-/* AUTH */
-onAuthStateChanged(auth, user => {
+/* =========================
+   AUTH GATE (CRITICAL FIX)
+========================= */
+
+onAuthStateChanged(auth, (user) => {
+
   if (!user) {
-    location.href = "login.html";
+    window.location.href = "login.html";
     return;
   }
 
-  listenPets();
+  currentUser = user;
+
+  // ONLY START FIRESTORE AFTER AUTH IS CONFIRMED
+  startFirestore();
 });
 
-/* LOAD PETS */
-function listenPets() {
-  onSnapshot(collection(db, "pets"), snap => {
-    pets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+/* =========================
+   FIRESTORE STARTER
+========================= */
+
+function startFirestore() {
+
+  const petsQuery = query(collection(db, "pets"));
+
+  onSnapshot(petsQuery, (snap) => {
+
+    pets = [];
+
+    snap.forEach(d => {
+      pets.push({ id: d.id, ...d.data() });
+    });
+
     render();
   });
 }
 
-/* SEARCH */
-document.getElementById("search").addEventListener("input", e => {
-  window.search = e.target.value.toLowerCase();
+/* =========================
+   SEARCH
+========================= */
+
+document.getElementById("search").addEventListener("input", (e) => {
+  search = (e.target.value || "").toLowerCase();
   render();
 });
 
-/* FILTER */
+/* =========================
+   FILTER
+========================= */
+
 window.setFilter = (f, btn) => {
   filter = f;
 
@@ -212,46 +106,79 @@ window.setFilter = (f, btn) => {
   render();
 };
 
-/* SAVE */
+/* =========================
+   SAVE PET
+========================= */
+
 window.savePet = async (id) => {
-  await updateDoc(doc(db, "pets", id), {
+
+  const ref = doc(db, "pets", id);
+  const snap = await getDoc(ref);
+
+  const before = snap.data();
+
+  const after = {
     name: document.getElementById("name-" + id).value,
     phone: document.getElementById("phone-" + id).value,
     phone2: document.getElementById("phone2-" + id).value
-  });
+  };
+
+  await updateDoc(ref, after);
 };
 
-/* DISABLE / ENABLE */
-window.toggleDisable = async (id, status) => {
+/* =========================
+   DISABLE / ENABLE
+========================= */
 
-  await updateDoc(doc(db, "pets", id), {
-    status: status === "disabled" ? "active" : "disabled"
-  });
+window.toggleDisable = async (id) => {
+
+  const ref = doc(db, "pets", id);
+  const snap = await getDoc(ref);
+
+  const data = snap.data();
+
+  const newStatus =
+    data.status === "disabled" ? "active" : "disabled";
+
+  await updateDoc(ref, { status: newStatus });
 };
 
-/* RENDER */
+/* =========================
+   RENDER
+========================= */
+
 function render() {
 
   listDiv.innerHTML = "";
 
-  const s = window.search || "";
+  const s = search || "";
 
   const filtered = pets.filter(p => {
 
     const match =
-      p.id.includes(s) ||
+      (p.id || "").includes(s) ||
       (p.name || "").toLowerCase().includes(s) ||
       (p.phone || "").includes(s) ||
       (p.phone2 || "").includes(s);
 
     if (!match) return false;
 
-    if (filter === "active") return p.activatedAt && p.status !== "disabled";
-    if (filter === "inactive") return !p.activatedAt;
-    if (filter === "disabled") return p.status === "disabled";
+    if (filter === "active")
+      return p.status === "active";
+
+    if (filter === "inactive")
+      return !p.status || p.status === "inactive";
+
+    if (filter === "disabled")
+      return p.status === "disabled";
 
     return true;
   });
+
+  if (filtered.length === 0) {
+    listDiv.innerHTML = "<p>No pets found.</p>";
+    return;
+  }
 
   filtered.forEach(p => {
 
@@ -261,29 +188,15 @@ function render() {
     div.innerHTML = `
       <div class="meta"><b>${p.id}</b></div>
 
-      <div class="badges">
-        ${
-          p.status === "disabled"
-            ? `<span class="badge purple">Disabled</span>`
-            : p.activatedAt
-              ? `<span class="badge green">Active</span>`
-              : `<span class="badge red">Inactive</span>`
-        }
-      </div>
-
       <div class="row">
         <input id="name-${p.id}" value="${p.name || ""}">
         <input id="phone-${p.id}" value="${p.phone || ""}">
         <input id="phone2-${p.id}" value="${p.phone2 || ""}">
       </div>
 
-      <div class="footer">
-        ${p.photo ? `<img src="${p.photo}">` : ""}
-      </div>
-
       <div class="buttons">
-        <button class="saveBtn" onclick="savePet('${p.id}')">Save</button>
-        <button class="disableBtn" onclick="toggleDisable('${p.id}','${p.status || ""}')">
+        <button onclick="savePet('${p.id}')">Save</button>
+        <button onclick="toggleDisable('${p.id}')">
           ${p.status === "disabled" ? "Re-enable" : "Disable"}
         </button>
       </div>
@@ -294,6 +207,3 @@ function render() {
 }
 
 </script>
-
-</body>
-</html>
