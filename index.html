@@ -245,7 +245,6 @@ async function loadPet() {
 
   const pet = snap.data();
 
-  /* 🔴 DISABLED OVERRIDE */
   if (pet.status === "disabled") {
     document.body.innerHTML = `
       <div style="
@@ -267,13 +266,11 @@ async function loadPet() {
     return;
   }
 
-  /* 🟡 NOT ACTIVE */
   if (pet.status !== "active") {
     showLocked();
     return;
   }
 
-  /* 🟢 ACTIVE */
   showMain();
 
   document.getElementById("title").innerText =
@@ -326,26 +323,50 @@ async function loadPet() {
     });
   };
 
-  if (!hasSecondary) {
+  /* ✅ FIXED SECONDARY GPS BUTTON */
+  if (hasSecondary) {
+
+    document.getElementById("callBtn2").onclick =
+      () => window.location.href = "tel:" + pet.phone2;
+
+    document.getElementById("textBtn2").onclick =
+      () => window.open(
+        `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
+        "_self"
+      );
+
+    document.getElementById("locBtn2").onclick = () => {
+
+      const btn = document.getElementById("locBtn2");
+
+      btn.disabled = true;
+      btn.innerText = "📡 Acquiring GPS...";
+
+      navigator.geolocation.getCurrentPosition(pos => {
+
+        const msg =
+          "I found " + pet.name +
+          ". Location: https://maps.google.com/?q=" +
+          pos.coords.latitude + "," + pos.coords.longitude;
+
+        btn.disabled = false;
+        btn.innerText = "📍 Send Location Secondary";
+
+        window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
+
+      }, () => {
+        btn.disabled = false;
+        btn.innerText = "📍 Send Location Secondary";
+        alert("Unable to get GPS location.");
+      });
+    };
+
+  } else {
     hide("callBtn2");
     hide("textBtn2");
     hide("locBtn2");
     setSingle();
-    return;
   }
-
-  show("callBtn2");
-  show("textBtn2");
-  show("locBtn2");
-
-  document.getElementById("callBtn2").onclick =
-    () => window.location.href = "tel:" + pet.phone2;
-
-  document.getElementById("textBtn2").onclick =
-    () => window.open(
-      `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-      "_self"
-    );
 }
 
 loadPet();
