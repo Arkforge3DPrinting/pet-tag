@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Found Pet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  padding: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+
+  background:
+    radial-gradient(circle at top, #ffffff 0%, #eef4ff 35%, #dfe9f7 100%);
+  color: #111827;
+}
+
+/* soft glowing background blobs */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(52,199,89,.12), transparent 30%),
+    radial-gradient(circle at 80% 10%, rgba(59,130,246,.12), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(255,159,10,.10), transparent 40%);
+}
+
+/* MAIN CARDS */
+.container,
+#locked {
+  max-width: 460px;
+  margin: auto;
+
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  border: 1px solid rgba(255,255,255,0.8);
+  border-radius: 34px;
+
+  box-shadow:
+    0 25px 60px rgba(0,0,0,0.10),
+    0 4px 12px rgba(0,0,0,0.04);
+
+  overflow: hidden;
+}
+
+.container {
+  display: none;
+}
+
+/* LOCKED SCREEN */
+#locked {
+  display: none;
+  padding: 26px;
+  text-align: center;
+}
+
+/* HERO SECTION */
+.hero {
+  padding: 30px 22px 10px;
+  text-align: center;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  background: rgba(52,199,89,0.14);
+  color: #1c7a39;
+
+  padding: 10px 16px;
+  border-radius: 999px;
+
+  font-weight: 700;
+  font-size: 13px;
+
+  margin-bottom: 18px;
+
+  animation: pulse 2.4s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* PET IMAGE */
+#petPhoto {
+  width: 250px;
+  height: 250px;
+
+  object-fit: cover;
+  border-radius: 34px;
+
+  margin: 10px auto 18px;
+  display: none;
+
+  border: 6px solid white;
+
+  box-shadow:
+    0 18px 40px rgba(0,0,0,0.18),
+    0 0 0 1px rgba(255,255,255,0.9);
+
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* TEXT */
+h1 {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 8px;
+}
+
+p {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* NOTICE */
+.notice {
+  margin: 0 18px 18px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.15);
+  text-align: center;
+  font-weight: 600;
+}
+
+/* BUTTON GRID */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 0 18px 18px;
+}
+
+.single {
+  grid-template-columns: 1fr !important;
+}
+
+/* BUTTONS */
+button {
+  border: none;
+  border-radius: 22px;
+
+  padding: 16px 12px;
+  min-height: 78px;
+
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  transition: 0.18s ease;
+}
+
+button:hover {
+  transform: translateY(-3px);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.7;
+  transform: none;
+}
+
+/* BUTTON COLORS */
+#callBtn, #callBtn2 {
+  background: linear-gradient(180deg, #34c759, #28a745);
+}
+
+#textBtn, #textBtn2 {
+  background: linear-gradient(180deg, #0a84ff, #0066d6);
+}
+
+#locBtn, #locBtn2 {
+  background: linear-gradient(180deg, #ff9f0a, #e68500);
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 10px 0 18px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* TAG BOX */
+.tagbox {
+  margin-top: 14px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  text-align: left;
+}
+
+.tagcode {
+  font-family: monospace;
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  word-break: break-all;
+}
+
+.tagbtn {
+  display: block;
+  margin-top: 10px;
+  padding: 12px;
+  text-align: center;
+  background: #0a84ff;
+  color: white;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+
+  #petPhoto {
+    width: 220px;
+    height: 220px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="locked">
+  <h2>🐾 Tag Not Activated</h2>
+  <p>This pet tag must be activated before contact details are available.</p>
+
+  <div class="tagbox">
+    <div class="tagcode" id="tagCode"></div>
+    <a id="tagLinkBtn" class="tagbtn" target="_blank">🔗 Activate This Tag</a>
+  </div>
+</div>
+
+<div class="container" id="main">
+
+  <div class="hero">
+    <div class="status-pill">🐾 Help Me Get Home</div>
+
+    <img id="petPhoto">
+
+    <h1 id="title">Loading...</h1>
+    <p id="message"></p>
+  </div>
+
+  <div class="notice">
+    If you have found this pet, please contact the owner immediately.
+  </div>
+
+  <div id="btnGrid" class="grid">
+
+    <button id="callBtn">📞<span>Call</span></button>
+    <button id="callBtn2">📞<span>Call Backup</span></button>
+
+    <button id="textBtn">💬<span>Text</span></button>
+    <button id="textBtn2">💬<span>Text Backup</span></button>
+
+    <button id="locBtn">📍<span>Send Location</span></button>
+    <button id="locBtn2">📍<span>Send Backup Location</span></button>
+
+  </div>
+
+  <div class="footer">
+    Powered by Arkforge 3D Printing ®
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  authDomain: "arkforge-pets.firebaseapp.com",
+  projectId: "arkforge-pets",
+  storageBucket: "arkforge-pets.firebasestorage.app",
+  messagingSenderId: "517154779272",
+  appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const id = new URLSearchParams(window.location.search).get("id");
+
+const main = document.getElementById("main");
+const locked = document.getElementById("locked");
+
+if (!id) {
+  locked.style.display = "block";
+  document.getElementById("tagCode").innerText = "INVALID";
+  throw new Error("Missing ID");
+}
+
+document.getElementById("tagCode").innerText = id;
+document.getElementById("tagLinkBtn").href =
+  "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
+
+function showMain() {
+  main.style.display = "block";
+}
+
+function showLocked() {
+  locked.style.display = "block";
+}
+
+function hide(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = "none";
+}
+
+function setSingle() {
+  document.getElementById("btnGrid").classList.add("single");
+}
+
+async function loadPet() {
+
+  const snap = await getDoc(doc(db, "pets", id));
+
+  if (!snap.exists()) {
+    showLocked();
+    return;
+  }
+
+  const pet = snap.data();
+
+  if (pet.status === "disabled") {
+    document.body.innerHTML = "<h2>Profile Disabled</h2>";
+    return;
+  }
+
+  if (pet.status !== "active") {
+    showLocked();
+    return;
+  }
+
+  showMain();
+
+  document.getElementById("title").innerText =
+    "🐾 You found " + (pet.name || "a pet");
+
+  document.getElementById("message").innerText =
+    "Help get " + (pet.name || "this pet") + " home safely.";
+
+  const img = document.getElementById("petPhoto");
+
+  if (pet.photo) {
+    img.src = pet.photo;
+    img.style.display = "block";
+  }
+
+  const hasSecondary = pet.phone2 && pet.phone2.trim() !== "";
+
+  document.getElementById("callBtn").onclick =
+    () => window.location.href = "tel:" + pet.phone;
+
+  document.getElementById("textBtn").onclick =
+    () => window.open(`sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+
+  document.getElementById("locBtn").onclick = () => {
+
+    navigator.geolocation.getCurrentPosition(pos => {
+
+      const msg =
+        "I found " + pet.name +
+        ". Location: https://maps.google.com/?q=" +
+        pos.coords.latitude + "," + pos.coords.longitude;
+
+      window.open(`sms:${pet.phone}?body=${encodeURIComponent(msg)}`, "_self");
+
+    });
+  };
+
+  if (hasSecondary) {
+
+    document.getElementById("callBtn2").onclick =
+      () => window.location.href = "tel:" + pet.phone2;
+
+    document.getElementById("textBtn2").onclick =
+      () => window.open(`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+
+    document.getElementById("locBtn2").onclick = () => {
+
+      navigator.geolocation.getCurrentPosition(pos => {
+
+        const msg =
+          "I found " + pet.name +
+          ". Location: https://maps.google.com/?q=" +
+          pos.coords.latitude + "," + pos.coords.longitude;
+
+        window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
+
+      });
+    };
+
+  } else {
+    hide("callBtn2");
+    hide("textBtn2");
+    hide("locBtn2");
+    setSingle();
+  }
+}
+
+loadPet();
+</script>
+
+</body>
+</html>
