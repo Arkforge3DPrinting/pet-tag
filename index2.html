@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ArkLink Pet ID - Found Pet</title>
+<title>Found Pet</title>
 
 <style>
 *{
@@ -17,190 +17,134 @@ body{
   min-height:100vh;
   padding:20px;
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
-
-  background:
-    radial-gradient(circle at top,#ffffff 0%,#eef4ff 30%,#dfe9f7 100%);
-
+  background: radial-gradient(circle at top,#ffffff 0%,#eef4ff 30%,#dfe9f7 100%);
   color:#111827;
-}
-
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:
-    radial-gradient(circle at 20% 20%,rgba(59,130,246,.12),transparent 25%),
-    radial-gradient(circle at 80% 10%,rgba(52,199,89,.12),transparent 25%),
-    radial-gradient(circle at 50% 100%,rgba(255,159,10,.12),transparent 35%);
-  pointer-events:none;
 }
 
 .container{
   max-width:460px;
   margin:auto;
-
   background:rgba(255,255,255,.78);
   backdrop-filter:blur(22px);
-  -webkit-backdrop-filter:blur(22px);
-
-  border:1px solid rgba(255,255,255,.8);
-
   border-radius:34px;
-
-  box-shadow:
-    0 25px 60px rgba(0,0,0,.10),
-    0 4px 12px rgba(0,0,0,.04);
-
   overflow:hidden;
-
   display:none;
 }
 
+/* HERO */
 .hero{
-  padding:30px 24px 22px;
+  padding:30px 24px 18px;
   text-align:center;
 }
 
-/* UPDATED IMAGE WRAPPER (CENTER FIX) */
+/* IMAGE WRAPPER */
 #petPhotoWrapper{
   position:relative;
   width:250px;
   height:250px;
-  margin:0 auto 18px;
-
+  margin:0 auto 14px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
+/* PET IMAGE */
 #petPhoto{
   width:100%;
   height:100%;
   object-fit:cover;
-
   border-radius:34px;
-
-  display:block;
   opacity:0;
-  transition:opacity .35s ease;
-
+  transition:opacity .3s ease;
   border:6px solid white;
-
-  box-shadow:
-    0 18px 40px rgba(0,0,0,.18),
-    0 0 0 1px rgba(255,255,255,.9);
-
-  animation:floaty 6s ease-in-out infinite;
 }
 
-@keyframes floaty{
-  0%{transform:translateY(0px);}
-  50%{transform:translateY(-10px);}
-  100%{transform:translateY(0px);}
-}
-
-/* 🔥 MOVED FOUND PET TAG */
-.status-pill{
+/* 🟢 LIVE DOT (NEW) */
+.live-dot{
   position:absolute;
-  bottom:-12px;
-  left:50%;
-  transform:translateX(-50%);
-
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-
-  background:rgba(52,199,89,.18);
-  color:#1c7a39;
-
-  padding:10px 16px;
-  border-radius:999px;
-
-  font-size:12px;
-  font-weight:800;
-
-  animation:pulse 2.5s infinite;
-
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-
-  border:1px solid rgba(52,199,89,.25);
+  top:14px;
+  right:14px;
+  width:14px;
+  height:14px;
+  background:#22c55e;
+  border-radius:50%;
+  box-shadow:0 0 10px #22c55e, 0 0 18px #22c55e;
+  animation:livePulse 1.6s infinite;
 }
 
-@keyframes pulse{
-  0%{transform:translateX(-50%) scale(1);}
-  50%{transform:translateX(-50%) scale(1.05);}
-  100%{transform:translateX(-50%) scale(1);}
+@keyframes livePulse{
+  0%{transform:scale(1); opacity:1;}
+  50%{transform:scale(1.4); opacity:.6;}
+  100%{transform:scale(1); opacity:1;}
 }
 
+/* 📡 GPS RINGS */
+.pulse-ring{
+  position:absolute;
+  width:260px;
+  height:260px;
+  border-radius:50%;
+  border:2px solid rgba(34,197,94,.55);
+  opacity:0;
+  transform:scale(.6);
+}
+
+.pulse-ring.active{
+  animation:radar 1.4s ease-out infinite;
+}
+
+@keyframes radar{
+  0%{transform:scale(.6); opacity:.8;}
+  70%{opacity:.2;}
+  100%{transform:scale(1.6); opacity:0;}
+}
+
+/* TEXT */
 h1{
-  font-size:34px;
+  font-size:32px;
   font-weight:800;
-  letter-spacing:-0.04em;
-  margin-bottom:10px;
+  margin-bottom:6px;
 }
 
-p{
-  color:#6b7280;
-  line-height:1.5;
-  font-size:15px;
-}
-
-/* MOVED TEXT HERE (NO EXTRA LINE NOW) */
+/* MOVED UP (your request) */
 .notice{
-  margin:0 20px 20px;
-  padding:16px;
-  border-radius:20px;
+  margin:0 18px 14px;
+  padding:14px;
+  border-radius:18px;
   background:rgba(59,130,246,.08);
   border:1px solid rgba(59,130,246,.15);
   font-weight:600;
-  color:#234;
   text-align:center;
 }
 
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:14px;
-  padding:0 20px 20px;
+  padding:0 18px 18px;
 }
 
 button{
   border:none;
-  border-radius:22px;
-  padding:18px 14px;
+  border-radius:20px;
+  padding:16px;
   color:white;
-  font-size:14px;
   font-weight:700;
   cursor:pointer;
-  min-height:78px;
-  transition:.18s ease;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
+  min-height:76px;
 }
 
-button:hover{ transform:translateY(-3px); }
-button:active{ transform:scale(.98); }
-button:disabled{ opacity:.75; transform:none; }
-
-#callBtn,#callBtn2{
-  background:linear-gradient(180deg,#34c759,#28a745);
-}
-#textBtn,#textBtn2{
-  background:linear-gradient(180deg,#0a84ff,#0066d6);
-}
-#locBtn,#locBtn2{
-  background:linear-gradient(180deg,#ff9f0a,#e68500);
-}
+/* COLORS */
+#callBtn,#callBtn2{background:#22c55e;}
+#textBtn,#textBtn2{background:#3b82f6;}
+#locBtn,#locBtn2{background:#f59e0b;}
 
 .footer{
   text-align:center;
-  padding:10px 20px 24px;
-  color:#9ca3af;
+  padding:10px 0 18px;
   font-size:12px;
+  color:#9ca3af;
 }
 </style>
 </head>
@@ -213,20 +157,21 @@ button:disabled{ opacity:.75; transform:none; }
 
     <div id="petPhotoWrapper">
       <img id="petPhoto">
-      <div class="status-pill">🐾 Found Pet</div>
+      <div class="pulse-ring" id="gpsPulse"></div>
+
+      <!-- 🟢 LIVE DOT -->
+      <div class="live-dot"></div>
     </div>
 
     <h1 id="title">Loading...</h1>
-
   </div>
 
-  <!-- MOVED TEXT HERE -->
+  <!-- MOVED UP -->
   <div class="notice" id="message">
     Help return this pet safely.
   </div>
 
   <div class="grid">
-
     <button id="callBtn">📞 Call</button>
     <button id="callBtn2">📞 Call 2</button>
 
@@ -235,10 +180,9 @@ button:disabled{ opacity:.75; transform:none; }
 
     <button id="locBtn">📍 Location</button>
     <button id="locBtn2">📍 Location 2</button>
-
   </div>
 
-  <div class="footer">Powered by ArkLink Pet ID ®</div>
+  <div class="footer">Powered by Arkforge 3D Printing ®</div>
 </div>
 
 <script type="module">
@@ -257,88 +201,65 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let pet = { name:"Pet", phone:"", phone2:"" };
+let pet={name:"Pet",phone:"",phone2:""};
 
-function clickSound(){
+const gpsPulse=document.getElementById("gpsPulse");
+
+/* 🔊 SOUND */
+function ping(){
   try{
     const ctx=new (window.AudioContext||window.webkitAudioContext)();
     const o=ctx.createOscillator();
     const g=ctx.createGain();
-    o.type="sine"; o.frequency.value=520;
-    g.gain.value=0.08;
-    o.connect(g); g.connect(ctx.destination);
-    o.start(); o.stop(ctx.currentTime+0.08);
-  }catch{}
-}
-
-function pingSound(){
-  try{
-    const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    const o=ctx.createOscillator();
-    const g=ctx.createGain();
-
     o.type="sine";
-    o.frequency.setValueAtTime(880,ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(1320,ctx.currentTime+0.12);
-
-    g.gain.setValueAtTime(0.0001,ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.2,ctx.currentTime+0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.25);
-
+    o.frequency.value=880;
+    g.gain.value=0.2;
     o.connect(g); g.connect(ctx.destination);
-    o.start(); o.stop(ctx.currentTime+0.3);
+    o.start(); o.stop(ctx.currentTime+0.2);
   }catch{}
 }
 
-function startPulse(){
-  const ring=document.getElementById("gpsPulse");
-  if(ring) ring.classList.add("active");
-}
-
-function stopPulse(){
-  const ring=document.getElementById("gpsPulse");
-  if(ring) ring.classList.remove("active");
-}
-
+/* 📡 GPS */
 function gps(phone,label,btn){
 
-  clickSound();
-
   btn.disabled=true;
-  btn.innerText="📡 Getting GPS...";
+  btn.innerText="Locating...";
 
-  startPulse();
+  gpsPulse.classList.add("active");
 
   navigator.geolocation.getCurrentPosition(pos=>{
 
-    stopPulse();
-    pingSound();
+    gpsPulse.classList.remove("active");
 
-    const msg =
+    ping();
+
+    if(navigator.vibrate){
+      navigator.vibrate([200,100,200]);
+    }
+
+    const msg=
       "I found "+pet.name+
-      ". https://maps.google.com/?q="+
+      " https://maps.google.com/?q="+
       pos.coords.latitude+","+pos.coords.longitude;
 
     btn.disabled=false;
     btn.innerText=label;
 
-    window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`,"_self");
+    location.href=`sms:${phone}?body=${encodeURIComponent(msg)}`;
 
   },()=>{
 
-    stopPulse();
-
+    gpsPulse.classList.remove("active");
     btn.disabled=false;
     btn.innerText=label;
 
     alert("GPS failed.");
   },{
-    enableHighAccuracy:true,
-    timeout:10000,
-    maximumAge:0
+    enableHighAccuracy:true
   });
 }
 
+/* LOAD */
 async function load(){
 
   document.getElementById("main").style.display="block";
@@ -346,15 +267,11 @@ async function load(){
   const id=new URLSearchParams(window.location.search).get("id");
 
   const snap=await getDoc(doc(db,"pets",id));
-
-  if(!snap.exists()){
-    document.getElementById("title").innerText="Pet not found";
-    return;
-  }
+  if(!snap.exists()) return;
 
   pet=snap.data();
 
-  document.getElementById("title").innerText="🐾 "+pet.name;
+  document.getElementById("title").innerText=pet.name;
 
   const img=document.getElementById("petPhoto");
 
@@ -368,33 +285,14 @@ async function load(){
 
 function bind(){
 
-  document.getElementById("callBtn").onclick=()=>{
-    clickSound();
-    location.href="tel:"+pet.phone;
-  };
+  document.getElementById("callBtn").onclick=()=>location.href="tel:"+pet.phone;
+  document.getElementById("callBtn2").onclick=()=>location.href="tel:"+pet.phone2;
 
-  document.getElementById("callBtn2").onclick=()=>{
-    clickSound();
-    location.href="tel:"+pet.phone2;
-  };
+  document.getElementById("textBtn").onclick=()=>location.href=`sms:${pet.phone}?body=${encodeURIComponent("I found your pet "+pet.name)}`;
+  document.getElementById("textBtn2").onclick=()=>location.href=`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet "+pet.name)}`;
 
-  document.getElementById("textBtn").onclick=()=>{
-    clickSound();
-    location.href=`sms:${pet.phone}?body=${encodeURIComponent("I found your pet "+pet.name)}`;
-  };
-
-  document.getElementById("textBtn2").onclick=()=>{
-    clickSound();
-    location.href=`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet "+pet.name)}`;
-  };
-
-  document.getElementById("locBtn").onclick=(e)=>{
-    gps(pet.phone,"📍 Location",e.currentTarget);
-  };
-
-  document.getElementById("locBtn2").onclick=(e)=>{
-    gps(pet.phone2,"📍 Location 2",e.currentTarget);
-  };
+  document.getElementById("locBtn").onclick=(e)=>gps(pet.phone,"Location",e.target);
+  document.getElementById("locBtn2").onclick=(e)=>gps(pet.phone2,"Location 2",e.target);
 }
 
 load();
