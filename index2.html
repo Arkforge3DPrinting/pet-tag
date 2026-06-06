@@ -5,22 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   min-height: 100vh;
-  padding: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
-
-  background:
-    radial-gradient(circle at top, #ffffff 0%, #eef4ff 35%, #dfe9f7 100%);
+  background: radial-gradient(circle at top, #ffffff 0%, #eef4ff 35%, #dfe9f7 100%);
   color: #111827;
+  padding: 14px;
 }
 
+/* soft background glow */
 body::before {
   content: "";
   position: fixed;
@@ -32,22 +33,23 @@ body::before {
     radial-gradient(circle at 50% 100%, rgba(255,159,10,.10), transparent 40%);
 }
 
-/* CARD */
 .container,
 #locked {
+  width: 100%;
   max-width: 460px;
-  margin: auto;
+  max-height: 95vh;
+
+  display: flex;
+  flex-direction: column;
 
   background: rgba(255,255,255,0.78);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
 
-  border: 1px solid rgba(255,255,255,0.8);
   border-radius: 34px;
+  border: 1px solid rgba(255,255,255,0.8);
 
-  box-shadow:
-    0 25px 60px rgba(0,0,0,0.10),
-    0 4px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.04);
 
   overflow: hidden;
 }
@@ -55,209 +57,131 @@ body::before {
 .container { display: none; }
 #locked { display: none; padding: 26px; text-align: center; }
 
-/* HERO */
+/* HERO (flex fills remaining space) */
 .hero {
-  padding: 30px 22px 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
   text-align: center;
-  position: relative;
+  padding: 18px;
 }
 
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-
   background: rgba(52,199,89,0.14);
   color: #1c7a39;
-
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 999px;
-
   font-weight: 700;
-  font-size: 13px;
-
-  margin-bottom: 18px;
-
-  animation: pulse 2.4s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.04); }
-  100% { transform: scale(1); }
+  font-size: 12px;
+  margin-bottom: 10px;
 }
 
 /* PET IMAGE */
 #petPhoto {
-  width: 250px;
-  height: 250px;
-
+  width: min(220px, 55vw);
+  aspect-ratio: 1 / 1;
   object-fit: cover;
-  border-radius: 34px;
 
-  margin: 10px auto 18px;
+  border-radius: 28px;
+  margin: 10px 0;
+
   display: none;
 
   border: 6px solid white;
-
-  box-shadow:
-    0 18px 40px rgba(0,0,0,0.18),
-    0 0 0 1px rgba(255,255,255,0.9);
-
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-/* ⭐ AIRTAG GPS PULSE */
-.pulse-ring {
-  position: absolute;
-  left: 50%;
-  top: 180px;
-
-  width: 260px;
-  height: 260px;
-
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-
-  border: 2px solid rgba(52,199,89,0.6);
-
-  opacity: 0;
-  pointer-events: none;
-}
-
-.pulse-ring.active {
-  animation: radarPulse 1.5s ease-out infinite;
-}
-
-@keyframes radarPulse {
-  0% {
-    transform: translate(-50%, -50%) scale(0.6);
-    opacity: 0.9;
-  }
-  70% { opacity: 0.25; }
-  100% {
-    transform: translate(-50%, -50%) scale(1.7);
-    opacity: 0;
-  }
+  box-shadow: 0 18px 40px rgba(0,0,0,0.18);
 }
 
 /* TEXT */
 h1 {
-  font-size: 34px;
+  font-size: clamp(20px, 4.5vw, 30px);
   font-weight: 800;
-  letter-spacing: -0.04em;
-  margin-bottom: 8px;
+  margin-top: 8px;
 }
 
 p {
-  font-size: 15px;
+  font-size: 14px;
   color: #6b7280;
-  line-height: 1.5;
 }
 
 /* NOTICE */
 .notice {
-  margin: 0 18px 18px;
-  padding: 14px;
-  border-radius: 18px;
+  margin: 8px 14px;
+  padding: 10px;
+  border-radius: 16px;
   background: rgba(59,130,246,0.08);
   border: 1px solid rgba(59,130,246,0.15);
-  text-align: center;
+  font-size: 12px;
   font-weight: 600;
+  text-align: center;
 }
 
-/* GRID */
+/* BUTTON GRID */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  padding: 0 18px 18px;
+  gap: 10px;
+  padding: 10px 14px 14px;
+  flex-shrink: 0;
 }
-
-.single { grid-template-columns: 1fr !important; }
 
 /* BUTTONS */
 button {
   border: none;
-  border-radius: 22px;
+  border-radius: 18px;
 
-  padding: 16px 12px;
-  min-height: 78px;
+  padding: 12px 8px;
+  min-height: 64px;
 
-  color: white;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
 
+  color: white;
   cursor: pointer;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
 
-  transition: 0.18s ease;
+  transition: 0.15s ease;
 }
 
-button:hover { transform: translateY(-3px); }
-button:active { transform: scale(0.98); }
-button:disabled { opacity: 0.7; transform: none; }
+button:active { transform: scale(0.97); }
+button:disabled { opacity: 0.6; }
 
 #callBtn,#callBtn2 { background: linear-gradient(180deg,#34c759,#28a745); }
 #textBtn,#textBtn2 { background: linear-gradient(180deg,#0a84ff,#0066d6); }
 #locBtn,#locBtn2 { background: linear-gradient(180deg,#ff9f0a,#e68500); }
 
-/* FOOTER */
-.footer {
-  text-align: center;
-  padding: 10px 0 18px;
-  font-size: 12px;
-  color: #9ca3af;
+/* LOCKED */
+#locked {
+  padding: 24px;
 }
 
 /* TAG */
 .tagbox {
   margin-top: 14px;
-  padding: 14px;
+  padding: 12px;
   background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
 .tagcode {
   font-family: monospace;
-  background: white;
   padding: 10px;
-  border-radius: 12px;
+  background: white;
+  border-radius: 10px;
   border: 1px solid #ddd;
-  word-break: break-all;
 }
 
-.tagbtn {
-  display: block;
-  margin-top: 10px;
-  padding: 12px;
-  text-align: center;
-  background: #0a84ff;
-  color: white;
-  border-radius: 12px;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-@media (max-width: 480px) {
-  body { padding: 12px; }
-  #petPhoto { width: 220px; height: 220px; }
-  h1 { font-size: 28px; }
-}
+/* Pulse removed visually (kept lightweight app feel) */
 </style>
-
 </head>
 
 <body>
@@ -268,7 +192,7 @@ button:disabled { opacity: 0.7; transform: none; }
 
   <div class="tagbox">
     <div class="tagcode" id="tagCode"></div>
-    <a id="tagLinkBtn" class="tagbtn" target="_blank">🔗 Activate This Tag</a>
+    <a id="tagLinkBtn" target="_blank">Activate Tag</a>
   </div>
 </div>
 
@@ -278,31 +202,26 @@ button:disabled { opacity: 0.7; transform: none; }
     <div class="status-pill">🐾 Help Me Get Home</div>
 
     <img id="petPhoto">
-    <div class="pulse-ring" id="gpsPulse"></div>
 
     <h1 id="title">Loading...</h1>
     <p id="message"></p>
   </div>
 
   <div class="notice">
-    If you have found this pet, please contact the owner immediately.
+    Contact the owner if found.
   </div>
 
   <div id="btnGrid" class="grid">
 
-    <button id="callBtn">📞<span>Call</span></button>
-    <button id="callBtn2">📞<span>Call Backup</span></button>
+    <button id="callBtn">📞 Call</button>
+    <button id="callBtn2">📞 Backup</button>
 
-    <button id="textBtn">💬<span>Text</span></button>
-    <button id="textBtn2">💬<span>Text Backup</span></button>
+    <button id="textBtn">💬 Text</button>
+    <button id="textBtn2">💬 Backup</button>
 
-    <button id="locBtn">📍<span>Send Location</span></button>
-    <button id="locBtn2">📍<span>Send Backup Location</span></button>
+    <button id="locBtn">📍 Location</button>
+    <button id="locBtn2">📍 Backup</button>
 
-  </div>
-
-  <div class="footer">
-    Powered by ArkLink Pet ID ®
   </div>
 
 </div>
@@ -311,172 +230,121 @@ button:disabled { opacity: 0.7; transform: none; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
   messagingSenderId: "517154779272",
   appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
-};
+});
 
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const id = new URLSearchParams(window.location.search).get("id");
+const id = new URLSearchParams(location.search).get("id");
 
 const main = document.getElementById("main");
 const locked = document.getElementById("locked");
 
-const gpsPulse = document.getElementById("gpsPulse");
+function playPing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-function startPulse() {
-  gpsPulse.classList.add("active");
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+
+    o.type = "sine";
+    o.frequency.setValueAtTime(880, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
+
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+
+    o.connect(g);
+    g.connect(ctx.destination);
+
+    o.start();
+    o.stop(ctx.currentTime + 0.3);
+  } catch {}
 }
 
-function stopPulse() {
-  gpsPulse.classList.remove("active");
+function gps(phone, label, btn) {
+
+  btn.disabled = true;
+  btn.innerText = "📡 Getting...";
+
+  navigator.geolocation.getCurrentPosition(pos => {
+
+    playPing();
+
+    const msg =
+      "I found " + window.petName +
+      ". https://maps.google.com/?q=" +
+      pos.coords.latitude + "," + pos.coords.longitude;
+
+    btn.disabled = false;
+    btn.innerText = label;
+
+    setTimeout(() => {
+      location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
+    }, 120);
+
+  }, () => {
+
+    btn.disabled = false;
+    btn.innerText = label;
+    alert("GPS failed.");
+  }, {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0
+  });
 }
 
-if (!id) {
-  locked.style.display = "block";
-  document.getElementById("tagCode").innerText = "INVALID";
-  throw new Error("Missing ID");
-}
-
-document.getElementById("tagCode").innerText = id;
-document.getElementById("tagLinkBtn").href =
-  "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
-
-function showMain() { main.style.display = "block"; }
-function showLocked() { locked.style.display = "block"; }
-function hide(id) { const el = document.getElementById(id); if (el) el.style.display = "none"; }
-function setSingle() { document.getElementById("btnGrid").classList.add("single"); }
-
-async function loadPet() {
+async function load() {
 
   const snap = await getDoc(doc(db, "pets", id));
 
-  if (!snap.exists()) {
-    showLocked();
-    return;
-  }
+  if (!snap.exists()) return locked.style.display = "block";
 
   const pet = snap.data();
+  window.petName = pet.name || "this pet";
 
-  if (pet.status !== "active") {
-    showLocked();
-    return;
-  }
+  main.style.display = "flex";
 
-  showMain();
-
-  document.getElementById("title").innerText =
-    "🐾 You found " + (pet.name || "a pet");
-
-  document.getElementById("message").innerText =
-    "Help get " + (pet.name || "this pet") + " home safely.";
+  document.getElementById("title").innerText = "🐾 " + window.petName;
+  document.getElementById("message").innerText = "Help bring them home safely.";
 
   const img = document.getElementById("petPhoto");
-
   if (pet.photo) {
     img.src = pet.photo;
     img.style.display = "block";
   }
 
-  const hasSecondary = pet.phone2 && pet.phone2.trim() !== "";
+  document.getElementById("callBtn").onclick = () => location.href = "tel:" + pet.phone;
+  document.getElementById("textBtn").onclick = () =>
+    location.href = `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + window.petName)}`;
 
-  document.getElementById("callBtn").onclick =
-    () => window.location.href = "tel:" + pet.phone;
+  document.getElementById("locBtn").onclick = e =>
+    gps(pet.phone, "📍 Location", e.currentTarget);
 
-  document.getElementById("textBtn").onclick =
-    () => window.open(`sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+  if (pet.phone2) {
 
-  document.getElementById("locBtn").onclick = () => {
+    document.getElementById("callBtn2").onclick = () => location.href = "tel:" + pet.phone2;
 
-    const btn = document.getElementById("locBtn");
+    document.getElementById("textBtn2").onclick = () =>
+      location.href = `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + window.petName)}`;
 
-    btn.disabled = true;
-    btn.innerText = "📡 Acquiring GPS...";
-
-    startPulse();
-
-    navigator.geolocation.getCurrentPosition(pos => {
-
-      stopPulse();
-
-      const msg =
-        "I found " + pet.name +
-        ". Location: https://maps.google.com/?q=" +
-        pos.coords.latitude + "," + pos.coords.longitude;
-
-      btn.disabled = false;
-      btn.innerText = "📍 Send Location";
-
-      window.open(`sms:${pet.phone}?body=${encodeURIComponent(msg)}`, "_self");
-
-    }, () => {
-
-      stopPulse();
-
-      btn.disabled = false;
-      btn.innerText = "📍 Send Location";
-
-      alert("Unable to get GPS location.");
-    });
-  };
-
-  if (hasSecondary) {
-
-    document.getElementById("callBtn2").onclick =
-      () => window.location.href = "tel:" + pet.phone2;
-
-    document.getElementById("textBtn2").onclick =
-      () => window.open(`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
-
-    document.getElementById("locBtn2").onclick = () => {
-
-      const btn = document.getElementById("locBtn2");
-
-      btn.disabled = true;
-      btn.innerText = "📡 Acquiring GPS...";
-
-      startPulse();
-
-      navigator.geolocation.getCurrentPosition(pos => {
-
-        stopPulse();
-
-        const msg =
-          "I found " + pet.name +
-          ". Location: https://maps.google.com/?q=" +
-          pos.coords.latitude + "," + pos.coords.longitude;
-
-        btn.disabled = false;
-        btn.innerText = "📍 Send Backup Location";
-
-        window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
-
-      }, () => {
-
-        stopPulse();
-
-        btn.disabled = false;
-        btn.innerText = "📍 Send Backup Location";
-
-        alert("Unable to get GPS location.");
-      });
-    };
+    document.getElementById("locBtn2").onclick = e =>
+      gps(pet.phone2, "📍 Backup", e.currentTarget);
 
   } else {
-    hide("callBtn2");
-    hide("textBtn2");
-    hide("locBtn2");
-    setSingle();
+    document.querySelectorAll("#callBtn2,#textBtn2,#locBtn2").forEach(e => e.style.display = "none");
   }
 }
 
-loadPet();
+load();
 </script>
 
 </body>
