@@ -21,7 +21,6 @@ body {
   color: #111827;
 }
 
-/* soft glowing background blobs */
 body::before {
   content: "";
   position: fixed;
@@ -33,7 +32,7 @@ body::before {
     radial-gradient(circle at 50% 100%, rgba(255,159,10,.10), transparent 40%);
 }
 
-/* MAIN CARDS */
+/* CARD */
 .container,
 #locked {
   max-width: 460px;
@@ -53,21 +52,14 @@ body::before {
   overflow: hidden;
 }
 
-.container {
-  display: none;
-}
+.container { display: none; }
+#locked { display: none; padding: 26px; text-align: center; }
 
-/* LOCKED SCREEN */
-#locked {
-  display: none;
-  padding: 26px;
-  text-align: center;
-}
-
-/* HERO SECTION */
+/* HERO */
 .hero {
   padding: 30px 22px 10px;
   text-align: center;
+  position: relative;
 }
 
 .status-pill {
@@ -121,6 +113,40 @@ body::before {
   100% { transform: translateY(0px); }
 }
 
+/* ⭐ AIRTAG GPS PULSE */
+.pulse-ring {
+  position: absolute;
+  left: 50%;
+  top: 180px;
+
+  width: 260px;
+  height: 260px;
+
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+
+  border: 2px solid rgba(52,199,89,0.6);
+
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pulse-ring.active {
+  animation: radarPulse 1.5s ease-out infinite;
+}
+
+@keyframes radarPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.9;
+  }
+  70% { opacity: 0.25; }
+  100% {
+    transform: translate(-50%, -50%) scale(1.7);
+    opacity: 0;
+  }
+}
+
 /* TEXT */
 h1 {
   font-size: 34px;
@@ -146,7 +172,7 @@ p {
   font-weight: 600;
 }
 
-/* BUTTON GRID */
+/* GRID */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -154,9 +180,7 @@ p {
   padding: 0 18px 18px;
 }
 
-.single {
-  grid-template-columns: 1fr !important;
-}
+.single { grid-template-columns: 1fr !important; }
 
 /* BUTTONS */
 button {
@@ -181,31 +205,13 @@ button {
   transition: 0.18s ease;
 }
 
-button:hover {
-  transform: translateY(-3px);
-}
+button:hover { transform: translateY(-3px); }
+button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.7; transform: none; }
 
-button:active {
-  transform: scale(0.98);
-}
-
-button:disabled {
-  opacity: 0.7;
-  transform: none;
-}
-
-/* BUTTON COLORS */
-#callBtn, #callBtn2 {
-  background: linear-gradient(180deg, #34c759, #28a745);
-}
-
-#textBtn, #textBtn2 {
-  background: linear-gradient(180deg, #0a84ff, #0066d6);
-}
-
-#locBtn, #locBtn2 {
-  background: linear-gradient(180deg, #ff9f0a, #e68500);
-}
+#callBtn,#callBtn2 { background: linear-gradient(180deg,#34c759,#28a745); }
+#textBtn,#textBtn2 { background: linear-gradient(180deg,#0a84ff,#0066d6); }
+#locBtn,#locBtn2 { background: linear-gradient(180deg,#ff9f0a,#e68500); }
 
 /* FOOTER */
 .footer {
@@ -215,14 +221,13 @@ button:disabled {
   color: #9ca3af;
 }
 
-/* TAG BOX */
+/* TAG */
 .tagbox {
   margin-top: 14px;
   padding: 14px;
   background: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  text-align: left;
 }
 
 .tagcode {
@@ -247,18 +252,9 @@ button:disabled {
 }
 
 @media (max-width: 480px) {
-  body {
-    padding: 12px;
-  }
-
-  #petPhoto {
-    width: 220px;
-    height: 220px;
-  }
-
-  h1 {
-    font-size: 28px;
-  }
+  body { padding: 12px; }
+  #petPhoto { width: 220px; height: 220px; }
+  h1 { font-size: 28px; }
 }
 </style>
 
@@ -282,6 +278,7 @@ button:disabled {
     <div class="status-pill">🐾 Help Me Get Home</div>
 
     <img id="petPhoto">
+    <div class="pulse-ring" id="gpsPulse"></div>
 
     <h1 id="title">Loading...</h1>
     <p id="message"></p>
@@ -331,6 +328,16 @@ const id = new URLSearchParams(window.location.search).get("id");
 const main = document.getElementById("main");
 const locked = document.getElementById("locked");
 
+const gpsPulse = document.getElementById("gpsPulse");
+
+function startPulse() {
+  gpsPulse.classList.add("active");
+}
+
+function stopPulse() {
+  gpsPulse.classList.remove("active");
+}
+
 if (!id) {
   locked.style.display = "block";
   document.getElementById("tagCode").innerText = "INVALID";
@@ -341,22 +348,10 @@ document.getElementById("tagCode").innerText = id;
 document.getElementById("tagLinkBtn").href =
   "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
 
-function showMain() {
-  main.style.display = "block";
-}
-
-function showLocked() {
-  locked.style.display = "block";
-}
-
-function hide(id) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = "none";
-}
-
-function setSingle() {
-  document.getElementById("btnGrid").classList.add("single");
-}
+function showMain() { main.style.display = "block"; }
+function showLocked() { locked.style.display = "block"; }
+function hide(id) { const el = document.getElementById(id); if (el) el.style.display = "none"; }
+function setSingle() { document.getElementById("btnGrid").classList.add("single"); }
 
 async function loadPet() {
 
@@ -368,11 +363,6 @@ async function loadPet() {
   }
 
   const pet = snap.data();
-
-  if (pet.status === "disabled") {
-    document.body.innerHTML = "<h2>Profile Disabled</h2>";
-    return;
-  }
 
   if (pet.status !== "active") {
     showLocked();
@@ -404,15 +394,35 @@ async function loadPet() {
 
   document.getElementById("locBtn").onclick = () => {
 
+    const btn = document.getElementById("locBtn");
+
+    btn.disabled = true;
+    btn.innerText = "📡 Acquiring GPS...";
+
+    startPulse();
+
     navigator.geolocation.getCurrentPosition(pos => {
+
+      stopPulse();
 
       const msg =
         "I found " + pet.name +
         ". Location: https://maps.google.com/?q=" +
         pos.coords.latitude + "," + pos.coords.longitude;
 
+      btn.disabled = false;
+      btn.innerText = "📍 Send Location";
+
       window.open(`sms:${pet.phone}?body=${encodeURIComponent(msg)}`, "_self");
 
+    }, () => {
+
+      stopPulse();
+
+      btn.disabled = false;
+      btn.innerText = "📍 Send Location";
+
+      alert("Unable to get GPS location.");
     });
   };
 
@@ -426,15 +436,35 @@ async function loadPet() {
 
     document.getElementById("locBtn2").onclick = () => {
 
+      const btn = document.getElementById("locBtn2");
+
+      btn.disabled = true;
+      btn.innerText = "📡 Acquiring GPS...";
+
+      startPulse();
+
       navigator.geolocation.getCurrentPosition(pos => {
+
+        stopPulse();
 
         const msg =
           "I found " + pet.name +
           ". Location: https://maps.google.com/?q=" +
           pos.coords.latitude + "," + pos.coords.longitude;
 
+        btn.disabled = false;
+        btn.innerText = "📍 Send Backup Location";
+
         window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
 
+      }, () => {
+
+        stopPulse();
+
+        btn.disabled = false;
+        btn.innerText = "📍 Send Backup Location";
+
+        alert("Unable to get GPS location.");
       });
     };
 
