@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ArkTag Pet ID - Found Pet</title>
+<title>ArkLink Pet ID - Found Pet</title>
 
 <style>
 *{
@@ -61,40 +61,21 @@ body::before{
   text-align:center;
 }
 
-.status-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-
-  background:rgba(52,199,89,.15);
-  color:#1c7a39;
-
-  padding:10px 18px;
-  border-radius:999px;
-
-  font-size:13px;
-  font-weight:700;
-
-  margin-bottom:20px;
-
-  animation:pulse 2.5s infinite;
-}
-
-@keyframes pulse{
-  0%{transform:scale(1);}
-  50%{transform:scale(1.04);}
-  100%{transform:scale(1);}
-}
-
+/* UPDATED IMAGE WRAPPER (CENTER FIX) */
 #petPhotoWrapper{
   position:relative;
-  display:inline-block;
-}
-
-/* IMAGE FIX */
-#petPhoto{
   width:250px;
   height:250px;
+  margin:0 auto 18px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+#petPhoto{
+  width:100%;
+  height:100%;
   object-fit:cover;
 
   border-radius:34px;
@@ -102,8 +83,6 @@ body::before{
   display:block;
   opacity:0;
   transition:opacity .35s ease;
-
-  margin:0 auto 22px;
 
   border:6px solid white;
 
@@ -120,28 +99,38 @@ body::before{
   100%{transform:translateY(0px);}
 }
 
-/* GPS PULSE */
-.pulse-ring{
+/* 🔥 MOVED FOUND PET TAG */
+.status-pill{
   position:absolute;
+  bottom:-12px;
   left:50%;
-  top:50%;
-  width:270px;
-  height:270px;
-  transform:translate(-50%, -50%);
-  border-radius:50%;
-  border:2px solid rgba(52,199,89,0.55);
-  opacity:0;
-  pointer-events:none;
+  transform:translateX(-50%);
+
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  background:rgba(52,199,89,.18);
+  color:#1c7a39;
+
+  padding:10px 16px;
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:800;
+
+  animation:pulse 2.5s infinite;
+
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+
+  border:1px solid rgba(52,199,89,.25);
 }
 
-.pulse-ring.active{
-  animation:radarPulse 1.5s ease-out infinite;
-}
-
-@keyframes radarPulse{
-  0%{transform:translate(-50%, -50%) scale(0.6); opacity:0.9;}
-  70%{opacity:0.25;}
-  100%{transform:translate(-50%, -50%) scale(1.6); opacity:0;}
+@keyframes pulse{
+  0%{transform:translateX(-50%) scale(1);}
+  50%{transform:translateX(-50%) scale(1.05);}
+  100%{transform:translateX(-50%) scale(1);}
 }
 
 h1{
@@ -157,6 +146,7 @@ p{
   font-size:15px;
 }
 
+/* MOVED TEXT HERE (NO EXTRA LINE NOW) */
 .notice{
   margin:0 20px 20px;
   padding:16px;
@@ -220,18 +210,18 @@ button:disabled{ opacity:.75; transform:none; }
 <div class="container" id="main">
 
   <div class="hero">
-    <div class="status-pill">🐾 Found Pet</div>
 
     <div id="petPhotoWrapper">
       <img id="petPhoto">
-      <div class="pulse-ring" id="gpsPulse"></div>
+      <div class="status-pill">🐾 Found Pet</div>
     </div>
 
     <h1 id="title">Loading...</h1>
-    <p id="message"></p>
+
   </div>
 
-  <div class="notice">
+  <!-- MOVED TEXT HERE -->
+  <div class="notice" id="message">
     Help return this pet safely.
   </div>
 
@@ -248,7 +238,7 @@ button:disabled{ opacity:.75; transform:none; }
 
   </div>
 
-  <div class="footer">Powered by Arkforge 3D Printing ®</div>
+  <div class="footer">Powered by ArkLink Pet ID ®</div>
 </div>
 
 <script type="module">
@@ -269,19 +259,14 @@ const db = getFirestore(app);
 
 let pet = { name:"Pet", phone:"", phone2:"" };
 
-const gpsPulse = document.getElementById("gpsPulse");
-
-/* SOUND */
 function clickSound(){
   try{
     const ctx=new (window.AudioContext||window.webkitAudioContext)();
     const o=ctx.createOscillator();
     const g=ctx.createGain();
-    o.type="sine";
-    o.frequency.value=520;
+    o.type="sine"; o.frequency.value=520;
     g.gain.value=0.08;
-    o.connect(g);
-    g.connect(ctx.destination);
+    o.connect(g); g.connect(ctx.destination);
     o.start(); o.stop(ctx.currentTime+0.08);
   }catch{}
 }
@@ -300,14 +285,20 @@ function pingSound(){
     g.gain.exponentialRampToValueAtTime(0.2,ctx.currentTime+0.02);
     g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.25);
 
-    o.connect(g);
-    g.connect(ctx.destination);
+    o.connect(g); g.connect(ctx.destination);
     o.start(); o.stop(ctx.currentTime+0.3);
   }catch{}
 }
 
-function startPulse(){ gpsPulse.classList.add("active"); }
-function stopPulse(){ gpsPulse.classList.remove("active"); }
+function startPulse(){
+  const ring=document.getElementById("gpsPulse");
+  if(ring) ring.classList.add("active");
+}
+
+function stopPulse(){
+  const ring=document.getElementById("gpsPulse");
+  if(ring) ring.classList.remove("active");
+}
 
 function gps(phone,label,btn){
 
@@ -348,30 +339,28 @@ function gps(phone,label,btn){
   });
 }
 
-/* LOAD PET (FIXED) */
 async function load(){
 
   document.getElementById("main").style.display="block";
 
-  const id = new URLSearchParams(window.location.search).get("id");
+  const id=new URLSearchParams(window.location.search).get("id");
 
-  const snap = await getDoc(doc(db,"pets",id));
+  const snap=await getDoc(doc(db,"pets",id));
 
   if(!snap.exists()){
     document.getElementById("title").innerText="Pet not found";
     return;
   }
 
-  pet = snap.data();
+  pet=snap.data();
 
   document.getElementById("title").innerText="🐾 "+pet.name;
-  document.getElementById("message").innerText="Help bring them home safely.";
 
-  const img = document.getElementById("petPhoto");
+  const img=document.getElementById("petPhoto");
 
   if(pet.photo){
-    img.src = pet.photo;
-    img.onload = () => img.style.opacity = "1";
+    img.src=pet.photo;
+    img.onload=()=>img.style.opacity="1";
   }
 
   bind();
