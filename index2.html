@@ -93,6 +93,7 @@ body::before{
   display:inline-block;
 }
 
+/* ✅ FIXED IMAGE (no more disappearing) */
 #petPhoto{
   width:250px;
   height:250px;
@@ -101,7 +102,10 @@ body::before{
 
   border-radius:34px;
 
-  display:none;
+  display:block;
+  opacity:0;
+  transition:opacity .35s ease;
+
   margin:0 auto 22px;
 
   border:6px solid white;
@@ -212,28 +216,21 @@ button:disabled{ opacity:.75; transform:none; }
   font-size:12px;
 }
 
-/* ✅ BRAND BADGE */
+/* Brand badge kept optional (remove if not used) */
 .brand-badge{
   display:flex;
   align-items:center;
   justify-content:center;
   gap:10px;
-
   padding:10px 14px;
   margin:10px auto 18px;
-
   width:fit-content;
-
   background:rgba(255,255,255,0.55);
   border:1px solid rgba(255,255,255,0.7);
-
   backdrop-filter:blur(14px);
   -webkit-backdrop-filter:blur(14px);
-
   border-radius:999px;
-
   box-shadow:0 10px 25px rgba(0,0,0,0.08);
-
   font-size:12px;
   font-weight:700;
   color:#374151;
@@ -281,12 +278,6 @@ button:disabled{ opacity:.75; transform:none; }
 
   </div>
 
-  <!-- ✅ BRAND BADGE -->
-  <div class="brand-badge">
-    <img src="https://static.wixstatic.com/media/437455_1d4cc9cf7bfb4339932d8b7d4866444b~mv2.png/v1/fill/w_425,h_426,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/TransparentAL_edited.png">
-    <span>Arkforge</span>
-  </div>
-
   <div class="footer">Powered by Arkforge 3D Printing ®</div>
 </div>
 
@@ -295,7 +286,7 @@ let pet = { name:"Pet", phone:"", phone2:"" };
 
 const gpsPulse = document.getElementById("gpsPulse");
 
-/* SOUND */
+/* SOUND FX */
 function clickSound(){
   try{
     const ctx=new (window.AudioContext||window.webkitAudioContext)();
@@ -331,7 +322,7 @@ function pingSound(){
 function startPulse(){ gpsPulse.classList.add("active"); }
 function stopPulse(){ gpsPulse.classList.remove("active"); }
 
-/* GPS */
+/* GPS FIX */
 function gps(phone,label,btn){
 
   clickSound();
@@ -371,7 +362,7 @@ function gps(phone,label,btn){
   });
 }
 
-/* BUTTONS */
+/* BUTTON BINDING */
 function bind(){
 
   document.getElementById("callBtn").onclick=()=>{
@@ -406,9 +397,12 @@ function bind(){
 /* INIT */
 function load(){
   document.getElementById("main").style.display="block";
+
   pet={name:"Found Pet",phone:"123",phone2:"456"};
+
   document.getElementById("title").innerText="🐾 "+pet.name;
   document.getElementById("message").innerText="Help bring them home safely.";
+
   bind();
 }
 
