@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>1 Activate Pet Tag</title>
+  <title>Activate Pet Tag</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -12,7 +12,6 @@
       background: #f4f6f8;
       margin: 0;
       padding: 14px;
-      -webkit-font-smoothing: antialiased;
     }
 
     .container {
@@ -23,12 +22,6 @@
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       text-align: center;
-      animation: pop 500ms ease;
-    }
-
-    @keyframes pop {
-      from { transform: scale(0.97); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
     }
 
     h2 { margin-bottom: 4px; }
@@ -65,11 +58,6 @@
       cursor: pointer;
       color: white;
       margin-bottom: 10px;
-      transition: transform 120ms ease;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
     }
 
     .camera { background: #ff9f43; }
@@ -92,87 +80,26 @@
       min-height: 20px;
     }
 
-    .error { color: #d11a2a; }
-    .ok { color: #0a7a2f; }
-
-    /* PROGRESS */
-    .progress {
-      display: none;
-      margin-top: 12px;
+    .error {
+      color: #d11a2a;
     }
 
-    .bar-bg {
-      height: 10px;
-      background: #e5e7eb;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg,#22c55e,#16a34a);
-      transition: width 600ms ease;
-    }
-
-    .progress-text {
-      font-size: 13px;
-      margin-top: 6px;
-      color: #444;
-    }
-
-    /* BLUR MODE */
-    .blur {
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(8px);
-      opacity: 0;
-      pointer-events: none;
-      transition: 300ms ease;
-    }
-
-    .blur.active {
-      opacity: 1;
-    }
-
-    /* PREVIEW */
-    .preview {
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 12px;
-      background: #f9fafb;
-      border: 1px solid #eee;
-      font-size: 13px;
-      text-align: left;
-      opacity: 0;
-      transform: translateY(6px);
-      transition: 300ms ease;
-    }
-
-    .preview.active {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    #confetti {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
+    .ok {
+      color: #0a7a2f;
     }
   </style>
 </head>
 
 <body>
 
-<div class="blur" id="blur"></div>
-<canvas id="confetti"></canvas>
-
 <div class="container">
 
   <h2>Activate Pet Tag</h2>
 
-  <div class="tagid">Tag ID: <span id="tagIdDisplay"></span></div>
+  <div class="tagid">
+    Tag ID:
+    <span id="tagIdDisplay"></span>
+  </div>
 
   <input id="name" placeholder="Pet Name">
   <input id="phone" placeholder="Primary Contact Number">
@@ -186,23 +113,11 @@
   <div class="tos-box">
     <label>
       <input type="checkbox" id="tosCheckbox">
-      I agree to Terms of Service.
+      I agree to Terms of Service and understand this profile may be publicly visible when scanned.
     </label>
   </div>
 
   <button class="btn activate" id="activateBtn">Activate</button>
-
-  <div class="progress" id="progress">
-    <div class="bar-bg"><div class="bar" id="bar"></div></div>
-    <div class="progress-text" id="progressText">Preparing…</div>
-  </div>
-
-  <div class="preview" id="preview">
-    <b>Live Preview</b><br>
-    <span id="pName">Name: —</span><br>
-    <span id="pPhone">Phone: —</span><br>
-    <span id="pPhoto">Photo: not uploaded</span>
-  </div>
 
   <div id="status"></div>
 
@@ -218,169 +133,156 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const app = initializeApp({
-  apiKey: "AIzaSyCxFKSE6b...",
+const firebaseConfig = {
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
   messagingSenderId: "517154779272",
   appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
-});
+};
 
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* =========================
+   SAFE ELEMENT ACCESS
+========================= */
+
 const statusEl = document.getElementById("status");
-const btn = document.getElementById("activateBtn");
-const urlId = new URLSearchParams(location.search).get("id");
-
-const bar = document.getElementById("bar");
-const progress = document.getElementById("progress");
-const progressText = document.getElementById("progressText");
-
-const blur = document.getElementById("blur");
-const preview = document.getElementById("preview");
-
+const activateBtn = document.getElementById("activateBtn");
 const photoInput = document.getElementById("photoInput");
 
-function status(msg,type=""){
+const urlId = new URLSearchParams(window.location.search).get("id");
+
+/* =========================
+   FAIL SAFE INIT
+========================= */
+
+function setStatus(msg, type = "") {
   statusEl.innerText = msg;
   statusEl.className = type;
 }
 
-function haptic(){
-  if(navigator.vibrate) navigator.vibrate(15);
+if (!urlId) {
+  setStatus("❌ Invalid activation link", "error");
+} else {
+  const tagEl = document.getElementById("tagIdDisplay");
+  if (tagEl) tagEl.innerText = urlId;
 }
 
-function setProgress(p,t){
-  progress.style.display="block";
-  bar.style.width=p+"%";
-  progressText.innerText=t;
-}
+/* =========================
+   CAMERA / GALLERY
+========================= */
 
-function showPreview(name,phone,photo){
-  preview.classList.add("active");
-  document.getElementById("pName").innerText="Name: "+name;
-  document.getElementById("pPhone").innerText="Phone: "+phone;
-  document.getElementById("pPhoto").innerText=photo?"Photo: uploaded ✓":"Photo: pending";
-}
-
-function blurOn(){blur.classList.add("active");}
-function blurOff(){blur.classList.remove("active");}
-
-/* CAMERA */
-document.getElementById("cameraBtn").onclick=()=>{
-  photoInput.setAttribute("capture","environment");
+document.getElementById("cameraBtn").onclick = () => {
+  photoInput.setAttribute("capture", "environment");
   photoInput.click();
 };
 
-document.getElementById("galleryBtn").onclick=()=>{
+document.getElementById("galleryBtn").onclick = () => {
   photoInput.removeAttribute("capture");
   photoInput.click();
 };
 
-/* COMPRESSION */
-async function compress(file){
-  return new Promise(res=>{
-    const r=new FileReader();
-    r.onload=e=>{
-      const img=new Image();
-      img.onload=()=>{
-        const c=document.createElement("canvas");
-        const scale=Math.min(1,Math.sqrt((2*1024*1024)/file.size));
-        c.width=img.width*scale;
-        c.height=img.height*scale;
-        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-        c.toBlob(b=>res(new File([b],"p.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
-      };
-      img.src=e.target.result;
-    };
-    r.readAsDataURL(file);
-  });
-}
+/* =========================
+   ACTIVATE FLOW
+========================= */
 
-let running=false;
+let isRunning = false;
 
-document.getElementById("activateBtn").onclick=async()=>{
+document.getElementById("activateBtn").onclick = async () => {
 
-  const name=document.getElementById("name").value.trim();
-  const phone=document.getElementById("phone").value.trim();
-  const phone2=document.getElementById("phone2").value.trim();
-  const micro=document.getElementById("microchip").value.trim();
-  const tos=document.getElementById("tosCheckbox").checked;
+  if (isRunning) return;
+  if (!urlId) return setStatus("❌ Missing tag ID", "error");
 
-  if(!name||!phone) return status("Missing fields","error");
-  if(!tos) return status("Accept Terms","error");
-  if(running) return;
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const phone2 = document.getElementById("phone2").value.trim();
+  const tos = document.getElementById("tosCheckbox").checked;
 
-  running=true;
-  btn.disabled=true;
+  /* HARD BLOCK FIRST */
+  if (!name || !phone) {
+    return setStatus("⚠ Fill required fields", "error");
+  }
 
-  blurOn();
-  haptic();
+  if (!tos) {
+    return setStatus("⚠ You must accept Terms of Service", "error");
+  }
 
-  showPreview(name,phone,false);
+  isRunning = true;
+  activateBtn.disabled = true;
+  activateBtn.innerText = "⏳ Activating...";
 
-  try{
+  try {
+    const ref = doc(db, "pets", urlId);
+    const snap = await getDoc(ref);
 
-    setProgress(10,"Checking tag…");
-
-    const ref=doc(db,"pets",urlId);
-    const snap=await getDoc(ref);
-    if(!snap.exists()) throw new Error("Tag not found");
-
-    let file=photoInput.files[0];
-    let photoURL="";
-
-    if(file){
-      setProgress(40,"Optimising photo…");
-      file=await compress(file);
+    if (!snap.exists()) {
+      setStatus("❌ Tag not found in database", "error");
+      return;
     }
 
-    if(file){
-      setProgress(55,"Uploading photo…");
+    const existing = snap.data();
 
-      const form=new FormData();
-      form.append("file",file);
-      form.append("upload_preset","arkforge-pets");
+    let photoURL = "";
 
-      const res=await fetch("https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",{method:"POST",body:form});
-      const data=await res.json();
+    const file = photoInput.files[0];
 
-      if(!data.secure_url) throw new Error("Upload failed");
+    if (file) {
+      setStatus("📤 Uploading photo...");
 
-      photoURL=data.secure_url;
-      showPreview(name,phone,true);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", "arkforge-pets");
+
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",
+        { method: "POST", body: form }
+      );
+
+      const data = await res.json();
+      photoURL = data.secure_url;
     }
 
-    setProgress(75,"Saving profile…");
+    setStatus("💾 Saving profile...");
 
-    const ex=snap.data();
-
-    await setDoc(ref,{
+    const payload = {
       name,
       phone,
-      phone2,
-      microchip,
-      photo:photoURL||ex.photo||"",
-      status:"active",
-      activatedAt:new Date().toISOString()
-    },{merge:true});
+      phone2: phone2 || existing.phone2 || "",
+      microchip: document.getElementById("microchip").value.trim() || existing.microchip || "",
+      photo: photoURL || existing.photo || "",
+      status: "active",
+      tosAccepted: true,
+      activatedAt: new Date().toISOString()
+    };
 
-    setProgress(100,"Complete");
-    blurOff();
-    haptic();
+    await setDoc(ref, payload, { merge: true });
 
-    status("🎉 Activated! Redirecting…","ok");
+setStatus(
+  "✅ Activated successfully!🐾 Now redirecting to your next stop...",
+  "ok"
+);
 
-    setTimeout(()=>{
-      location.href=`https://arkforge3dprinting.github.io/pet-tag/index.html?id=${urlId}`;
-    },2500);
+setTimeout(() => {
+  const params = new URLSearchParams(window.location.search);
+  const petId = params.get("id");
 
-  }catch(e){
-    blurOff();
-    status("❌ "+e.message,"error");
-    running=false;
-    btn.disabled=false;
+  window.location.href =
+    `https://arkforge3dprinting.github.io/pet-tag/index.html?id=${petId}`;
+
+}, 3000);
+    
+    activateBtn.innerText = "Activated";
+
+  } catch (err) {
+    console.error(err);
+    setStatus("❌ " + err.message, "error");
+
+    isRunning = false;
+    activateBtn.disabled = false;
+    activateBtn.innerText = "Activate";
   }
 };
 
