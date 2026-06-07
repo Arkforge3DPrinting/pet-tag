@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Activate Pet Tag</title>
+  <title>1 Activate Pet Tag</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -23,12 +23,12 @@
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       text-align: center;
-      animation: popIn 600ms cubic-bezier(0.22, 1, 0.36, 1);
+      animation: pop 500ms ease;
     }
 
-    @keyframes popIn {
-      0% { transform: scale(0.96); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+    @keyframes pop {
+      from { transform: scale(0.97); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     h2 { margin-bottom: 4px; }
@@ -65,12 +65,11 @@
       cursor: pointer;
       color: white;
       margin-bottom: 10px;
-      transition: transform 120ms ease, filter 120ms ease;
+      transition: transform 120ms ease;
     }
 
     .btn:active {
       transform: scale(0.98);
-      filter: brightness(0.95);
     }
 
     .camera { background: #ff9f43; }
@@ -97,76 +96,58 @@
     .ok { color: #0a7a2f; }
 
     /* PROGRESS */
-    .progress-wrap {
-      display:none;
-      margin-top:14px;
+    .progress {
+      display: none;
+      margin-top: 12px;
     }
 
     .bar-bg {
-      width:100%;
-      height:10px;
-      background:#e5e7eb;
-      border-radius:999px;
-      overflow:hidden;
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
     }
 
     .bar {
-      width:0%;
-      height:100%;
-      background:linear-gradient(90deg,#22c55e,#16a34a);
-      transition: width 700ms cubic-bezier(0.22, 1, 0.36, 1);
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg,#22c55e,#16a34a);
+      transition: width 600ms ease;
     }
 
     .progress-text {
-      font-size:13px;
-      margin-top:8px;
-      color:#555;
-    }
-
-    /* STEPS */
-    .step {
-      font-size:13px;
-      color:#999;
-      margin-top:6px;
-      transition: all 300ms ease;
-    }
-
-    .step.done {
-      color:#16a34a;
-      font-weight:600;
-    }
-
-    .step.done::before {
-      content:"✓ ";
+      font-size: 13px;
+      margin-top: 6px;
+      color: #444;
     }
 
     /* BLUR MODE */
-    .blur-overlay {
+    .blur {
       position: fixed;
       inset: 0;
       background: rgba(255,255,255,0.6);
       backdrop-filter: blur(8px);
       opacity: 0;
-      pointer-events:none;
+      pointer-events: none;
       transition: 300ms ease;
     }
 
-    .blur-overlay.active {
+    .blur.active {
       opacity: 1;
     }
 
     /* PREVIEW */
     .preview {
-      margin-top: 14px;
+      margin-top: 12px;
       padding: 12px;
-      border-radius: 14px;
+      border-radius: 12px;
       background: #f9fafb;
       border: 1px solid #eee;
-      text-align: left;
       font-size: 13px;
+      text-align: left;
       opacity: 0;
       transform: translateY(6px);
-      transition: all 300ms ease;
+      transition: 300ms ease;
     }
 
     .preview.active {
@@ -174,18 +155,18 @@
       transform: translateY(0);
     }
 
-    #confettiCanvas {
+    #confetti {
       position: fixed;
       inset: 0;
-      pointer-events:none;
+      pointer-events: none;
     }
   </style>
 </head>
 
 <body>
 
-<div class="blur-overlay" id="blur"></div>
-<canvas id="confettiCanvas"></canvas>
+<div class="blur" id="blur"></div>
+<canvas id="confetti"></canvas>
 
 <div class="container">
 
@@ -211,21 +192,16 @@
 
   <button class="btn activate" id="activateBtn">Activate</button>
 
-  <div class="progress-wrap" id="progressWrap">
+  <div class="progress" id="progress">
     <div class="bar-bg"><div class="bar" id="bar"></div></div>
     <div class="progress-text" id="progressText">Preparing…</div>
-
-    <div class="step" id="s1">Checking tag…</div>
-    <div class="step" id="s2">Uploading photo…</div>
-    <div class="step" id="s3">Saving profile…</div>
-    <div class="step" id="s4">Finalising…</div>
   </div>
 
   <div class="preview" id="preview">
-    <b>Live Preview</b>
-    <div id="pName">Name: —</div>
-    <div id="pPhone">Phone: —</div>
-    <div id="pPhoto">Photo: not uploaded</div>
+    <b>Live Preview</b><br>
+    <span id="pName">Name: —</span><br>
+    <span id="pPhone">Phone: —</span><br>
+    <span id="pPhoto">Photo: not uploaded</span>
   </div>
 
   <div id="status"></div>
@@ -243,7 +219,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  apiKey: "AIzaSyCxFKSE6b...",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -257,70 +233,52 @@ const statusEl = document.getElementById("status");
 const btn = document.getElementById("activateBtn");
 const urlId = new URLSearchParams(location.search).get("id");
 
-const wrap = document.getElementById("progressWrap");
 const bar = document.getElementById("bar");
-const text = document.getElementById("progressText");
+const progress = document.getElementById("progress");
+const progressText = document.getElementById("progressText");
 
 const blur = document.getElementById("blur");
 const preview = document.getElementById("preview");
 
-function status(msg, type="") {
+const photoInput = document.getElementById("photoInput");
+
+function status(msg,type=""){
   statusEl.innerText = msg;
   statusEl.className = type;
 }
 
-function haptic() {
-  if (navigator.vibrate) navigator.vibrate(12);
+function haptic(){
+  if(navigator.vibrate) navigator.vibrate(15);
 }
 
-function progress(p, t) {
-  wrap.style.display = "block";
-  bar.style.width = p + "%";
-  text.innerText = t;
+function setProgress(p,t){
+  progress.style.display="block";
+  bar.style.width=p+"%";
+  progressText.innerText=t;
 }
 
-function step(id) {
-  document.getElementById(id).classList.add("done");
-}
-
-function showPreview(name, phone, photo) {
+function showPreview(name,phone,photo){
   preview.classList.add("active");
-  document.getElementById("pName").innerText = "Name: " + name;
-  document.getElementById("pPhone").innerText = "Phone: " + phone;
-  document.getElementById("pPhoto").innerText = photo ? "Photo: uploaded ✓" : "Photo: pending";
+  document.getElementById("pName").innerText="Name: "+name;
+  document.getElementById("pPhone").innerText="Phone: "+phone;
+  document.getElementById("pPhoto").innerText=photo?"Photo: uploaded ✓":"Photo: pending";
 }
 
-function blurOn(){ blur.classList.add("active"); }
-function blurOff(){ blur.classList.remove("active"); }
+function blurOn(){blur.classList.add("active");}
+function blurOff(){blur.classList.remove("active");}
 
-/* CONFETTI */
-const canvas = document.getElementById("confettiCanvas");
-const ctx = canvas.getContext("2d");
-canvas.width = innerWidth;
-canvas.height = innerHeight;
-let pieces=[];
+/* CAMERA */
+document.getElementById("cameraBtn").onclick=()=>{
+  photoInput.setAttribute("capture","environment");
+  photoInput.click();
+};
 
-function boom(){
-  pieces=[];
-  for(let i=0;i<120;i++){
-    pieces.push({x:Math.random()*canvas.width,y:0,r:Math.random()*6});
-  }
-  draw();
-}
+document.getElementById("galleryBtn").onclick=()=>{
+  photoInput.removeAttribute("capture");
+  photoInput.click();
+};
 
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  pieces.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle="hsl("+Math.random()*360+",80%,60%)";
-    ctx.fill();
-    p.y+=3;
-  });
-  if(pieces.length) requestAnimationFrame(draw);
-}
-
-/* IMAGE COMPRESS */
+/* COMPRESSION */
 async function compress(file){
   return new Promise(res=>{
     const r=new FileReader();
@@ -328,11 +286,11 @@ async function compress(file){
       const img=new Image();
       img.onload=()=>{
         const c=document.createElement("canvas");
-        const scale=Math.sqrt((2*1024*1024)/file.size);
+        const scale=Math.min(1,Math.sqrt((2*1024*1024)/file.size));
         c.width=img.width*scale;
         c.height=img.height*scale;
         c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-        c.toBlob(b=>res(new File([b],"img.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
+        c.toBlob(b=>res(new File([b],"p.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
       };
       img.src=e.target.result;
     };
@@ -342,20 +300,21 @@ async function compress(file){
 
 let running=false;
 
-btn.onclick=async()=>{
+document.getElementById("activateBtn").onclick=async()=>{
 
-  const name=nameInput.value;
-  const phone=phoneInput.value;
-  const tos=tosBox.checked;
-  const file=fileInput.files[0];
+  const name=document.getElementById("name").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  const phone2=document.getElementById("phone2").value.trim();
+  const micro=document.getElementById("microchip").value.trim();
+  const tos=document.getElementById("tosCheckbox").checked;
 
   if(!name||!phone) return status("Missing fields","error");
-  if(!tos) return status("Accept terms","error");
-
+  if(!tos) return status("Accept Terms","error");
   if(running) return;
-  running=true;
 
+  running=true;
   btn.disabled=true;
+
   blurOn();
   haptic();
 
@@ -363,20 +322,23 @@ btn.onclick=async()=>{
 
   try{
 
-    progress(10,"Checking tag…");
-    const snap=await getDoc(doc(db,"pets",urlId));
-    if(!snap.exists()) throw new Error("Tag not found");
-    step("s1");
+    setProgress(10,"Checking tag…");
 
+    const ref=doc(db,"pets",urlId);
+    const snap=await getDoc(ref);
+    if(!snap.exists()) throw new Error("Tag not found");
+
+    let file=photoInput.files[0];
     let photoURL="";
-    let file=fileInput.files[0];
 
     if(file){
-      progress(40,"Preparing photo…");
+      setProgress(40,"Optimising photo…");
       file=await compress(file);
-      step("s2");
+    }
 
-      progress(55,"Uploading photo…");
+    if(file){
+      setProgress(55,"Uploading photo…");
+
       const form=new FormData();
       form.append("file",file);
       form.append("upload_preset","arkforge-pets");
@@ -385,31 +347,27 @@ btn.onclick=async()=>{
       const data=await res.json();
 
       if(!data.secure_url) throw new Error("Upload failed");
-      photoURL=data.secure_url;
 
+      photoURL=data.secure_url;
       showPreview(name,phone,true);
     }
 
-    progress(75,"Saving profile…");
-    step("s3");
+    setProgress(75,"Saving profile…");
 
     const ex=snap.data();
 
-    await setDoc(doc(db,"pets",urlId),{
+    await setDoc(ref,{
       name,
       phone,
-      phone2:"",
-      microchip:"",
+      phone2,
+      microchip,
       photo:photoURL||ex.photo||"",
       status:"active",
       activatedAt:new Date().toISOString()
     },{merge:true});
 
-    step("s4");
-    progress(100,"Complete");
-
+    setProgress(100,"Complete");
     blurOff();
-    boom();
     haptic();
 
     status("🎉 Activated! Redirecting…","ok");
