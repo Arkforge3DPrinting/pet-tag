@@ -80,13 +80,43 @@
       min-height: 20px;
     }
 
-    .error {
-      color: #d11a2a;
+    .error { color: #d11a2a; }
+    .ok { color: #0a7a2f; }
+
+    /* PROGRESS */
+    .progress-wrap {
+      display: none;
+      margin-top: 12px;
     }
 
-    .ok {
-      color: #0a7a2f;
+    .bar-bg {
+      width: 100%;
+      height: 12px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
     }
+
+    .bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg,#22c55e,#16a34a);
+      transition: width 0.4s ease;
+    }
+
+    .steps {
+      text-align: left;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .steps div {
+      margin-bottom: 5px;
+    }
+
+    .done { color: #16a34a; font-weight: bold; }
+    .fail { color: #d11a2a; font-weight: bold; }
   </style>
 </head>
 
@@ -97,8 +127,7 @@
   <h2>Activate Pet Tag</h2>
 
   <div class="tagid">
-    Tag ID:
-    <span id="tagIdDisplay"></span>
+    Tag ID: <span id="tagIdDisplay"></span>
   </div>
 
   <input id="name" placeholder="Pet Name">
@@ -118,6 +147,17 @@
   </div>
 
   <button class="btn activate" id="activateBtn">Activate</button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="bar-bg"><div class="bar" id="bar"></div></div>
+
+    <div class="steps" id="steps">
+      <div id="s1">⏳ Checking tag...</div>
+      <div id="s2">⏳ Uploading photo...</div>
+      <div id="s3">⏳ Saving profile...</div>
+      <div id="s4">⏳ Finalising...</div>
+    </div>
+  </div>
 
   <div id="status"></div>
 
@@ -145,38 +185,41 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* =========================
-   SAFE ELEMENT ACCESS
-========================= */
-
 const statusEl = document.getElementById("status");
-const activateBtn = document.getElementById("activateBtn");
+const btn = document.getElementById("activateBtn");
 const photoInput = document.getElementById("photoInput");
+
+const wrap = document.getElementById("progressWrap");
+const bar = document.getElementById("bar");
+const steps = document.getElementById("steps");
 
 const urlId = new URLSearchParams(window.location.search).get("id");
 
-/* =========================
-   FAIL SAFE INIT
-========================= */
-
-function setStatus(msg, type = "") {
+function setStatus(msg, type="") {
   statusEl.innerText = msg;
   statusEl.className = type;
+}
+
+function progress(p) {
+  wrap.style.display = "block";
+  steps.style.display = "block";
+  bar.style.width = p + "%";
+}
+
+function step(id, ok, text) {
+  const el = document.getElementById(id);
+  el.className = ok ? "done" : "fail";
+  el.innerText = (ok ? "✅ " : "❌ ") + text;
 }
 
 if (!urlId) {
   setStatus("❌ Invalid activation link", "error");
 } else {
-  const tagEl = document.getElementById("tagIdDisplay");
-  if (tagEl) tagEl.innerText = urlId;
+  document.getElementById("tagIdDisplay").innerText = urlId;
 }
 
-/* =========================
-   CAMERA / GALLERY
-========================= */
-
 document.getElementById("cameraBtn").onclick = () => {
-  photoInput.setAttribute("capture", "environment");
+  photoInput.setAttribute("capture","environment");
   photoInput.click();
 };
 
@@ -185,67 +228,74 @@ document.getElementById("galleryBtn").onclick = () => {
   photoInput.click();
 };
 
-/* =========================
-   ACTIVATE FLOW
-========================= */
+let running = false;
 
-let isRunning = false;
+btn.onclick = async () => {
 
-document.getElementById("activateBtn").onclick = async () => {
-
-  if (isRunning) return;
-  if (!urlId) return setStatus("❌ Missing tag ID", "error");
+  if (running) return;
+  running = true;
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
   const tos = document.getElementById("tosCheckbox").checked;
 
-  /* HARD BLOCK FIRST */
-  if (!name || !phone) {
-    return setStatus("⚠ Fill required fields", "error");
-  }
+  if (!name || !phone) return setStatus("⚠ Missing required fields","error");
+  if (!tos) return setStatus("⚠ Accept Terms first","error");
 
-  if (!tos) {
-    return setStatus("⚠ You must accept Terms of Service", "error");
-  }
-
-  isRunning = true;
-  activateBtn.disabled = true;
-  activateBtn.innerText = "⏳ Activating...";
+  btn.disabled = true;
+  btn.innerText = "Activating...";
 
   try {
-    const ref = doc(db, "pets", urlId);
+
+    progress(10);
+    setStatus("Checking tag...");
+
+    const ref = doc(db,"pets",urlId);
     const snap = await getDoc(ref);
 
     if (!snap.exists()) {
-      setStatus("❌ Tag not found in database", "error");
-      return;
+      step("s1",false,"Tag not found");
+      throw new Error("Tag not found");
     }
 
-    const existing = snap.data();
+    step("s1",true,"Tag found");
 
     let photoURL = "";
-
     const file = photoInput.files[0];
 
     if (file) {
-      setStatus("📤 Uploading photo...");
+
+      progress(35);
+      setStatus("Uploading photo...");
+      step("s2",false,"Uploading photo...");
 
       const form = new FormData();
-      form.append("file", file);
-      form.append("upload_preset", "arkforge-pets");
+      form.append("file",file);
+      form.append("upload_preset","arkforge-pets");
 
       const res = await fetch(
         "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",
-        { method: "POST", body: form }
+        { method:"POST", body:form }
       );
 
       const data = await res.json();
+
+      if (!data.secure_url) {
+        step("s2",false,"Photo failed");
+        throw new Error("Upload failed");
+      }
+
       photoURL = data.secure_url;
+
+      step("s2",true,"Photo uploaded");
     }
 
-    setStatus("💾 Saving profile...");
+    progress(70);
+    setStatus("Saving profile...");
+    step("s3",false,"Saving profile...");
+
+    const existing = snap.data();
 
     const payload = {
       name,
@@ -258,31 +308,29 @@ document.getElementById("activateBtn").onclick = async () => {
       activatedAt: new Date().toISOString()
     };
 
-    await setDoc(ref, payload, { merge: true });
+    await setDoc(ref,payload,{ merge:true });
 
-setStatus(
-  "✅ Activated successfully!🐾 Now redirecting to your next stop...",
-  "ok"
-);
+    step("s3",true,"Profile saved");
 
-setTimeout(() => {
-  const params = new URLSearchParams(window.location.search);
-  const petId = params.get("id");
+    progress(100);
+    step("s4",true,"Activation complete");
 
-  window.location.href =
-    `https://arkforge3dprinting.github.io/pet-tag/index.html?id=${petId}`;
+    setStatus("🎉 Activated! Redirecting...","ok");
 
-}, 3000);
-    
-    activateBtn.innerText = "Activated";
+    setTimeout(() => {
+      window.location.href =
+        `https://arkforge3dprinting.github.io/pet-tag/index.html?id=${urlId}`;
+    },3000);
 
-  } catch (err) {
-    console.error(err);
-    setStatus("❌ " + err.message, "error");
+    btn.innerText = "Activated";
 
-    isRunning = false;
-    activateBtn.disabled = false;
-    activateBtn.innerText = "Activate";
+  } catch(e) {
+
+    console.error(e);
+    setStatus("❌ " + e.message,"error");
+    running = false;
+    btn.disabled = false;
+    btn.innerText = "Activate";
   }
 };
 
