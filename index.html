@@ -283,7 +283,7 @@ async function loadPet() {
 
 if (chipEl) {
   if (pet.microchip) {
-    chipEl.innerText = "My microchip number is: " + pet.microchip;
+    chipEl.innerHTML = "My microchip number is: <b>" + pet.microchip + "</b>";
   } else {
     chipEl.innerText = "";
   }
