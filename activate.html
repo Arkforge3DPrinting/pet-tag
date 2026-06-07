@@ -251,6 +251,7 @@ document.getElementById("activateBtn").onclick = async () => {
       name,
       phone,
       phone2: phone2 || existing.phone2 || "",
+      microchip: document.getElementById("microchip").value.trim() || existing.microchip || "",
       photo: photoURL || existing.photo || "",
       status: "active",
       tosAccepted: true,
