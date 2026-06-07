@@ -161,7 +161,7 @@
   <p id="message"></p>
 
   <img id="petPhoto">
-
+  <div id="microchipText" style="font-size:12px; color:#777; margin-top:6px;"></div>
   <div id="btnGrid" class="grid">
 
     <button id="callBtn">📞 Call</button>
@@ -278,6 +278,16 @@ async function loadPet() {
 
   document.getElementById("message").innerText =
     "Help get " + (pet.name || "this pet") + " home safely.";
+
+  const chipEl = document.getElementById("microchipText");
+
+if (chipEl) {
+  if (pet.microchip) {
+    chipEl.innerText = "Microchip: " + pet.microchip;
+  } else {
+    chipEl.innerText = "";
+  }
+}
 
   const img = document.getElementById("petPhoto");
 
