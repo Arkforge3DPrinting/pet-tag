@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Activate Pet Tag</title>
+  <title>ArkLink Pet ID - Activate Ark Tag</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -82,41 +82,6 @@
 
     .error { color: #d11a2a; }
     .ok { color: #0a7a2f; }
-
-    /* PROGRESS */
-    .progress-wrap {
-      display: none;
-      margin-top: 12px;
-    }
-
-    .bar-bg {
-      width: 100%;
-      height: 12px;
-      background: #e5e7eb;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .bar {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg,#22c55e,#16a34a);
-      transition: width 0.4s ease;
-    }
-
-    .steps {
-      text-align: left;
-      font-size: 13px;
-      margin-top: 10px;
-      display: none;
-    }
-
-    .steps div {
-      margin-bottom: 5px;
-    }
-
-    .done { color: #16a34a; font-weight: bold; }
-    .fail { color: #d11a2a; font-weight: bold; }
   </style>
 </head>
 
@@ -148,17 +113,6 @@
 
   <button class="btn activate" id="activateBtn">Activate</button>
 
-  <div class="progress-wrap" id="progressWrap">
-    <div class="bar-bg"><div class="bar" id="bar"></div></div>
-
-    <div class="steps" id="steps">
-      <div id="s1">⏳ Checking tag...</div>
-      <div id="s2">⏳ Uploading photo...</div>
-      <div id="s3">⏳ Saving profile...</div>
-      <div id="s4">⏳ Finalising...</div>
-    </div>
-  </div>
-
   <div id="status"></div>
 
 </div>
@@ -186,30 +140,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const statusEl = document.getElementById("status");
-const btn = document.getElementById("activateBtn");
+const activateBtn = document.getElementById("activateBtn");
 const photoInput = document.getElementById("photoInput");
-
-const wrap = document.getElementById("progressWrap");
-const bar = document.getElementById("bar");
-const steps = document.getElementById("steps");
 
 const urlId = new URLSearchParams(window.location.search).get("id");
 
-function setStatus(msg, type="") {
+function setStatus(msg, type = "") {
   statusEl.innerText = msg;
   statusEl.className = type;
-}
-
-function progress(p) {
-  wrap.style.display = "block";
-  steps.style.display = "block";
-  bar.style.width = p + "%";
-}
-
-function step(id, ok, text) {
-  const el = document.getElementById(id);
-  el.className = ok ? "done" : "fail";
-  el.innerText = (ok ? "✅ " : "❌ ") + text;
 }
 
 if (!urlId) {
@@ -218,8 +156,9 @@ if (!urlId) {
   document.getElementById("tagIdDisplay").innerText = urlId;
 }
 
+/* CAMERA / GALLERY */
 document.getElementById("cameraBtn").onclick = () => {
-  photoInput.setAttribute("capture","environment");
+  photoInput.setAttribute("capture", "environment");
   photoInput.click();
 };
 
@@ -228,74 +167,109 @@ document.getElementById("galleryBtn").onclick = () => {
   photoInput.click();
 };
 
-let running = false;
+/* IMAGE COMPRESSION (FIX FOR 9MB ISSUE) */
+async function compressImage(file, maxMB = 2) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
 
-btn.onclick = async () => {
+    reader.onload = (e) => {
+      const img = new Image();
 
-  if (running) return;
-  running = true;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
 
+        const scale = Math.sqrt((maxMB * 1024 * 1024) / file.size);
+
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], file.name, { type: "image/jpeg" }));
+        }, "image/jpeg", 0.85);
+      };
+
+      img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+let isRunning = false;
+
+activateBtn.onclick = async () => {
+
+  /* FIXED: validation BEFORE locking UI */
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const phone2 = document.getElementById("phone2").value.trim();
   const tos = document.getElementById("tosCheckbox").checked;
 
-  if (!name || !phone) return setStatus("⚠ Missing required fields","error");
-  if (!tos) return setStatus("⚠ Accept Terms first","error");
+  if (!name || !phone) {
+    setStatus("⚠ Fill required fields", "error");
+    return;
+  }
 
-  btn.disabled = true;
-  btn.innerText = "Activating...";
+  if (!tos) {
+    setStatus("⚠ Please accept Terms of Service", "error");
+    return;
+  }
+
+  if (isRunning) return;
+  isRunning = true;
+
+  activateBtn.disabled = true;
+  activateBtn.innerText = "⏳ Activating...";
 
   try {
 
-    progress(10);
-    setStatus("Checking tag...");
-
-    const ref = doc(db,"pets",urlId);
+    const ref = doc(db, "pets", urlId);
     const snap = await getDoc(ref);
 
     if (!snap.exists()) {
-      step("s1",false,"Tag not found");
-      throw new Error("Tag not found");
+      throw new Error("Tag not found in database");
     }
 
-    step("s1",true,"Tag found");
+    const existing = snap.data();
 
     let photoURL = "";
-    const file = photoInput.files[0];
+    let file = photoInput.files[0];
 
+    /* FIX: compress large images */
+    if (file) {
+      setStatus("Optimising image...");
+      file = await compressImage(file, 2);
+    }
+
+    /* UPLOAD */
     if (file) {
 
-      progress(35);
-      setStatus("Uploading photo...");
-      step("s2",false,"Uploading photo...");
+      setStatus("📤 Uploading photo...");
 
       const form = new FormData();
-      form.append("file",file);
-      form.append("upload_preset","arkforge-pets");
+      form.append("file", file);
+      form.append("upload_preset", "arkforge-pets");
 
       const res = await fetch(
         "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",
-        { method:"POST", body:form }
+        { method: "POST", body: form }
       );
 
       const data = await res.json();
 
-      if (!data.secure_url) {
-        step("s2",false,"Photo failed");
-        throw new Error("Upload failed");
+      /* FIX: proper error handling */
+      if (!res.ok || !data.secure_url) {
+        console.error(data);
+        throw new Error("Photo upload failed (file may be too large)");
       }
 
       photoURL = data.secure_url;
-
-      step("s2",true,"Photo uploaded");
     }
 
-    progress(70);
-    setStatus("Saving profile...");
-    step("s3",false,"Saving profile...");
-
-    const existing = snap.data();
+    setStatus("💾 Saving profile...");
 
     const payload = {
       name,
@@ -308,29 +282,25 @@ btn.onclick = async () => {
       activatedAt: new Date().toISOString()
     };
 
-    await setDoc(ref,payload,{ merge:true });
+    await setDoc(ref, payload, { merge: true });
 
-    step("s3",true,"Profile saved");
-
-    progress(100);
-    step("s4",true,"Activation complete");
-
-    setStatus("🎉 Activated! Redirecting...","ok");
+    setStatus("🎉 Activated successfully! Redirecting...", "ok");
 
     setTimeout(() => {
       window.location.href =
         `https://arkforge3dprinting.github.io/pet-tag/index.html?id=${urlId}`;
-    },3000);
+    }, 3000);
 
-    btn.innerText = "Activated";
+    activateBtn.innerText = "Activated";
 
-  } catch(e) {
+  } catch (err) {
 
-    console.error(e);
-    setStatus("❌ " + e.message,"error");
-    running = false;
-    btn.disabled = false;
-    btn.innerText = "Activate";
+    console.error(err);
+    setStatus("❌ " + err.message, "error");
+
+    isRunning = false;
+    activateBtn.disabled = false;
+    activateBtn.innerText = "Activate";
   }
 };
 
