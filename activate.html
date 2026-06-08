@@ -22,9 +22,15 @@
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       text-align: center;
+      animation: pop 220ms ease;
     }
 
-    h2 { margin-bottom: 4px; }
+    @keyframes pop {
+      from { transform: scale(0.98); opacity: 0.6; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    h2 { margin-bottom: 6px; }
 
     .tagid {
       font-size: 12px;
@@ -42,10 +48,7 @@
       font-size: 15px;
     }
 
-    input:focus {
-      outline: none;
-      border-color: #3b82f6;
-    }
+    input:focus { outline: none; border-color: #3b82f6; }
 
     #photoInput { display: none; }
 
@@ -80,13 +83,42 @@
       min-height: 20px;
     }
 
-    .error {
-      color: #d11a2a;
+    .error { color: #d11a2a; }
+    .ok { color: #0a7a2f; }
+
+    /* STEP UI */
+    .steps {
+      font-size: 13px;
+      text-align: left;
+      margin: 10px 0 14px;
+      padding: 10px;
+      background: #f9fafb;
+      border-radius: 12px;
+      border: 1px solid #eee;
     }
 
-    .ok {
-      color: #0a7a2f;
+    .step { margin: 4px 0; }
+    .done { color: #16a34a; font-weight: bold; }
+    .active { color: #2563eb; font-weight: bold; }
+
+    /* PROGRESS */
+    .progress {
+      width: 100%;
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+      display: none;
     }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      transition: width 300ms ease;
+    }
+
   </style>
 </head>
 
@@ -97,8 +129,13 @@
   <h2>Activate Pet Tag</h2>
 
   <div class="tagid">
-    Tag ID:
-    <span id="tagIdDisplay"></span>
+    Tag ID: <span id="tagIdDisplay"></span>
+  </div>
+
+  <div class="steps" id="steps">
+    <div class="step active" id="s1">○ Step 1: Enter details</div>
+    <div class="step" id="s2">○ Step 2: Add photo (optional)</div>
+    <div class="step" id="s3">○ Step 3: Activate</div>
   </div>
 
   <input id="name" placeholder="Pet Name">
@@ -113,11 +150,15 @@
   <div class="tos-box">
     <label>
       <input type="checkbox" id="tosCheckbox">
-      I agree to Terms of Service and understand this profile may be publicly visible when scanned.
+      I agree to Terms of Service
     </label>
   </div>
 
   <button class="btn activate" id="activateBtn">Activate</button>
+
+  <div class="progress" id="progress">
+    <div class="bar" id="bar"></div>
+  </div>
 
   <div id="status"></div>
 
@@ -133,156 +174,168 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
   messagingSenderId: "517154779272",
   appId: "1:517154779272:web:4f7e09601bc327b57faf3d"
-};
+});
 
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* =========================
-   SAFE ELEMENT ACCESS
-========================= */
-
+/* ELEMENTS */
 const statusEl = document.getElementById("status");
-const activateBtn = document.getElementById("activateBtn");
+const btn = document.getElementById("activateBtn");
+const bar = document.getElementById("bar");
+const progress = document.getElementById("progress");
 const photoInput = document.getElementById("photoInput");
 
-const urlId = new URLSearchParams(window.location.search).get("id");
+const urlId = new URLSearchParams(location.search).get("id");
 
-/* =========================
-   FAIL SAFE INIT
-========================= */
-
-function setStatus(msg, type = "") {
+/* STATUS */
+function setStatus(msg,type=""){
   statusEl.innerText = msg;
   statusEl.className = type;
 }
 
-if (!urlId) {
-  setStatus("❌ Invalid activation link", "error");
-} else {
-  const tagEl = document.getElementById("tagIdDisplay");
-  if (tagEl) tagEl.innerText = urlId;
+/* STEPS */
+function step(n){
+  const s1=document.getElementById("s1");
+  const s2=document.getElementById("s2");
+  const s3=document.getElementById("s3");
+
+  s1.className = n>=1 ? "step done" : "step";
+  s2.className = n>=2 ? "step done" : (n===2 ? "step active":"step");
+  s3.className = n>=3 ? "step done" : (n===3 ? "step active":"step");
 }
 
-/* =========================
-   CAMERA / GALLERY
-========================= */
+/* PROGRESS */
+function setProgress(p){
+  progress.style.display="block";
+  bar.style.width=p+"%";
+}
 
-document.getElementById("cameraBtn").onclick = () => {
-  photoInput.setAttribute("capture", "environment");
+/* CAMERA */
+document.getElementById("cameraBtn").onclick=()=>{
+  photoInput.setAttribute("capture","environment");
   photoInput.click();
 };
 
-document.getElementById("galleryBtn").onclick = () => {
+document.getElementById("galleryBtn").onclick=()=>{
   photoInput.removeAttribute("capture");
   photoInput.click();
 };
 
-/* =========================
-   ACTIVATE FLOW
-========================= */
+/* IMAGE COMPRESSION */
+async function compress(file){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const c=document.createElement("canvas");
+        const scale=Math.min(1,Math.sqrt((2*1024*1024)/file.size));
+        c.width=img.width*scale;
+        c.height=img.height*scale;
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        c.toBlob(b=>res(new File([b],"img.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
 
-let isRunning = false;
+/* INIT */
+if(!urlId){
+  setStatus("Invalid link","error");
+}else{
+  document.getElementById("tagIdDisplay").innerText=urlId;
+}
 
-document.getElementById("activateBtn").onclick = async () => {
+let running=false;
 
-  if (isRunning) return;
-  if (!urlId) return setStatus("❌ Missing tag ID", "error");
+document.getElementById("activateBtn").onclick=async()=>{
 
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const phone2 = document.getElementById("phone2").value.trim();
-  const tos = document.getElementById("tosCheckbox").checked;
+  if(running) return;
 
-  /* HARD BLOCK FIRST */
-  if (!name || !phone) {
-    return setStatus("⚠ Fill required fields", "error");
-  }
+  const name=document.getElementById("name").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  const phone2=document.getElementById("phone2").value.trim();
+  const tos=document.getElementById("tosCheckbox").checked;
 
-  if (!tos) {
-    return setStatus("⚠ You must accept Terms of Service", "error");
-  }
+  if(!name||!phone) return setStatus("Fill required fields","error");
+  if(!tos) return setStatus("Accept Terms","error");
 
-  isRunning = true;
-  activateBtn.disabled = true;
-  activateBtn.innerText = "⏳ Activating...";
+  running=true;
+  btn.disabled=true;
 
-  try {
-    const ref = doc(db, "pets", urlId);
-    const snap = await getDoc(ref);
+  step(1);
 
-    if (!snap.exists()) {
-      setStatus("❌ Tag not found in database", "error");
-      return;
+  try{
+
+    setProgress(10);
+    setStatus("Checking tag...");
+
+    const ref=doc(db,"pets",urlId);
+    const snap=await getDoc(ref);
+    if(!snap.exists()) throw new Error("Tag not found");
+
+    step(2);
+
+    let file=photoInput.files[0];
+    let photoURL="";
+
+    if(file){
+      setStatus("Compressing photo...");
+      file=await compress(file);
     }
 
-    const existing = snap.data();
+    if(file){
+      setStatus("Uploading photo...");
+      setProgress(40);
 
-    let photoURL = "";
+      const form=new FormData();
+      form.append("file",file);
+      form.append("upload_preset","arkforge-pets");
 
-    const file = photoInput.files[0];
+      const res=await fetch("https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",{method:"POST",body:form});
+      const data=await res.json();
 
-    if (file) {
-      setStatus("📤 Uploading photo...");
-
-      const form = new FormData();
-      form.append("file", file);
-      form.append("upload_preset", "arkforge-pets");
-
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",
-        { method: "POST", body: form }
-      );
-
-      const data = await res.json();
-      photoURL = data.secure_url;
+      photoURL=data.secure_url;
     }
 
-    setStatus("💾 Saving profile...");
+    step(3);
 
-    const payload = {
+    setStatus("Saving profile...");
+    setProgress(80);
+
+    const ex=snap.data();
+
+    await setDoc(ref,{
       name,
       phone,
-      phone2: phone2 || existing.phone2 || "",
-      microchip: document.getElementById("microchip").value.trim() || existing.microchip || "",
-      photo: photoURL || existing.photo || "",
-      status: "active",
-      tosAccepted: true,
-      activatedAt: new Date().toISOString()
-    };
+      phone2,
+      microchip:document.getElementById("microchip").value.trim()||ex.microchip||"",
+      photo:photoURL||ex.photo||"",
+      status:"active",
+      activatedAt:new Date().toISOString()
+    },{merge:true});
 
-    await setDoc(ref, payload, { merge: true });
+    setProgress(100);
 
-setStatus(
-  "✅ Activated successfully!🐾 Now redirecting to your next stop...",
-  "ok"
-);
+    setStatus("✓ Your tag is now active","ok");
 
-setTimeout(() => {
-  const params = new URLSearchParams(window.location.search);
-  const petId = params.get("id");
+    setTimeout(()=>{
+      location.href=`https://arkforge3dprinting.github.io/pet-tag/index.html?id=${urlId}`;
+    },2000);
 
-  window.location.href =
-    `https://arkforge3dprinting.github.io/pet-tag/index.html?id=${petId}`;
-
-}, 3000);
-    
-    activateBtn.innerText = "Activated";
-
-  } catch (err) {
-    console.error(err);
-    setStatus("❌ " + err.message, "error");
-
-    isRunning = false;
-    activateBtn.disabled = false;
-    activateBtn.innerText = "Activate";
+  }catch(e){
+    setStatus("❌ "+e.message,"error");
+    running=false;
+    btn.disabled=false;
   }
 };
 
