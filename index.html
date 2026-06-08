@@ -15,7 +15,7 @@
     }
 
     /* =========================
-       SCAN INTRO (UPGRADED PULSE)
+       SCAN INTRO
        ========================= */
 
     #scanIntro {
@@ -27,9 +27,8 @@
       justify-content: center;
       flex-direction: column;
       z-index: 9999;
-
       animation: fadeOut 1.6s ease forwards;
-      animation-delay: 3s; /* slightly longer scan feel */
+      animation-delay: 3s;
     }
 
     .scanWrap {
@@ -45,10 +44,8 @@
       border-radius: 50%;
       border: 3px solid #3b82f6;
       animation: pulse 1.2s infinite;
-      z-index: 2;
     }
 
-    /* ripple pulse */
     .scanRipple {
       position: absolute;
       width: 90px;
@@ -77,7 +74,6 @@
       margin-top: 16px;
       font-weight: 600;
       color: #3b82f6;
-      letter-spacing: -0.01em;
     }
 
     /* =========================
@@ -117,11 +113,8 @@
       border-radius: 22px;
       margin: 14px auto;
       display: none;
-
       border: 4px solid rgba(255,255,255,0.9);
-      box-shadow:
-        0 0 0 3px #3b82f6,
-        0 18px 40px rgba(0,0,0,0.20);
+      box-shadow: 0 0 0 3px #3b82f6, 0 18px 40px rgba(0,0,0,0.20);
     }
 
     #microchipText {
@@ -177,12 +170,6 @@
     #callBtn, #callBtn2 { background: #22c55e; }
     #textBtn, #textBtn2 { background: #3b82f6; }
     #locBtn, #locBtn2 { background: #f59e0b; }
-
-    .footer {
-      margin-top: 14px;
-      font-size: 12px;
-      color: #999;
-    }
   </style>
 </head>
 
@@ -224,13 +211,9 @@
     <button id="locBtn2">📍 Send Location Secondary</button>
 
   </div>
-
-  <div class="footer">
-    Powered by ArkLink Pet ID ®
-  </div>
 </div>
 
-<!-- AUDIO (safe inline chime) -->
+<!-- AUDIO -->
 <audio id="chime">
   <source src="https://assets.mixkit.co/sfx/preview/mixkit-light-positive-notification-951.mp3" type="audio/mpeg">
 </audio>
@@ -256,17 +239,52 @@ const id = new URLSearchParams(window.location.search).get("id");
 const main = document.getElementById("main");
 const chime = document.getElementById("chime");
 
-/* SCAN EXPERIENCE */
+/* =========================
+   AUDIO + HAPTIC UNLOCK
+   ========================= */
+
+let unlocked = false;
+
+function unlockMedia() {
+  if (unlocked) return;
+  unlocked = true;
+
+  try {
+    chime.volume = 0.6;
+    chime.play().then(() => {
+      chime.pause();
+      chime.currentTime = 0;
+    }).catch(() => {});
+  } catch (e) {}
+
+  if (navigator.vibrate) {
+    navigator.vibrate(30);
+  }
+
+  window.removeEventListener("touchstart", unlockMedia);
+  window.removeEventListener("click", unlockMedia);
+}
+
+window.addEventListener("touchstart", unlockMedia, { once: true });
+window.addEventListener("click", unlockMedia, { once: true });
+
+/* =========================
+   SCAN TIMING
+   ========================= */
+
 setTimeout(() => {
   document.getElementById("scanIntro").style.display = "none";
 
-  /* try play sound (may be blocked on some devices until interaction) */
   try {
     chime.volume = 0.6;
-    chime.play();
+    chime.play().catch(() => {});
   } catch (e) {}
 
-}, 3200); // longer scan feel
+  if (navigator.vibrate) {
+    navigator.vibrate([20, 40, 20]);
+  }
+
+}, 3200);
 
 if (!id) {
   throw new Error("Missing ID");
