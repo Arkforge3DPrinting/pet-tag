@@ -55,7 +55,6 @@
 
     .step.active { background:#dbeafe; border:1px solid #3b82f6; }
     .step.done { background:#dcfce7; border:1px solid #22c55e; }
-    .step.error { background:#fee2e2; border:1px solid #ef4444; }
 
     .tick { width: 20px; font-weight: 900; }
 
@@ -86,26 +85,6 @@
     .gallery { background:#2563eb; }
     .activate { background:#16a34a; font-size:18px; }
 
-    /* ✅ TOC BOX FIXED (CENTER + BIGGER TEXT + NICER LOOK) */
-    .tos-box {
-      text-align: center;
-      font-size: 15px;
-      line-height: 1.4;
-      padding: 14px;
-      background: #fafafa;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      margin: 12px 0;
-      font-weight: 600;
-    }
-
-    .tos-box label {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-    }
-
     .progress {
       height: 12px;
       background: #e5e7eb;
@@ -135,6 +114,44 @@
       margin-top: -6px;
       margin-bottom: 8px;
     }
+
+    /* =========================
+       FIXED ToS (clean card style)
+    ========================= */
+
+    .tos-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+
+      text-align: left;
+      font-size: 14px;
+      line-height: 1.4;
+
+      padding: 14px 16px;
+      margin: 14px 0;
+
+      background: #fafafa;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+    }
+
+    .tos-box input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin: 0;
+      accent-color: #16a34a;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .tos-text {
+      flex: 1;
+      font-weight: 600;
+      color: #111827;
+    }
+
   </style>
 </head>
 
@@ -163,11 +180,12 @@
 
   <div class="small" id="fileInfo">No image selected</div>
 
+  <!-- FIXED ToS -->
   <div class="tos-box">
-    <label>
-      <input type="checkbox" id="tosCheckbox">
-      I agree to Terms of Service and understand this profile may be publicly visible when scanned.
-    </label>
+    <input type="checkbox" id="tosCheckbox">
+    <div class="tos-text">
+      I agree to the Terms of Service and understand this profile may be publicly visible when scanned.
+    </div>
   </div>
 
   <button class="btn activate" id="activateBtn">ACTIVATE TAG</button>
@@ -200,7 +218,6 @@ const bar = document.getElementById("bar");
 const status = document.getElementById("status");
 const fileInfo = document.getElementById("fileInfo");
 
-/* STEP SYSTEM */
 function setStep(n){
   for(let i=1;i<=3;i++){
     const el=document.getElementById("s"+i);
@@ -219,17 +236,11 @@ function setStep(n){
   }
 }
 
-/* IMAGE LABEL */
 document.getElementById("photoInput").addEventListener("change",(e)=>{
   const file=e.target.files[0];
-  if(file){
-    fileInfo.innerText = `📸 ${file.name} selected`;
-  } else {
-    fileInfo.innerText = "No image selected";
-  }
+  fileInfo.innerText = file ? `📸 ${file.name} selected` : "No image selected";
 });
 
-/* BUTTONS */
 document.getElementById("cameraBtn").onclick=()=>{
   const i=document.getElementById("photoInput");
   i.setAttribute("capture","environment");
@@ -244,7 +255,6 @@ document.getElementById("galleryBtn").onclick=()=>{
 
 setStep(1);
 
-/* MAIN FLOW */
 document.getElementById("activateBtn").onclick=async()=>{
 
   const name=document.getElementById("name").value.trim();
@@ -302,10 +312,7 @@ document.getElementById("activateBtn").onclick=async()=>{
     },{merge:true});
 
     bar.style.width="100%";
-
     status.innerHTML="✅ Activated successfully! Redirecting...";
-
-    setStep(3);
 
     let count = 5;
 
