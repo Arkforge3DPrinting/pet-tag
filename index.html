@@ -6,11 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    /* =========================
-       ARKLINK APP SHELL v2
-       NO BREAKING CHANGES
-       ========================= */
-
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -20,7 +15,7 @@
     }
 
     /* =========================
-       SCAN INTRO OVERLAY
+       SCAN INTRO (UPGRADED PULSE)
        ========================= */
 
     #scanIntro {
@@ -32,8 +27,16 @@
       justify-content: center;
       flex-direction: column;
       z-index: 9999;
-      animation: fadeOut 1s ease forwards;
-      animation-delay: 1.4s;
+
+      animation: fadeOut 1.6s ease forwards;
+      animation-delay: 3s; /* slightly longer scan feel */
+    }
+
+    .scanWrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .scanCircle {
@@ -42,12 +45,28 @@
       border-radius: 50%;
       border: 3px solid #3b82f6;
       animation: pulse 1.2s infinite;
+      z-index: 2;
+    }
+
+    /* ripple pulse */
+    .scanRipple {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(59,130,246,0.2);
+      animation: ripple 1.6s infinite;
     }
 
     @keyframes pulse {
       0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.5; }
+      50% { transform: scale(1.25); opacity: 0.5; }
       100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(1); opacity: 0.5; }
+      100% { transform: scale(2.4); opacity: 0; }
     }
 
     @keyframes fadeOut {
@@ -55,59 +74,14 @@
     }
 
     .scanText {
-      margin-top: 14px;
+      margin-top: 16px;
       font-weight: 600;
       color: #3b82f6;
+      letter-spacing: -0.01em;
     }
 
     /* =========================
-       LOCKED STATE
-       ========================= */
-
-    #locked {
-      max-width: 420px;
-      margin: auto;
-      background: white;
-      padding: 22px;
-      border-radius: 20px;
-      box-shadow: 0 14px 40px rgba(0,0,0,0.08);
-      text-align: center;
-      display: none;
-    }
-
-    .tagbox {
-      margin-top: 14px;
-      padding: 14px;
-      background: #f8fafc;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      text-align: left;
-    }
-
-    .tagcode {
-      font-family: monospace;
-      font-size: 14px;
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      word-break: break-all;
-    }
-
-    .tagbtn {
-      display: block;
-      margin-top: 10px;
-      padding: 12px;
-      text-align: center;
-      background: #3b82f6;
-      color: white;
-      border-radius: 10px;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    /* =========================
-       MAIN APP CARD
+       MAIN CARD
        ========================= */
 
     .container {
@@ -120,12 +94,6 @@
       text-align: center;
       display: none;
       backdrop-filter: blur(10px);
-      transform: translateY(10px);
-      animation: slideIn 0.4s ease forwards;
-    }
-
-    @keyframes slideIn {
-      to { transform: translateY(0); opacity: 1; }
     }
 
     h1 {
@@ -140,10 +108,6 @@
       margin: 0 0 10px 0;
       line-height: 1.5;
     }
-
-    /* =========================
-       PET IMAGE HERO
-       ========================= */
 
     #petPhoto {
       width: 100%;
@@ -160,16 +124,11 @@
         0 18px 40px rgba(0,0,0,0.20);
     }
 
-    /* microchip */
     #microchipText {
       font-size: 14px;
       color: #6b7280;
       margin-top: 6px;
     }
-
-    /* =========================
-       STATUS BADGE
-       ========================= */
 
     .status {
       display: inline-flex;
@@ -192,37 +151,6 @@
       box-shadow: 0 0 12px rgba(52,199,89,0.6);
       animation: pulse 1.6s infinite;
     }
-
-    /* =========================
-       ACTION DOCK (FLOATING)
-       ========================= */
-
-    .dock {
-      position: fixed;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      z-index: 999;
-    }
-
-    .dock button {
-      border: none;
-      padding: 14px;
-      border-radius: 999px;
-      font-weight: 600;
-      color: white;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    }
-
-    .call { background: #22c55e; }
-    .text { background: #3b82f6; }
-    .loc { background: #f59e0b; }
-
-    /* =========================
-       GRID (kept for fallback buttons)
-       ========================= */
 
     .grid {
       display: grid;
@@ -262,19 +190,11 @@
 
 <!-- SCAN INTRO -->
 <div id="scanIntro">
-  <div class="scanCircle"></div>
-  <div class="scanText">Scanning ArkLink Tag...</div>
-</div>
-
-<!-- LOCKED -->
-<div id="locked">
-  <h2>🐾 Tag Not Activated</h2>
-  <p>This pet tag must be activated before contact details are available.</p>
-
-  <div class="tagbox">
-    <div class="tagcode" id="tagCode"></div>
-    <a id="tagLinkBtn" class="tagbtn" target="_blank">🔗 Activate This Tag</a>
+  <div class="scanWrap">
+    <div class="scanRipple"></div>
+    <div class="scanCircle"></div>
   </div>
+  <div class="scanText">Scanning ArkLink Tag...</div>
 </div>
 
 <!-- MAIN -->
@@ -310,12 +230,10 @@
   </div>
 </div>
 
-<!-- FLOATING ACTION DOCK -->
-<div class="dock" id="dock" style="display:none;">
-  <button class="call" id="dockCall">Call</button>
-  <button class="text" id="dockText">Text</button>
-  <button class="loc" id="dockLoc">Location</button>
-</div>
+<!-- AUDIO (safe inline chime) -->
+<audio id="chime">
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-light-positive-notification-951.mp3" type="audio/mpeg">
+</audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -336,54 +254,35 @@ const db = getFirestore(app);
 const id = new URLSearchParams(window.location.search).get("id");
 
 const main = document.getElementById("main");
-const locked = document.getElementById("locked");
-const dock = document.getElementById("dock");
+const chime = document.getElementById("chime");
 
+/* SCAN EXPERIENCE */
 setTimeout(() => {
   document.getElementById("scanIntro").style.display = "none";
-}, 1400);
+
+  /* try play sound (may be blocked on some devices until interaction) */
+  try {
+    chime.volume = 0.6;
+    chime.play();
+  } catch (e) {}
+
+}, 3200); // longer scan feel
 
 if (!id) {
-  locked.style.display = "block";
-  document.getElementById("tagCode").innerText = "INVALID";
   throw new Error("Missing ID");
-}
-
-document.getElementById("tagCode").innerText = id;
-document.getElementById("tagLinkBtn").href =
-  "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
-
-function showMain() {
-  main.style.display = "block";
-  dock.style.display = "flex";
-}
-
-function hide(id) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = "none";
-}
-
-function setSingle() {
-  document.getElementById("btnGrid").classList.add("single");
 }
 
 async function loadPet() {
 
   const snap = await getDoc(doc(db, "pets", id));
 
-  if (!snap.exists()) {
-    locked.style.display = "block";
-    return;
-  }
+  if (!snap.exists()) return;
 
   const pet = snap.data();
 
-  if (pet.status !== "active") {
-    locked.style.display = "block";
-    return;
-  }
+  if (pet.status !== "active") return;
 
-  showMain();
+  main.style.display = "block";
 
   document.getElementById("title").innerText =
     "You found " + (pet.name || "a pet");
@@ -398,8 +297,6 @@ async function loadPet() {
     img.style.display = "block";
   }
 
-  const hasSecondary = pet.phone2 && pet.phone2.trim();
-
   document.getElementById("callBtn").onclick =
     () => window.location.href = "tel:" + pet.phone;
 
@@ -408,33 +305,10 @@ async function loadPet() {
 
   document.getElementById("locBtn").onclick = () => {
     navigator.geolocation.getCurrentPosition(pos => {
-      window.open(`sms:${pet.phone}?body=Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`, "_self");
-    });
-  };
-
-  if (hasSecondary) {
-    document.getElementById("callBtn2").onclick =
-      () => window.location.href = "tel:" + pet.phone2;
-
-    document.getElementById("textBtn2").onclick =
-      () => window.open(`sms:${pet.phone2}`, "_self");
-  } else {
-    hide("callBtn2");
-    hide("textBtn2");
-    hide("locBtn2");
-    setSingle();
-  }
-
-  /* dock actions */
-  document.getElementById("dockCall").onclick =
-    () => window.location.href = "tel:" + pet.phone;
-
-  document.getElementById("dockText").onclick =
-    () => window.open(`sms:${pet.phone}`, "_self");
-
-  document.getElementById("dockLoc").onclick = () => {
-    navigator.geolocation.getCurrentPosition(pos => {
-      window.open(`sms:${pet.phone}?body=Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`, "_self");
+      window.open(
+        `sms:${pet.phone}?body=Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`,
+        "_self"
+      );
     });
   };
 }
