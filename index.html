@@ -1,140 +1,67 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ArkLink Pet ID - Found Pet</title>
+  <title>ArkLink Pet ID</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     /* =========================
-       BASE UPGRADE (SAFE)
+       ARKLINK APP SHELL v2
+       NO BREAKING CHANGES
        ========================= */
 
     body {
+      margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background: radial-gradient(circle at top, #ffffff, #eef3f8);
-      margin: 0;
-      padding: 12px;
       color: #1c1c1e;
+      overflow-x: hidden;
     }
 
     /* =========================
-       CARD UPGRADE
+       SCAN INTRO OVERLAY
        ========================= */
 
-    .container {
-      max-width: 420px;
-      margin: auto;
-      background: rgba(255,255,255,0.95);
-      padding: 16px;
-      border-radius: 22px;
-      box-shadow: 0 14px 40px rgba(0,0,0,0.08);
-      text-align: center;
-      display: none;
-      backdrop-filter: blur(8px);
+    #scanIntro {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.98);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+      animation: fadeOut 1s ease forwards;
+      animation-delay: 1.4s;
     }
 
-    /* =========================
-       TYPOGRAPHY
-       ========================= */
-
-    h1 {
-      font-size: 24px;
-      margin: 0 0 6px 0;
-      letter-spacing: -0.02em;
+    .scanCircle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 3px solid #3b82f6;
+      animation: pulse 1.2s infinite;
     }
 
-    p {
-      font-size: 15px;
-      color: #555;
-      margin: 0 0 10px 0;
-      line-height: 1.5;
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.5; }
+      100% { transform: scale(1); opacity: 1; }
     }
 
-    /* =========================
-       IMAGE UPGRADE (IMPORTANT)
-       ========================= */
-
-    #petPhoto {
-      width: 100%;
-      max-width: 260px;
-      aspect-ratio: 1 / 1;
-      object-fit: cover;
-      border-radius: 20px;
-      margin: 12px auto;
-      display: none;
-
-      border: 4px solid rgba(255,255,255,0.9);
-      box-shadow:
-        0 0 0 3px #3b82f6,
-        0 14px 30px rgba(0,0,0,0.18);
+    @keyframes fadeOut {
+      to { opacity: 0; visibility: hidden; }
     }
 
-    /* =========================
-       BUTTON GRID
-       ========================= */
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+    .scanText {
       margin-top: 14px;
-    }
-
-    .single {
-      grid-template-columns: 1fr !important;
-      justify-items: center;
-    }
-
-    /* =========================
-       BUTTONS (MODERNIZED)
-       ========================= */
-
-    button {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 14px;
-      font-size: 13px;
       font-weight: 600;
-      cursor: pointer;
-      color: white;
-      transition: transform 0.15s ease, filter 0.15s ease;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    #callBtn, #callBtn2 {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-    }
-
-    #textBtn, #textBtn2 {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-    }
-
-    #locBtn, #locBtn2 {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #3b82f6;
     }
 
     /* =========================
-       FOOTER
-       ========================= */
-
-    .footer {
-      margin-top: 14px;
-      font-size: 12px;
-      color: #999;
-    }
-
-    /* =========================
-       LOCK SCREEN UPGRADE
+       LOCKED STATE
        ========================= */
 
     #locked {
@@ -179,15 +106,167 @@
       text-decoration: none;
     }
 
-    /* subtle polish */
-    * {
-      -webkit-tap-highlight-color: transparent;
+    /* =========================
+       MAIN APP CARD
+       ========================= */
+
+    .container {
+      max-width: 420px;
+      margin: auto;
+      background: rgba(255,255,255,0.95);
+      padding: 18px;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.10);
+      text-align: center;
+      display: none;
+      backdrop-filter: blur(10px);
+      transform: translateY(10px);
+      animation: slideIn 0.4s ease forwards;
+    }
+
+    @keyframes slideIn {
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 6px 0;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      font-size: 15px;
+      color: #555;
+      margin: 0 0 10px 0;
+      line-height: 1.5;
+    }
+
+    /* =========================
+       PET IMAGE HERO
+       ========================= */
+
+    #petPhoto {
+      width: 100%;
+      max-width: 260px;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 22px;
+      margin: 14px auto;
+      display: none;
+
+      border: 4px solid rgba(255,255,255,0.9);
+      box-shadow:
+        0 0 0 3px #3b82f6,
+        0 18px 40px rgba(0,0,0,0.20);
+    }
+
+    /* microchip */
+    #microchipText {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    /* =========================
+       STATUS BADGE
+       ========================= */
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #e8fff1;
+      color: #118a3a;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34c759;
+      box-shadow: 0 0 12px rgba(52,199,89,0.6);
+      animation: pulse 1.6s infinite;
+    }
+
+    /* =========================
+       ACTION DOCK (FLOATING)
+       ========================= */
+
+    .dock {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 999;
+    }
+
+    .dock button {
+      border: none;
+      padding: 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: white;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .call { background: #22c55e; }
+    .text { background: #3b82f6; }
+    .loc { background: #f59e0b; }
+
+    /* =========================
+       GRID (kept for fallback buttons)
+       ========================= */
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .single {
+      grid-template-columns: 1fr !important;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: white;
+    }
+
+    #callBtn, #callBtn2 { background: #22c55e; }
+    #textBtn, #textBtn2 { background: #3b82f6; }
+    #locBtn, #locBtn2 { background: #f59e0b; }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #999;
     }
   </style>
 </head>
 
 <body>
 
+<!-- SCAN INTRO -->
+<div id="scanIntro">
+  <div class="scanCircle"></div>
+  <div class="scanText">Scanning ArkLink Tag...</div>
+</div>
+
+<!-- LOCKED -->
 <div id="locked">
   <h2>🐾 Tag Not Activated</h2>
   <p>This pet tag must be activated before contact details are available.</p>
@@ -198,14 +277,20 @@
   </div>
 </div>
 
+<!-- MAIN -->
 <div class="container" id="main">
+
+  <div class="status">
+    <span class="dot"></span>
+    Found Pet
+  </div>
 
   <h1 id="title">Loading...</h1>
   <p id="message"></p>
 
   <img id="petPhoto">
 
-  <div id="microchipText" style="font-size:15px; color:#666; margin-top:8px;"></div>
+  <div id="microchipText"></div>
 
   <div id="btnGrid" class="grid">
 
@@ -223,7 +308,13 @@
   <div class="footer">
     Powered by ArkLink Pet ID ®
   </div>
+</div>
 
+<!-- FLOATING ACTION DOCK -->
+<div class="dock" id="dock" style="display:none;">
+  <button class="call" id="dockCall">Call</button>
+  <button class="text" id="dockText">Text</button>
+  <button class="loc" id="dockLoc">Location</button>
 </div>
 
 <script type="module">
@@ -246,6 +337,11 @@ const id = new URLSearchParams(window.location.search).get("id");
 
 const main = document.getElementById("main");
 const locked = document.getElementById("locked");
+const dock = document.getElementById("dock");
+
+setTimeout(() => {
+  document.getElementById("scanIntro").style.display = "none";
+}, 1400);
 
 if (!id) {
   locked.style.display = "block";
@@ -259,6 +355,7 @@ document.getElementById("tagLinkBtn").href =
 
 function showMain() {
   main.style.display = "block";
+  dock.style.display = "flex";
 }
 
 function hide(id) {
@@ -281,17 +378,6 @@ async function loadPet() {
 
   const pet = snap.data();
 
-  if (pet.status === "disabled") {
-    document.body.innerHTML = `
-      <div style="max-width:420px;margin:auto;margin-top:40px;background:white;padding:24px;border-radius:18px;text-align:center;font-family:Arial;box-shadow:0 6px 20px rgba(0,0,0,0.08);">
-        <h2>⚠ Profile Disabled</h2>
-        <p>This pet profile has been disabled.</p>
-        <p>Please contact ArkLink Pet ID if this is an error.</p>
-      </div>
-    `;
-    return;
-  }
-
   if (pet.status !== "active") {
     locked.style.display = "block";
     return;
@@ -300,18 +386,10 @@ async function loadPet() {
   showMain();
 
   document.getElementById("title").innerText =
-    "🐾 You found " + (pet.name || "a pet");
+    "You found " + (pet.name || "a pet");
 
   document.getElementById("message").innerText =
-    "Help get " + (pet.name || "this pet") + " home safely.";
-
-  const chipEl = document.getElementById("microchipText");
-
-  if (chipEl) {
-    chipEl.innerHTML = pet.microchip
-      ? "Microchip: <b>" + pet.microchip + "</b>"
-      : "";
-  }
+    "Help bring them home safely.";
 
   const img = document.getElementById("petPhoto");
 
@@ -320,86 +398,45 @@ async function loadPet() {
     img.style.display = "block";
   }
 
-  const hasSecondary = pet.phone2 && pet.phone2.trim() !== "";
+  const hasSecondary = pet.phone2 && pet.phone2.trim();
 
   document.getElementById("callBtn").onclick =
     () => window.location.href = "tel:" + pet.phone;
 
   document.getElementById("textBtn").onclick =
-    () => window.open(
-      `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-      "_self"
-    );
+    () => window.open(`sms:${pet.phone}`, "_self");
 
   document.getElementById("locBtn").onclick = () => {
-
-    const btn = document.getElementById("locBtn");
-
-    btn.disabled = true;
-    btn.innerText = "📡 Getting location...";
-
     navigator.geolocation.getCurrentPosition(pos => {
-
-      const msg =
-        "I found " + pet.name +
-        ". Location: https://maps.google.com/?q=" +
-        pos.coords.latitude + "," + pos.coords.longitude;
-
-      btn.disabled = false;
-      btn.innerText = "📍 Send Location";
-
-      window.open(`sms:${pet.phone}?body=${encodeURIComponent(msg)}`, "_self");
-
-    }, () => {
-      btn.disabled = false;
-      btn.innerText = "📍 Send Location";
-      alert("Unable to get GPS location.");
+      window.open(`sms:${pet.phone}?body=Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`, "_self");
     });
   };
 
   if (hasSecondary) {
-
     document.getElementById("callBtn2").onclick =
       () => window.location.href = "tel:" + pet.phone2;
 
     document.getElementById("textBtn2").onclick =
-      () => window.open(
-        `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-        "_self"
-      );
-
-    document.getElementById("locBtn2").onclick = () => {
-
-      const btn = document.getElementById("locBtn2");
-
-      btn.disabled = true;
-      btn.innerText = "📡 Getting location...";
-
-      navigator.geolocation.getCurrentPosition(pos => {
-
-        const msg =
-          "I found " + pet.name +
-          ". Location: https://maps.google.com/?q=" +
-          pos.coords.latitude + "," + pos.coords.longitude;
-
-        btn.disabled = false;
-        btn.innerText = "📍 Send Location Secondary";
-
-        window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
-
-      }, () => {
-        btn.disabled = false;
-        btn.innerText = "📍 Send Location Secondary";
-        alert("Unable to get GPS location.");
-      });
-    };
-
+      () => window.open(`sms:${pet.phone2}`, "_self");
   } else {
     hide("callBtn2");
     hide("textBtn2");
     hide("locBtn2");
     setSingle();
   }
+
+  /* dock actions */
+  document.getElementById("dockCall").onclick =
+    () => window.location.href = "tel:" + pet.phone;
+
+  document.getElementById("dockText").onclick =
+    () => window.open(`sms:${pet.phone}`, "_self");
+
+  document.getElementById("dockLoc").onclick = () => {
+    navigator.geolocation.getCurrentPosition(pos => {
+      window.open(`sms:${pet.phone}?body=Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`, "_self");
+    });
+  };
 }
 
 loadPet();
