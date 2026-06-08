@@ -86,14 +86,24 @@
     .gallery { background:#2563eb; }
     .activate { background:#16a34a; font-size:18px; }
 
+    /* ✅ TOC BOX FIXED (CENTER + BIGGER TEXT + NICER LOOK) */
     .tos-box {
-      text-align: left;
-      font-size: 13px;
-      padding: 10px;
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.4;
+      padding: 14px;
       background: #fafafa;
-      border: 2px solid #eee;
-      border-radius: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
       margin: 12px 0;
+      font-weight: 600;
+    }
+
+    .tos-box label {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
     }
 
     .progress {
@@ -151,13 +161,12 @@
   <button class="btn camera" id="cameraBtn">📷 Take Photo</button>
   <button class="btn gallery" id="galleryBtn">📁 Choose Photo</button>
 
-  <!-- 📸 IMAGE CONFIRMATION (RESTORED) -->
   <div class="small" id="fileInfo">No image selected</div>
 
   <div class="tos-box">
     <label>
       <input type="checkbox" id="tosCheckbox">
-      I agree to Terms of Service
+      I agree to Terms of Service and understand this profile may be publicly visible when scanned.
     </label>
   </div>
 
@@ -210,12 +219,12 @@ function setStep(n){
   }
 }
 
-/* IMAGE LABEL UPDATE (RESTORED) */
+/* IMAGE LABEL */
 document.getElementById("photoInput").addEventListener("change",(e)=>{
   const file=e.target.files[0];
   if(file){
     fileInfo.innerText = `📸 ${file.name} selected`;
-  }else{
+  } else {
     fileInfo.innerText = "No image selected";
   }
 });
@@ -294,12 +303,10 @@ document.getElementById("activateBtn").onclick=async()=>{
 
     bar.style.width="100%";
 
-    /* SUCCESS STATE */
     status.innerHTML="✅ Activated successfully! Redirecting...";
 
     setStep(3);
 
-    /* ⏳ RESTORED COUNTDOWN */
     let count = 5;
 
     const interval = setInterval(()=>{
