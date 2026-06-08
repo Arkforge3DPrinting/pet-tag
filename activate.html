@@ -8,7 +8,7 @@
     * { box-sizing: border-box; }
 
     body {
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
       background: #f4f6f8;
       margin: 0;
       padding: 14px;
@@ -18,25 +18,39 @@
       max-width: 420px;
       margin: auto;
       background: white;
-      padding: 18px;
-      border-radius: 20px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      padding: 22px;
+      border-radius: 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       text-align: center;
-      animation: pop 220ms ease;
+      overflow: hidden;
+      position: relative;
     }
 
-    @keyframes pop {
-      from { transform: scale(0.98); opacity: 0.6; }
-      to { transform: scale(1); opacity: 1; }
+    h2 {
+      margin: 6px 0 14px;
+      font-weight: 600;
     }
-
-    h2 { margin-bottom: 6px; }
 
     .tagid {
       font-size: 12px;
-      color: #666;
-      margin-bottom: 12px;
+      color: #888;
+      margin-bottom: 16px;
       word-break: break-all;
+    }
+
+    /* STEP SYSTEM */
+    .step {
+      display: none;
+      animation: slide 280ms ease;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    @keyframes slide {
+      from { opacity: 0; transform: translateX(10px); }
+      to { opacity: 1; transform: translateX(0); }
     }
 
     input {
@@ -48,7 +62,10 @@
       font-size: 15px;
     }
 
-    input:focus { outline: none; border-color: #3b82f6; }
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
 
     #photoInput { display: none; }
 
@@ -57,62 +74,32 @@
       padding: 14px;
       border: none;
       border-radius: 12px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
       color: white;
-      margin-bottom: 10px;
+      margin-top: 8px;
     }
 
-    .camera { background: #ff9f43; }
-    .gallery { background: #3b82f6; }
-    .activate { background: #3b82f6; font-size: 18px; }
+    .primary { background: #3b82f6; }
+    .secondary { background: #ff9f43; }
 
-    .tos-box {
-      text-align: left;
+    .tos {
       font-size: 13px;
-      padding: 10px;
-      background: #fafafa;
-      border: 1px solid #eee;
-      border-radius: 10px;
-      margin: 12px 0;
-    }
-
-    #status {
-      margin-top: 10px;
-      font-weight: bold;
-      min-height: 20px;
-    }
-
-    .error { color: #d11a2a; }
-    .ok { color: #0a7a2f; }
-
-    /* CHECKLIST */
-    .steps {
       text-align: left;
-      font-size: 14px;
       margin: 12px 0;
-      padding: 12px;
-      border-radius: 12px;
-      background: #f9fafb;
+      background: #fafafa;
+      padding: 10px;
+      border-radius: 10px;
       border: 1px solid #eee;
     }
 
-    .step {
-      margin: 6px 0;
-      transition: all 200ms ease;
-    }
-
-    .step span {
-      margin-right: 6px;
-    }
-
-    /* PROGRESS */
+    /* subtle progress */
     .progress {
-      height: 8px;
-      background: #e5e7eb;
+      height: 6px;
+      background: #eee;
       border-radius: 999px;
       overflow: hidden;
-      margin-top: 10px;
+      margin-top: 12px;
       display: none;
     }
 
@@ -120,10 +107,23 @@
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg,#22c55e,#16a34a);
-      transition: width 300ms ease;
+      transition: width 250ms ease;
     }
 
-    /* CONFETTI */
+    .status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #444;
+      min-height: 18px;
+    }
+
+    .success {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0a7a2f;
+      margin-top: 10px;
+    }
+
     canvas {
       position: fixed;
       inset: 0;
@@ -140,37 +140,51 @@
 
   <h2>Activate Pet Tag</h2>
 
-  <div class="tagid">Tag ID: <span id="tagIdDisplay"></span></div>
-
-  <div class="steps">
-    <div class="step" id="s1"><span>❌</span> Enter details</div>
-    <div class="step" id="s2"><span>❌</span> Add photo (optional)</div>
-    <div class="step" id="s3"><span>❌</span> Activate</div>
+  <div class="tagid">
+    Tag ID: <span id="tagIdDisplay"></span>
   </div>
 
-  <input id="name" placeholder="Pet Name">
-  <input id="phone" placeholder="Primary Contact Number">
-  <input id="phone2" placeholder="Secondary Contact (optional)">
-  <input id="microchip" placeholder="Microchip number (optional)">
-  <input type="file" id="photoInput" accept="image/*">
+  <!-- STEP 1 -->
+  <div class="step active" id="step1">
+    <input id="name" placeholder="Pet Name">
+    <input id="phone" placeholder="Primary Contact Number">
+    <input id="phone2" placeholder="Secondary Contact (optional)">
 
-  <button class="btn camera" id="cameraBtn">📷 Take Photo</button>
-  <button class="btn gallery" id="galleryBtn">📁 Choose Photo</button>
+    <div class="tos">
+      <label>
+        <input type="checkbox" id="tosCheckbox">
+        I agree to Terms of Service
+      </label>
+    </div>
 
-  <div class="tos-box">
-    <label>
-      <input type="checkbox" id="tosCheckbox">
-      I agree to Terms of Service
-    </label>
+    <button class="btn primary" id="next1">Continue</button>
   </div>
 
-  <button class="btn activate" id="activateBtn">Activate</button>
+  <!-- STEP 2 -->
+  <div class="step" id="step2">
+    <input type="file" id="photoInput" accept="image/*">
 
-  <div class="progress" id="progress">
-    <div class="bar" id="bar"></div>
+    <button class="btn secondary" id="cameraBtn">📷 Take Photo</button>
+    <button class="btn primary" id="galleryBtn">📁 Choose Photo</button>
+
+    <button class="btn primary" id="next2">Continue</button>
   </div>
 
-  <div id="status"></div>
+  <!-- STEP 3 -->
+  <div class="step" id="step3">
+    <div class="status" id="status">Ready to activate</div>
+
+    <div class="progress" id="progress">
+      <div class="bar" id="bar"></div>
+    </div>
+
+    <button class="btn primary" id="activateBtn">Activate Tag</button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="step" id="step4">
+    <div class="success">✓ Your tag is now active</div>
+  </div>
 
 </div>
 
@@ -195,39 +209,21 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-const statusEl = document.getElementById("status");
-const btn = document.getElementById("activateBtn");
-const bar = document.getElementById("bar");
-const progress = document.getElementById("progress");
-const photoInput = document.getElementById("photoInput");
-
 const urlId = new URLSearchParams(location.search).get("id");
 
-/* STATUS */
-function setStatus(msg,type=""){
-  statusEl.innerText = msg;
-  statusEl.className = type;
-}
+document.getElementById("tagIdDisplay").innerText = urlId || "Invalid";
 
-/* CHECKLIST UI */
-function step(n){
-  const set=(id,ok)=>{
-    document.getElementById(id).innerHTML =
-      `<span>${ok ? "✔" : "❌"}</span>` + document.getElementById(id).textContent.slice(2);
-  };
-
-  set("s1", n>=1);
-  set("s2", n>=2);
-  set("s3", n>=3);
-}
-
-/* PROGRESS */
-function setProgress(p){
-  progress.style.display="block";
-  bar.style.width=p+"%";
+/* STEP NAV */
+function showStep(n){
+  for(let i=1;i<=4;i++){
+    document.getElementById("step"+i).classList.remove("active");
+  }
+  document.getElementById("step"+n).classList.add("active");
 }
 
 /* CAMERA */
+const photoInput = document.getElementById("photoInput");
+
 document.getElementById("cameraBtn").onclick=()=>{
   photoInput.setAttribute("capture","environment");
   photoInput.click();
@@ -238,7 +234,23 @@ document.getElementById("galleryBtn").onclick=()=>{
   photoInput.click();
 };
 
-/* IMAGE COMPRESSION */
+/* CONTROLS */
+document.getElementById("next1").onclick=()=>{
+  const name=document.getElementById("name").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  const tos=document.getElementById("tosCheckbox").checked;
+
+  if(!name||!phone) return alert("Fill required fields");
+  if(!tos) return alert("Accept Terms");
+
+  showStep(2);
+};
+
+document.getElementById("next2").onclick=()=>{
+  showStep(3);
+};
+
+/* COMPRESSION */
 async function compress(file){
   return new Promise(res=>{
     const r=new FileReader();
@@ -267,7 +279,7 @@ function boom(){
 
   let p=[];
   for(let i=0;i<80;i++){
-    p.push({x:Math.random()*c.width,y:Math.random()*-c.height,r:3+Math.random()*4,v:2+Math.random()*3});
+    p.push({x:Math.random()*c.width,y:Math.random()*-c.height,v:2+Math.random()*3,r:3});
   }
 
   (function anim(){
@@ -283,33 +295,14 @@ function boom(){
   })();
 }
 
-/* INIT */
-if(!urlId){
-  setStatus("Invalid link","error");
-}else{
-  document.getElementById("tagIdDisplay").innerText=urlId;
-}
+/* ACTIVATE */
+document.getElementById("activateBtn").onclick = async ()=>{
 
-let running=false;
+  const status=document.getElementById("status");
+  const bar=document.getElementById("bar");
+  const progress=document.getElementById("progress");
 
-document.getElementById("activateBtn").onclick=async()=>{
-
-  if(running) return;
-
-  const name=document.getElementById("name").value.trim();
-  const phone=document.getElementById("phone").value.trim();
-  const phone2=document.getElementById("phone2").value.trim();
-  const tos=document.getElementById("tosCheckbox").checked;
-
-  if(!name||!phone) return setStatus("Fill required fields","error");
-  if(!tos) return setStatus("Accept Terms","error");
-
-  running=true;
-  btn.disabled=true;
-
-  step(1);
-  setProgress(10);
-  setStatus("Checking tag...");
+  progress.style.display="block";
 
   try{
 
@@ -317,19 +310,34 @@ document.getElementById("activateBtn").onclick=async()=>{
     const snap=await getDoc(ref);
     if(!snap.exists()) throw new Error("Tag not found");
 
-    step(2);
-
     let file=photoInput.files[0];
     let photoURL="";
 
-    if(file){
-      setStatus("Compressing photo...");
-      file=await compress(file);
-    }
+    status.innerText="Preparing photo...";
+    bar.style.width="20%";
 
     if(file){
-      setStatus("Uploading photo...");
-      setProgress(45);
+      file=await (async f=>{
+        const r=new FileReader();
+        return new Promise(res=>{
+          r.onload=e=>{
+            const img=new Image();
+            img.onload=()=>{
+              const c=document.createElement("canvas");
+              const s=Math.min(1,Math.sqrt((2*1024*1024)/f.size));
+              c.width=img.width*s;
+              c.height=img.height*s;
+              c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+              c.toBlob(b=>res(new File([b],"img.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
+            };
+            img.src=e.target.result;
+          };
+          r.readAsDataURL(f);
+        });
+      })(file);
+
+      status.innerText="Uploading photo...";
+      bar.style.width="50%";
 
       const form=new FormData();
       form.append("file",file);
@@ -337,16 +345,17 @@ document.getElementById("activateBtn").onclick=async()=>{
 
       const res=await fetch("https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",{method:"POST",body:form});
       const data=await res.json();
-
       photoURL=data.secure_url;
     }
 
-    step(3);
-
-    setStatus("Saving profile...");
-    setProgress(80);
+    status.innerText="Saving...";
+    bar.style.width="80%";
 
     const ex=snap.data();
+
+    const name=document.getElementById("name").value.trim();
+    const phone=document.getElementById("phone").value.trim();
+    const phone2=document.getElementById("phone2").value.trim();
 
     await setDoc(ref,{
       name,
@@ -358,10 +367,9 @@ document.getElementById("activateBtn").onclick=async()=>{
       activatedAt:new Date().toISOString()
     },{merge:true});
 
-    setProgress(100);
+    bar.style.width="100%";
 
-    setStatus("✓ Your tag is now active","ok");
-
+    showStep(4);
     boom();
 
     setTimeout(()=>{
@@ -369,9 +377,7 @@ document.getElementById("activateBtn").onclick=async()=>{
     },2500);
 
   }catch(e){
-    setStatus("❌ "+e.message,"error");
-    running=false;
-    btn.disabled=false;
+    alert(e.message);
   }
 };
 
