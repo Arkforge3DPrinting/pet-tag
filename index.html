@@ -8,69 +8,64 @@
 
 <style>
 /* =========================
-   ARKLINK UI LAYER v2
-   UNIVERSAL DROP-IN SYSTEM
-   SAFE FOR ALL PAGES
+   ARKLINK SAFE UI SYSTEM v1
+   DROP-IN FULL PAGE VERSION
+   NON-DESTRUCTIVE
    ========================= */
-
-/* ROOT */
-:root {
-  --bg: #f5f7fb;
-  --card: rgba(255,255,255,0.92);
-  --text: #1c1c1e;
-  --muted: #6b7280;
-  --primary: #007aff;
-  --good: #34c759;
-  --shadow: 0 12px 30px rgba(0,0,0,0.08);
-}
 
 /* BASE */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  background: radial-gradient(circle at top, #ffffff, var(--bg));
-  color: var(--text);
+  background: #f5f7fb;
+  color: #1c1c1e;
 }
 
-/* =========================
-   SAFE LAYOUT IMPROVEMENTS
-   ========================= */
-img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 16px;
-}
-
-/* try not to break existing layouts */
-.container, .content, .wrapper, .main {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 12px;
-}
-
-/* =========================
-   UNIVERSAL CARD SYSTEM
-   ========================= */
-.card, .box, .panel {
-  background: var(--card);
-  border-radius: 18px;
-  padding: 16px;
-  margin: 12px 0;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(0,0,0,0.04);
-}
-
-/* fallback: soften all blocks slightly */
-div {
+/* Prevent layout collapse issues */
+* {
   box-sizing: border-box;
 }
 
 /* =========================
-   TYPOGRAPHY POLISH
+   SAFE PAGE LAYOUT HELPERS
+   (ONLY ACTIVATES IF YOU ALREADY HAVE THESE CLASSES)
    ========================= */
-h1, h2, h3 {
-  letter-spacing: -0.02em;
+
+.container,
+.content,
+.wrapper,
+.main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 14px;
+}
+
+/* =========================
+   CARD ENHANCEMENT SYSTEM
+   ONLY ENHANCES EXISTING BLOCKS
+   ========================= */
+
+.card,
+.box,
+.panel,
+section,
+div.card,
+div.box {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 14px;
   margin: 10px 0;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* =========================
+   TYPOGRAPHY POLISH (SAFE)
+   ========================= */
+
+h1, h2, h3 {
+  margin: 10px 0;
+  letter-spacing: -0.02em;
 }
 
 p {
@@ -79,124 +74,121 @@ p {
 }
 
 /* =========================
-   BADGES / STATUS
+   IMAGE IMPROVEMENT (SAFE)
    ========================= */
-.badge, .tag, .label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  background: #e8fff1;
-  color: #118a3a;
-}
 
-.dot, .status-dot, .live {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--good);
-  box-shadow: 0 0 14px rgba(52,199,89,0.55);
-  animation: pulse 1.6s infinite ease-in-out;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.6; }
-  100% { transform: scale(1); opacity: 1; }
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 14px;
 }
 
 /* =========================
-   BUTTON SYSTEM (SAFE)
+   BADGES / STATUS ELEMENTS
    ========================= */
-a, button {
-  font-family: inherit;
+
+.badge,
+.tag,
+.label {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #eafaf1;
+  color: #118a3a;
 }
 
-a[href^="tel"],
-a[href^="mailto"],
-.button, .cta {
+/* live indicator dot */
+.dot,
+.status-dot,
+.live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34c759;
+  display: inline-block;
+  box-shadow: 0 0 10px rgba(52,199,89,0.45);
+}
+
+/* =========================
+   BUTTON SYSTEM (SAFE ONLY)
+   ========================= */
+
+.button,
+.cta,
+a.button {
   display: block;
   width: 100%;
-  padding: 14px;
-  border-radius: 14px;
+  padding: 12px;
+  border-radius: 12px;
   text-align: center;
   font-weight: 600;
   text-decoration: none;
   margin-top: 10px;
-  transition: 0.2s ease;
+  transition: transform 0.15s ease;
 }
 
 /* primary action */
-a[href^="tel"], .primary {
-  background: var(--primary);
+.primary {
+  background: #007aff;
   color: white !important;
-  box-shadow: 0 10px 24px rgba(0,122,255,0.25);
+  box-shadow: 0 10px 22px rgba(0,122,255,0.18);
 }
 
 /* secondary action */
 .secondary {
   background: #f2f2f7;
-  color: var(--text) !important;
+  color: #1c1c1e !important;
 }
 
-/* hover feel */
-a[href^="tel"]:hover,
-.primary:hover {
+/* subtle interaction */
+.button:hover,
+.cta:hover {
   transform: translateY(-1px);
 }
 
 /* =========================
-   FLOATING ACTION SYSTEM
-   (only activates if you use it later)
+   OPTIONAL SAFE CENTERING
    ========================= */
-.ark-fab {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 999;
-}
 
-.ark-fab button {
-  border: none;
-  padding: 14px;
-  border-radius: 999px;
-  box-shadow: var(--shadow);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.ark-fab .call {
-  background: var(--primary);
-  color: white;
-}
-
-.ark-fab .share {
-  background: white;
-  color: var(--text);
+.center {
+  text-align: center;
 }
 
 /* =========================
-   MOBILE SAFETY
+   MOBILE OPTIMISATION
    ========================= */
+
 @media (max-width: 480px) {
-  .card, .box, .panel {
-    margin: 10px 8px;
-    padding: 14px;
+  .container,
+  .content,
+  .wrapper,
+  .main {
+    padding: 10px;
+  }
+
+  .card,
+  .box,
+  .panel,
+  section {
+    margin: 8px 0;
+    padding: 12px;
   }
 }
 </style>
 
 </head>
+
 <body>
 
-<!-- Your existing page remains untouched -->
-<!-- This is purely a global visual + UI enhancement layer -->
+<!--
+  IMPORTANT:
+  This file does NOT define structure.
+  It only enhances whatever your existing index.html already renders via JS (?id=...)
+
+  Your existing ArkLink logic remains untouched.
+-->
 
 </body>
 </html>
