@@ -25,19 +25,29 @@
       border: 2px solid #e5e7eb;
     }
 
-    h2 {
-      margin-bottom: 6px;
-      font-size: 22px;
-    }
+    h2 { margin-bottom: 6px; }
 
     .tagid {
       font-size: 12px;
       color: #666;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       word-break: break-all;
     }
 
-    /* STEP BOX */
+    /* LIVE PREVIEW CARD */
+    .preview {
+      background: #0f172a;
+      color: white;
+      padding: 10px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .preview strong { color: #60a5fa; }
+
+    /* STEPS */
     .steps {
       text-align: left;
       background: #f9fafb;
@@ -69,11 +79,7 @@
       border: 1px solid #22c55e;
     }
 
-    .tick {
-      width: 20px;
-      text-align: center;
-      font-weight: 900;
-    }
+    .tick { width: 20px; font-weight: 900; }
 
     input {
       width: 100%;
@@ -84,10 +90,7 @@
       font-size: 15px;
     }
 
-    input:focus {
-      outline: none;
-      border-color: #3b82f6;
-    }
+    input:focus { border-color: #3b82f6; outline: none; }
 
     #photoInput { display: none; }
 
@@ -96,18 +99,11 @@
       padding: 14px;
       border: none;
       border-radius: 12px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
       color: white;
       margin-bottom: 10px;
-      letter-spacing: 0.3px;
       box-shadow: 0 4px 0 rgba(0,0,0,0.15);
-      transition: all 120ms ease;
-    }
-
-    .btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 rgba(0,0,0,0.15);
     }
 
     .camera { background: #f97316; }
@@ -141,6 +137,21 @@
       transition: width 250ms ease;
     }
 
+    /* SCAN EFFECT */
+    .scan {
+      height: 6px;
+      background: linear-gradient(90deg,transparent,#60a5fa,transparent);
+      position: relative;
+      animation: scan 1.2s infinite linear;
+      margin-top: 10px;
+      display: none;
+    }
+
+    @keyframes scan {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(100%); }
+    }
+
     .status {
       margin-top: 10px;
       font-weight: 800;
@@ -148,8 +159,8 @@
       min-height: 20px;
     }
 
-    .ok { color: #16a34a; }
     .error { color: #dc2626; }
+    .ok { color: #16a34a; }
 
     canvas {
       position: fixed;
@@ -161,7 +172,6 @@
       font-size: 20px;
       font-weight: 900;
       color: #16a34a;
-      padding: 20px;
     }
   </style>
 </head>
@@ -176,10 +186,17 @@
 
   <div class="tagid">Tag ID: <span id="tagIdDisplay"></span></div>
 
+  <!-- LIVE PREVIEW -->
+  <div class="preview" id="preview">
+    <strong>Live Preview</strong><br>
+    Name: <span id="pName">-</span><br>
+    Phone: <span id="pPhone">-</span>
+  </div>
+
   <div class="steps">
-    <div class="step" id="s1"><div class="tick">❌</div> Enter details</div>
-    <div class="step" id="s2"><div class="tick">❌</div> Add photo</div>
-    <div class="step" id="s3"><div class="tick">❌</div> Activate tag</div>
+    <div class="step" id="s1"><span class="tick">❌</span> Enter details</div>
+    <div class="step" id="s2"><span class="tick">❌</span> Add photo</div>
+    <div class="step" id="s3"><span class="tick">❌</span> Activate tag</div>
   </div>
 
   <input id="name" placeholder="Pet Name">
@@ -199,6 +216,8 @@
   </div>
 
   <button class="btn activate" id="activateBtn">ACTIVATE TAG</button>
+
+  <div class="scan" id="scan"></div>
 
   <div class="progress">
     <div class="bar" id="bar"></div>
@@ -232,8 +251,29 @@ const id = new URLSearchParams(location.search).get("id");
 
 document.getElementById("tagIdDisplay").innerText = id;
 
-const bar = document.getElementById("bar");
-const status = document.getElementById("status");
+/* SOUND ENGINE */
+function beep(type){
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+
+  const freq={
+    click:300,
+    success:600,
+    error:180,
+    upload:420
+  }[type]||300;
+
+  o.frequency.value=freq;
+  o.type="square";
+  g.gain.value=0.05;
+
+  o.connect(g);
+  g.connect(ctx.destination);
+
+  o.start();
+  setTimeout(()=>o.stop(),120);
+}
 
 /* STEP UI */
 function setStep(n){
@@ -254,6 +294,20 @@ function setStep(n){
   }
 }
 
+/* LIVE PREVIEW */
+function bindPreview(){
+  const n=document.getElementById("name");
+  const p=document.getElementById("phone");
+
+  n.oninput=()=>document.getElementById("pName").innerText=n.value||"-";
+  p.oninput=()=>document.getElementById("pPhone").innerText=p.value||"-";
+}
+
+/* SCAN */
+function scan(on){
+  document.getElementById("scan").style.display=on?"block":"none";
+}
+
 /* CONFETTI */
 function boom(){
   const c=document.getElementById("confetti");
@@ -262,7 +316,7 @@ function boom(){
   c.height=innerHeight;
 
   let p=[];
-  for(let i=0;i<90;i++){
+  for(let i=0;i<100;i++){
     p.push({x:Math.random()*c.width,y:Math.random()*-c.height,v:2+Math.random()*4,r:3});
   }
 
@@ -271,7 +325,7 @@ function boom(){
     p.forEach(o=>{
       ctx.beginPath();
       ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
-      ctx.fillStyle=`hsl(${Math.random()*360},80%,60%)`;
+      ctx.fillStyle=`hsl(${Math.random()*360},90%,60%)`;
       ctx.fill();
       o.y+=o.v;
     });
@@ -279,40 +333,23 @@ function boom(){
   })();
 }
 
-/* IMAGE COMPRESS */
-async function compress(file){
-  return new Promise(res=>{
-    const r=new FileReader();
-    r.onload=e=>{
-      const img=new Image();
-      img.onload=()=>{
-        const c=document.createElement("canvas");
-        const s=Math.min(1,Math.sqrt((2*1024*1024)/file.size));
-        c.width=img.width*s;
-        c.height=img.height*s;
-        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-        c.toBlob(b=>res(new File([b],"img.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
-      };
-      img.src=e.target.result;
-    };
-    r.readAsDataURL(file);
-  });
-}
+/* INIT */
+bindPreview();
+setStep(1);
 
-/* FLOW */
 document.getElementById("cameraBtn").onclick=()=>{
+  beep("click");
   const i=document.getElementById("photoInput");
   i.setAttribute("capture","environment");
   i.click();
 };
 
 document.getElementById("galleryBtn").onclick=()=>{
+  beep("click");
   const i=document.getElementById("photoInput");
   i.removeAttribute("capture");
   i.click();
 };
-
-setStep(1);
 
 document.getElementById("activateBtn").onclick=async()=>{
 
@@ -320,37 +357,37 @@ document.getElementById("activateBtn").onclick=async()=>{
   const phone=document.getElementById("phone").value.trim();
   const tos=document.getElementById("tosCheckbox").checked;
 
-  if(!name||!phone) return alert("Fill details");
-  if(!tos) return alert("Accept Terms");
+  if(!name||!phone){
+    beep("error");
+    return setStatus("Missing details","error");
+  }
+
+  if(!tos){
+    beep("error");
+    return setStatus("Accept Terms","error");
+  }
 
   try{
 
     setStep(2);
-    bar.style.width="20%";
-    status.innerText="Preparing image...";
+    scan(true);
+    beep("upload");
 
-    const file=document.getElementById("photoInput").files[0];
+    let file=document.getElementById("photoInput").files[0];
     let photoURL="";
 
     if(file){
-      const compressed=await compress(file);
-
-      setStep(2);
-      status.innerText="Uploading photo...";
-      bar.style.width="50%";
-
       const form=new FormData();
-      form.append("file",compressed);
+      form.append("file",file);
       form.append("upload_preset","arkforge-pets");
 
       const res=await fetch("https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",{method:"POST",body:form});
       const data=await res.json();
+
       photoURL=data.secure_url;
     }
 
     setStep(3);
-    status.innerText="Activating tag...";
-    bar.style.width="80%";
 
     const ref=doc(db,"pets",id);
     const snap=await getDoc(ref);
@@ -365,13 +402,19 @@ document.getElementById("activateBtn").onclick=async()=>{
       activatedAt:new Date().toISOString()
     },{merge:true});
 
-    bar.style.width="100%";
-    status.innerHTML="✓ ACTIVATED";
-    setStep(3);
+    scan(false);
+    beep("success");
+    setStatus("✓ ACTIVATED","ok");
     boom();
 
+    setTimeout(()=>{
+      location.href=`https://arkforge3dprinting.github.io/pet-tag/index.html?id=${id}`;
+    },2500);
+
   }catch(e){
-    status.innerText="ERROR: "+e.message;
+    scan(false);
+    beep("error");
+    setStatus("ERROR: "+e.message,"error");
   }
 };
 
