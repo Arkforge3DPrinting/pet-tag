@@ -37,7 +37,6 @@
       word-break: break-all;
     }
 
-    /* STEP BOX */
     .steps {
       text-align: left;
       background: #f9fafb;
@@ -85,8 +84,8 @@
     }
 
     input:focus {
-      outline: none;
       border-color: #3b82f6;
+      outline: none;
     }
 
     #photoInput { display: none; }
@@ -105,11 +104,6 @@
       transition: all 120ms ease;
     }
 
-    .btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 rgba(0,0,0,0.15);
-    }
-
     .camera { background: #f97316; }
     .gallery { background: #2563eb; }
     .activate { background: #16a34a; font-size: 18px; }
@@ -124,7 +118,6 @@
       margin: 12px 0;
     }
 
-    /* PROGRESS */
     .progress {
       height: 12px;
       background: #e5e7eb;
@@ -155,13 +148,6 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-    }
-
-    .success {
-      font-size: 20px;
-      font-weight: 900;
-      color: #16a34a;
-      padding: 20px;
     }
   </style>
 </head>
@@ -279,39 +265,7 @@ function boom(){
   })();
 }
 
-/* IMAGE COMPRESS */
-async function compress(file){
-  return new Promise(res=>{
-    const r=new FileReader();
-    r.onload=e=>{
-      const img=new Image();
-      img.onload=()=>{
-        const c=document.createElement("canvas");
-        const s=Math.min(1,Math.sqrt((2*1024*1024)/file.size));
-        c.width=img.width*s;
-        c.height=img.height*s;
-        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-        c.toBlob(b=>res(new File([b],"img.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
-      };
-      img.src=e.target.result;
-    };
-    r.readAsDataURL(file);
-  });
-}
-
 /* FLOW */
-document.getElementById("cameraBtn").onclick=()=>{
-  const i=document.getElementById("photoInput");
-  i.setAttribute("capture","environment");
-  i.click();
-};
-
-document.getElementById("galleryBtn").onclick=()=>{
-  const i=document.getElementById("photoInput");
-  i.removeAttribute("capture");
-  i.click();
-};
-
 setStep(1);
 
 document.getElementById("activateBtn").onclick=async()=>{
@@ -320,27 +274,24 @@ document.getElementById("activateBtn").onclick=async()=>{
   const phone=document.getElementById("phone").value.trim();
   const tos=document.getElementById("tosCheckbox").checked;
 
-  if(!name||!phone) return alert("Fill details");
-  if(!tos) return alert("Accept Terms");
+  if(!name||!phone) return setStatus("Fill details","error");
+  if(!tos) return setStatus("Accept Terms","error");
 
   try{
 
     setStep(2);
-    bar.style.width="20%";
-    status.innerText="Preparing image...";
+    bar.style.width="30%";
 
     const file=document.getElementById("photoInput").files[0];
     let photoURL="";
 
     if(file){
-      const compressed=await compress(file);
-
       setStep(2);
       status.innerText="Uploading photo...";
-      bar.style.width="50%";
+      bar.style.width="60%";
 
       const form=new FormData();
-      form.append("file",compressed);
+      form.append("file",file);
       form.append("upload_preset","arkforge-pets");
 
       const res=await fetch("https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",{method:"POST",body:form});
@@ -349,8 +300,7 @@ document.getElementById("activateBtn").onclick=async()=>{
     }
 
     setStep(3);
-    status.innerText="Activating tag...";
-    bar.style.width="80%";
+    bar.style.width="90%";
 
     const ref=doc(db,"pets",id);
     const snap=await getDoc(ref);
@@ -365,10 +315,20 @@ document.getElementById("activateBtn").onclick=async()=>{
       activatedAt:new Date().toISOString()
     },{merge:true});
 
+    /* FIX: force final UI state */
+    setStep(4); // treated as final override
+    document.getElementById("s3").className="step done";
+    document.querySelector("#s3 .tick").innerText="✔";
+
     bar.style.width="100%";
     status.innerHTML="✓ ACTIVATED";
-    setStep(3);
     boom();
+
+    /* FIX: REDIRECT */
+    setTimeout(()=>{
+      window.location.href =
+        `https://arkforge3dprinting.github.io/pet-tag/index.html?id=${id}`;
+    },2000);
 
   }catch(e){
     status.innerText="ERROR: "+e.message;
