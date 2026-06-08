@@ -115,43 +115,32 @@
       margin-bottom: 8px;
     }
 
-    /* =========================
-       FIXED ToS (clean card style)
-    ========================= */
-
     .tos-box {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-
       text-align: left;
       font-size: 14px;
       line-height: 1.4;
-
       padding: 14px 16px;
       margin: 14px 0;
-
       background: #fafafa;
       border: 2px solid #e5e7eb;
       border-radius: 14px;
     }
 
-    .tos-box input[type="checkbox"] {
+    .tos-box input {
       width: 22px;
       height: 22px;
       margin: 0;
       accent-color: #16a34a;
-      cursor: pointer;
-      flex-shrink: 0;
     }
 
     .tos-text {
       flex: 1;
       font-weight: 600;
-      color: #111827;
     }
-
   </style>
 </head>
 
@@ -180,7 +169,6 @@
 
   <div class="small" id="fileInfo">No image selected</div>
 
-  <!-- FIXED ToS -->
   <div class="tos-box">
     <input type="checkbox" id="tosCheckbox">
     <div class="tos-text">
@@ -218,6 +206,25 @@ const bar = document.getElementById("bar");
 const status = document.getElementById("status");
 const fileInfo = document.getElementById("fileInfo");
 
+/* =========================
+   SOUND + HAPTIC
+========================= */
+
+const tickSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+tickSound.volume = 0.4;
+
+function feedback() {
+  try {
+    tickSound.currentTime = 0;
+    tickSound.play();
+  } catch(e) {}
+
+  if (navigator.vibrate) {
+    navigator.vibrate(30);
+  }
+}
+
+/* STEP SYSTEM */
 function setStep(n){
   for(let i=1;i<=3;i++){
     const el=document.getElementById("s"+i);
@@ -226,16 +233,18 @@ function setStep(n){
     if(i<n){
       el.className="step done";
       tick.innerText="✔";
-    }else if(i===n){
+      feedback(); // 🔥 trigger sound + haptic on completion
+    } else if(i===n){
       el.className="step active";
       tick.innerText="▶";
-    }else{
+    } else {
       el.className="step";
       tick.innerText="❌";
     }
   }
 }
 
+/* IMAGE LABEL */
 document.getElementById("photoInput").addEventListener("change",(e)=>{
   const file=e.target.files[0];
   fileInfo.innerText = file ? `📸 ${file.name} selected` : "No image selected";
@@ -255,6 +264,7 @@ document.getElementById("galleryBtn").onclick=()=>{
 
 setStep(1);
 
+/* MAIN FLOW */
 document.getElementById("activateBtn").onclick=async()=>{
 
   const name=document.getElementById("name").value.trim();
