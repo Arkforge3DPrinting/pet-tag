@@ -25,10 +25,7 @@
       border: 2px solid #e5e7eb;
     }
 
-    h2 {
-      margin-bottom: 6px;
-      font-size: 22px;
-    }
+    h2 { margin-bottom: 6px; font-size: 22px; }
 
     .tagid {
       font-size: 12px;
@@ -54,13 +51,11 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: all 200ms ease;
     }
 
     .step.active {
       background: #dbeafe;
       border: 1px solid #3b82f6;
-      transform: scale(1.02);
     }
 
     .step.done {
@@ -70,7 +65,6 @@
 
     .tick {
       width: 20px;
-      text-align: center;
       font-weight: 900;
     }
 
@@ -98,24 +92,19 @@
       font-weight: 800;
       cursor: pointer;
       color: white;
-      margin-bottom: 10px;
-      letter-spacing: 0.3px;
+      margin-bottom: 6px;
       box-shadow: 0 4px 0 rgba(0,0,0,0.15);
-      transition: all 120ms ease;
     }
 
     .camera { background: #f97316; }
     .gallery { background: #2563eb; }
     .activate { background: #16a34a; font-size: 18px; }
 
-    .tos-box {
-      text-align: left;
-      font-size: 13px;
-      padding: 10px;
-      background: #fafafa;
-      border: 2px solid #eee;
-      border-radius: 10px;
-      margin: 12px 0;
+    .file-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 10px;
+      min-height: 16px;
     }
 
     .progress {
@@ -143,18 +132,10 @@
 
     .ok { color: #16a34a; }
     .error { color: #dc2626; }
-
-    canvas {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-    }
   </style>
 </head>
 
 <body>
-
-<canvas id="confetti"></canvas>
 
 <div class="container">
 
@@ -163,26 +144,23 @@
   <div class="tagid">Tag ID: <span id="tagIdDisplay"></span></div>
 
   <div class="steps">
-    <div class="step" id="s1"><div class="tick">❌</div> Enter details</div>
-    <div class="step" id="s2"><div class="tick">❌</div> Add photo</div>
-    <div class="step" id="s3"><div class="tick">❌</div> Activate tag</div>
+    <div class="step" id="s1"><span class="tick">❌</span> Enter details</div>
+    <div class="step" id="s2"><span class="tick">❌</span> Add photo</div>
+    <div class="step" id="s3"><span class="tick">❌</span> Activate tag</div>
   </div>
 
   <input id="name" placeholder="Pet Name">
   <input id="phone" placeholder="Primary Contact Number">
   <input id="phone2" placeholder="Secondary Contact (optional)">
   <input id="microchip" placeholder="Microchip number (optional)">
+
   <input type="file" id="photoInput" accept="image/*">
 
   <button class="btn camera" id="cameraBtn">📷 Take Photo</button>
   <button class="btn gallery" id="galleryBtn">📁 Choose Photo</button>
 
-  <div class="tos-box">
-    <label>
-      <input type="checkbox" id="tosCheckbox">
-      I agree to Terms of Service
-    </label>
-  </div>
+  <!-- FILE CONFIRMATION -->
+  <div class="file-label" id="fileLabel">No image selected</div>
 
   <button class="btn activate" id="activateBtn">ACTIVATE TAG</button>
 
@@ -220,6 +198,8 @@ document.getElementById("tagIdDisplay").innerText = id;
 
 const bar = document.getElementById("bar");
 const status = document.getElementById("status");
+const fileLabel = document.getElementById("fileLabel");
+const fileInput = document.getElementById("photoInput");
 
 /* STEP UI */
 function setStep(n){
@@ -240,55 +220,54 @@ function setStep(n){
   }
 }
 
-/* CONFETTI */
-function boom(){
-  const c=document.getElementById("confetti");
-  const ctx=c.getContext("2d");
-  c.width=innerWidth;
-  c.height=innerHeight;
-
-  let p=[];
-  for(let i=0;i<90;i++){
-    p.push({x:Math.random()*c.width,y:Math.random()*-c.height,v:2+Math.random()*4,r:3});
+/* FILE NAME DISPLAY */
+fileInput.onchange = () => {
+  const file = fileInput.files[0];
+  if(file){
+    fileLabel.innerText = `✓ ${file.name} selected`;
+    fileLabel.style.color = "#16a34a";
+  } else {
+    fileLabel.innerText = "No image selected";
+    fileLabel.style.color = "#6b7280";
   }
-
-  (function anim(){
-    ctx.clearRect(0,0,c.width,c.height);
-    p.forEach(o=>{
-      ctx.beginPath();
-      ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
-      ctx.fillStyle=`hsl(${Math.random()*360},80%,60%)`;
-      ctx.fill();
-      o.y+=o.v;
-    });
-    if(p.some(o=>o.y<c.height)) requestAnimationFrame(anim);
-  })();
-}
+};
 
 /* FLOW */
 setStep(1);
+
+document.getElementById("cameraBtn").onclick=()=>{
+  const i=fileInput;
+  i.setAttribute("capture","environment");
+  i.click();
+};
+
+document.getElementById("galleryBtn").onclick=()=>{
+  const i=fileInput;
+  i.removeAttribute("capture");
+  i.click();
+};
 
 document.getElementById("activateBtn").onclick=async()=>{
 
   const name=document.getElementById("name").value.trim();
   const phone=document.getElementById("phone").value.trim();
-  const tos=document.getElementById("tosCheckbox").checked;
 
-  if(!name||!phone) return setStatus("Fill details","error");
-  if(!tos) return setStatus("Accept Terms","error");
+  if(!name||!phone){
+    status.innerText="Fill details";
+    return;
+  }
 
   try{
 
     setStep(2);
-    bar.style.width="30%";
+    bar.style.width="40%";
 
-    const file=document.getElementById("photoInput").files[0];
+    const file=fileInput.files[0];
     let photoURL="";
 
     if(file){
-      setStep(2);
       status.innerText="Uploading photo...";
-      bar.style.width="60%";
+      bar.style.width="65%";
 
       const form=new FormData();
       form.append("file",file);
@@ -315,20 +294,23 @@ document.getElementById("activateBtn").onclick=async()=>{
       activatedAt:new Date().toISOString()
     },{merge:true});
 
-    /* FIX: force final UI state */
-    setStep(4); // treated as final override
-    document.getElementById("s3").className="step done";
-    document.querySelector("#s3 .tick").innerText="✔";
-
     bar.style.width="100%";
-    status.innerHTML="✓ ACTIVATED";
-    boom();
+    setStep(3);
 
-    /* FIX: REDIRECT */
-    setTimeout(()=>{
-      window.location.href =
-        `https://arkforge3dprinting.github.io/pet-tag/index.html?id=${id}`;
-    },2000);
+    /* COUNTDOWN REDIRECT */
+    let count = 5;
+    status.innerText = `✓ Activated! Redirecting in ${count}...`;
+
+    const timer = setInterval(() => {
+      count--;
+      if(count > 0){
+        status.innerText = `✓ Activated! Redirecting in ${count}...`;
+      } else {
+        clearInterval(timer);
+        window.location.href =
+          `index.html?id=${id}`;
+      }
+    }, 1000);
 
   }catch(e){
     status.innerText="ERROR: "+e.message;
