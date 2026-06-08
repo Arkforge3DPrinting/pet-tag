@@ -86,25 +86,29 @@
     .error { color: #d11a2a; }
     .ok { color: #0a7a2f; }
 
-    /* STEP UI */
+    /* CHECKLIST */
     .steps {
-      font-size: 13px;
       text-align: left;
-      margin: 10px 0 14px;
-      padding: 10px;
-      background: #f9fafb;
+      font-size: 14px;
+      margin: 12px 0;
+      padding: 12px;
       border-radius: 12px;
+      background: #f9fafb;
       border: 1px solid #eee;
     }
 
-    .step { margin: 4px 0; }
-    .done { color: #16a34a; font-weight: bold; }
-    .active { color: #2563eb; font-weight: bold; }
+    .step {
+      margin: 6px 0;
+      transition: all 200ms ease;
+    }
+
+    .step span {
+      margin-right: 6px;
+    }
 
     /* PROGRESS */
     .progress {
-      width: 100%;
-      height: 10px;
+      height: 8px;
       background: #e5e7eb;
       border-radius: 999px;
       overflow: hidden;
@@ -115,27 +119,33 @@
     .bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #22c55e, #16a34a);
+      background: linear-gradient(90deg,#22c55e,#16a34a);
       transition: width 300ms ease;
     }
 
+    /* CONFETTI */
+    canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
 
 <body>
 
+<canvas id="confetti"></canvas>
+
 <div class="container">
 
   <h2>Activate Pet Tag</h2>
 
-  <div class="tagid">
-    Tag ID: <span id="tagIdDisplay"></span>
-  </div>
+  <div class="tagid">Tag ID: <span id="tagIdDisplay"></span></div>
 
-  <div class="steps" id="steps">
-    <div class="step active" id="s1">○ Step 1: Enter details</div>
-    <div class="step" id="s2">○ Step 2: Add photo (optional)</div>
-    <div class="step" id="s3">○ Step 3: Activate</div>
+  <div class="steps">
+    <div class="step" id="s1"><span>❌</span> Enter details</div>
+    <div class="step" id="s2"><span>❌</span> Add photo (optional)</div>
+    <div class="step" id="s3"><span>❌</span> Activate</div>
   </div>
 
   <input id="name" placeholder="Pet Name">
@@ -175,7 +185,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  apiKey: "AIzaSyCxFKSE6b...",
   authDomain: "arkforge-pets.firebaseapp.com",
   projectId: "arkforge-pets",
   storageBucket: "arkforge-pets.firebasestorage.app",
@@ -185,7 +195,6 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-/* ELEMENTS */
 const statusEl = document.getElementById("status");
 const btn = document.getElementById("activateBtn");
 const bar = document.getElementById("bar");
@@ -200,15 +209,16 @@ function setStatus(msg,type=""){
   statusEl.className = type;
 }
 
-/* STEPS */
+/* CHECKLIST UI */
 function step(n){
-  const s1=document.getElementById("s1");
-  const s2=document.getElementById("s2");
-  const s3=document.getElementById("s3");
+  const set=(id,ok)=>{
+    document.getElementById(id).innerHTML =
+      `<span>${ok ? "✔" : "❌"}</span>` + document.getElementById(id).textContent.slice(2);
+  };
 
-  s1.className = n>=1 ? "step done" : "step";
-  s2.className = n>=2 ? "step done" : (n===2 ? "step active":"step");
-  s3.className = n>=3 ? "step done" : (n===3 ? "step active":"step");
+  set("s1", n>=1);
+  set("s2", n>=2);
+  set("s3", n>=3);
 }
 
 /* PROGRESS */
@@ -248,6 +258,31 @@ async function compress(file){
   });
 }
 
+/* CONFETTI */
+function boom(){
+  const c=document.getElementById("confetti");
+  const ctx=c.getContext("2d");
+  c.width=innerWidth;
+  c.height=innerHeight;
+
+  let p=[];
+  for(let i=0;i<80;i++){
+    p.push({x:Math.random()*c.width,y:Math.random()*-c.height,r:3+Math.random()*4,v:2+Math.random()*3});
+  }
+
+  (function anim(){
+    ctx.clearRect(0,0,c.width,c.height);
+    p.forEach(o=>{
+      ctx.beginPath();
+      ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
+      ctx.fillStyle=`hsl(${Math.random()*360},80%,60%)`;
+      ctx.fill();
+      o.y+=o.v;
+    });
+    if(p.some(o=>o.y<c.height)) requestAnimationFrame(anim);
+  })();
+}
+
 /* INIT */
 if(!urlId){
   setStatus("Invalid link","error");
@@ -273,11 +308,10 @@ document.getElementById("activateBtn").onclick=async()=>{
   btn.disabled=true;
 
   step(1);
+  setProgress(10);
+  setStatus("Checking tag...");
 
   try{
-
-    setProgress(10);
-    setStatus("Checking tag...");
 
     const ref=doc(db,"pets",urlId);
     const snap=await getDoc(ref);
@@ -295,7 +329,7 @@ document.getElementById("activateBtn").onclick=async()=>{
 
     if(file){
       setStatus("Uploading photo...");
-      setProgress(40);
+      setProgress(45);
 
       const form=new FormData();
       form.append("file",file);
@@ -328,9 +362,11 @@ document.getElementById("activateBtn").onclick=async()=>{
 
     setStatus("✓ Your tag is now active","ok");
 
+    boom();
+
     setTimeout(()=>{
       location.href=`https://arkforge3dprinting.github.io/pet-tag/index.html?id=${urlId}`;
-    },2000);
+    },2500);
 
   }catch(e){
     setStatus("❌ "+e.message,"error");
