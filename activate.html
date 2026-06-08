@@ -8,8 +8,8 @@
     * { box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-      background: #f4f6f8;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg,#eef2ff,#f4f6f8);
       margin: 0;
       padding: 14px;
     }
@@ -18,39 +18,61 @@
       max-width: 420px;
       margin: auto;
       background: white;
-      padding: 22px;
+      padding: 20px;
       border-radius: 22px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
       text-align: center;
-      overflow: hidden;
-      position: relative;
+      border: 2px solid #e5e7eb;
     }
 
     h2 {
-      margin: 6px 0 14px;
-      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 22px;
     }
 
     .tagid {
       font-size: 12px;
-      color: #888;
-      margin-bottom: 16px;
+      color: #666;
+      margin-bottom: 12px;
       word-break: break-all;
     }
 
-    /* STEP SYSTEM */
+    /* STEP BOX */
+    .steps {
+      text-align: left;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
     .step {
-      display: none;
-      animation: slide 280ms ease;
+      padding: 8px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 200ms ease;
     }
 
     .step.active {
-      display: block;
+      background: #dbeafe;
+      border: 1px solid #3b82f6;
+      transform: scale(1.02);
     }
 
-    @keyframes slide {
-      from { opacity: 0; transform: translateX(10px); }
-      to { opacity: 1; transform: translateX(0); }
+    .step.done {
+      background: #dcfce7;
+      border: 1px solid #22c55e;
+    }
+
+    .tick {
+      width: 20px;
+      text-align: center;
+      font-weight: 900;
     }
 
     input {
@@ -58,7 +80,7 @@
       padding: 14px;
       margin-bottom: 10px;
       border-radius: 12px;
-      border: 1px solid #ddd;
+      border: 2px solid #ddd;
       font-size: 15px;
     }
 
@@ -74,33 +96,42 @@
       padding: 14px;
       border: none;
       border-radius: 12px;
-      font-weight: 600;
+      font-weight: 800;
       cursor: pointer;
       color: white;
-      margin-top: 8px;
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+      transition: all 120ms ease;
     }
 
-    .primary { background: #3b82f6; }
-    .secondary { background: #ff9f43; }
+    .btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+    }
 
-    .tos {
-      font-size: 13px;
+    .camera { background: #f97316; }
+    .gallery { background: #2563eb; }
+    .activate { background: #16a34a; font-size: 18px; }
+
+    .tos-box {
       text-align: left;
-      margin: 12px 0;
-      background: #fafafa;
+      font-size: 13px;
       padding: 10px;
+      background: #fafafa;
+      border: 2px solid #eee;
       border-radius: 10px;
-      border: 1px solid #eee;
+      margin: 12px 0;
     }
 
-    /* subtle progress */
+    /* PROGRESS */
     .progress {
-      height: 6px;
-      background: #eee;
+      height: 12px;
+      background: #e5e7eb;
       border-radius: 999px;
       overflow: hidden;
-      margin-top: 12px;
-      display: none;
+      margin-top: 10px;
+      border: 2px solid #d1d5db;
     }
 
     .bar {
@@ -112,22 +143,25 @@
 
     .status {
       margin-top: 10px;
-      font-size: 13px;
-      color: #444;
-      min-height: 18px;
+      font-weight: 800;
+      font-size: 14px;
+      min-height: 20px;
     }
 
-    .success {
-      font-size: 18px;
-      font-weight: 600;
-      color: #0a7a2f;
-      margin-top: 10px;
-    }
+    .ok { color: #16a34a; }
+    .error { color: #dc2626; }
 
     canvas {
       position: fixed;
       inset: 0;
       pointer-events: none;
+    }
+
+    .success {
+      font-size: 20px;
+      font-weight: 900;
+      color: #16a34a;
+      padding: 20px;
     }
   </style>
 </head>
@@ -140,51 +174,37 @@
 
   <h2>Activate Pet Tag</h2>
 
-  <div class="tagid">
-    Tag ID: <span id="tagIdDisplay"></span>
+  <div class="tagid">Tag ID: <span id="tagIdDisplay"></span></div>
+
+  <div class="steps">
+    <div class="step" id="s1"><div class="tick">❌</div> Enter details</div>
+    <div class="step" id="s2"><div class="tick">❌</div> Add photo</div>
+    <div class="step" id="s3"><div class="tick">❌</div> Activate tag</div>
   </div>
 
-  <!-- STEP 1 -->
-  <div class="step active" id="step1">
-    <input id="name" placeholder="Pet Name">
-    <input id="phone" placeholder="Primary Contact Number">
-    <input id="phone2" placeholder="Secondary Contact (optional)">
+  <input id="name" placeholder="Pet Name">
+  <input id="phone" placeholder="Primary Contact Number">
+  <input id="phone2" placeholder="Secondary Contact (optional)">
+  <input id="microchip" placeholder="Microchip number (optional)">
+  <input type="file" id="photoInput" accept="image/*">
 
-    <div class="tos">
-      <label>
-        <input type="checkbox" id="tosCheckbox">
-        I agree to Terms of Service
-      </label>
-    </div>
+  <button class="btn camera" id="cameraBtn">📷 Take Photo</button>
+  <button class="btn gallery" id="galleryBtn">📁 Choose Photo</button>
 
-    <button class="btn primary" id="next1">Continue</button>
+  <div class="tos-box">
+    <label>
+      <input type="checkbox" id="tosCheckbox">
+      I agree to Terms of Service
+    </label>
   </div>
 
-  <!-- STEP 2 -->
-  <div class="step" id="step2">
-    <input type="file" id="photoInput" accept="image/*">
+  <button class="btn activate" id="activateBtn">ACTIVATE TAG</button>
 
-    <button class="btn secondary" id="cameraBtn">📷 Take Photo</button>
-    <button class="btn primary" id="galleryBtn">📁 Choose Photo</button>
-
-    <button class="btn primary" id="next2">Continue</button>
+  <div class="progress">
+    <div class="bar" id="bar"></div>
   </div>
 
-  <!-- STEP 3 -->
-  <div class="step" id="step3">
-    <div class="status" id="status">Ready to activate</div>
-
-    <div class="progress" id="progress">
-      <div class="bar" id="bar"></div>
-    </div>
-
-    <button class="btn primary" id="activateBtn">Activate Tag</button>
-  </div>
-
-  <!-- SUCCESS -->
-  <div class="step" id="step4">
-    <div class="success">✓ Your tag is now active</div>
-  </div>
+  <div class="status" id="status"></div>
 
 </div>
 
@@ -208,66 +228,30 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
+const id = new URLSearchParams(location.search).get("id");
 
-const urlId = new URLSearchParams(location.search).get("id");
+document.getElementById("tagIdDisplay").innerText = id;
 
-document.getElementById("tagIdDisplay").innerText = urlId || "Invalid";
+const bar = document.getElementById("bar");
+const status = document.getElementById("status");
 
-/* STEP NAV */
-function showStep(n){
-  for(let i=1;i<=4;i++){
-    document.getElementById("step"+i).classList.remove("active");
+/* STEP UI */
+function setStep(n){
+  for(let i=1;i<=3;i++){
+    const el=document.getElementById("s"+i);
+    const tick=el.querySelector(".tick");
+
+    if(i<n){
+      el.className="step done";
+      tick.innerText="✔";
+    }else if(i===n){
+      el.className="step active";
+      tick.innerText="▶";
+    }else{
+      el.className="step";
+      tick.innerText="❌";
+    }
   }
-  document.getElementById("step"+n).classList.add("active");
-}
-
-/* CAMERA */
-const photoInput = document.getElementById("photoInput");
-
-document.getElementById("cameraBtn").onclick=()=>{
-  photoInput.setAttribute("capture","environment");
-  photoInput.click();
-};
-
-document.getElementById("galleryBtn").onclick=()=>{
-  photoInput.removeAttribute("capture");
-  photoInput.click();
-};
-
-/* CONTROLS */
-document.getElementById("next1").onclick=()=>{
-  const name=document.getElementById("name").value.trim();
-  const phone=document.getElementById("phone").value.trim();
-  const tos=document.getElementById("tosCheckbox").checked;
-
-  if(!name||!phone) return alert("Fill required fields");
-  if(!tos) return alert("Accept Terms");
-
-  showStep(2);
-};
-
-document.getElementById("next2").onclick=()=>{
-  showStep(3);
-};
-
-/* COMPRESSION */
-async function compress(file){
-  return new Promise(res=>{
-    const r=new FileReader();
-    r.onload=e=>{
-      const img=new Image();
-      img.onload=()=>{
-        const c=document.createElement("canvas");
-        const scale=Math.min(1,Math.sqrt((2*1024*1024)/file.size));
-        c.width=img.width*scale;
-        c.height=img.height*scale;
-        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-        c.toBlob(b=>res(new File([b],"img.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
-      };
-      img.src=e.target.result;
-    };
-    r.readAsDataURL(file);
-  });
 }
 
 /* CONFETTI */
@@ -278,8 +262,8 @@ function boom(){
   c.height=innerHeight;
 
   let p=[];
-  for(let i=0;i<80;i++){
-    p.push({x:Math.random()*c.width,y:Math.random()*-c.height,v:2+Math.random()*3,r:3});
+  for(let i=0;i<90;i++){
+    p.push({x:Math.random()*c.width,y:Math.random()*-c.height,v:2+Math.random()*4,r:3});
   }
 
   (function anim(){
@@ -295,52 +279,68 @@ function boom(){
   })();
 }
 
-/* ACTIVATE */
-document.getElementById("activateBtn").onclick = async ()=>{
+/* IMAGE COMPRESS */
+async function compress(file){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const c=document.createElement("canvas");
+        const s=Math.min(1,Math.sqrt((2*1024*1024)/file.size));
+        c.width=img.width*s;
+        c.height=img.height*s;
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        c.toBlob(b=>res(new File([b],"img.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
 
-  const status=document.getElementById("status");
-  const bar=document.getElementById("bar");
-  const progress=document.getElementById("progress");
+/* FLOW */
+document.getElementById("cameraBtn").onclick=()=>{
+  const i=document.getElementById("photoInput");
+  i.setAttribute("capture","environment");
+  i.click();
+};
 
-  progress.style.display="block";
+document.getElementById("galleryBtn").onclick=()=>{
+  const i=document.getElementById("photoInput");
+  i.removeAttribute("capture");
+  i.click();
+};
+
+setStep(1);
+
+document.getElementById("activateBtn").onclick=async()=>{
+
+  const name=document.getElementById("name").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  const tos=document.getElementById("tosCheckbox").checked;
+
+  if(!name||!phone) return alert("Fill details");
+  if(!tos) return alert("Accept Terms");
 
   try{
 
-    const ref=doc(db,"pets",urlId);
-    const snap=await getDoc(ref);
-    if(!snap.exists()) throw new Error("Tag not found");
+    setStep(2);
+    bar.style.width="20%";
+    status.innerText="Preparing image...";
 
-    let file=photoInput.files[0];
+    const file=document.getElementById("photoInput").files[0];
     let photoURL="";
 
-    status.innerText="Preparing photo...";
-    bar.style.width="20%";
-
     if(file){
-      file=await (async f=>{
-        const r=new FileReader();
-        return new Promise(res=>{
-          r.onload=e=>{
-            const img=new Image();
-            img.onload=()=>{
-              const c=document.createElement("canvas");
-              const s=Math.min(1,Math.sqrt((2*1024*1024)/f.size));
-              c.width=img.width*s;
-              c.height=img.height*s;
-              c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-              c.toBlob(b=>res(new File([b],"img.jpg",{type:"image/jpeg"})),"image/jpeg",0.85);
-            };
-            img.src=e.target.result;
-          };
-          r.readAsDataURL(f);
-        });
-      })(file);
+      const compressed=await compress(file);
 
+      setStep(2);
       status.innerText="Uploading photo...";
       bar.style.width="50%";
 
       const form=new FormData();
-      form.append("file",file);
+      form.append("file",compressed);
       form.append("upload_preset","arkforge-pets");
 
       const res=await fetch("https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload",{method:"POST",body:form});
@@ -348,36 +348,30 @@ document.getElementById("activateBtn").onclick = async ()=>{
       photoURL=data.secure_url;
     }
 
-    status.innerText="Saving...";
+    setStep(3);
+    status.innerText="Activating tag...";
     bar.style.width="80%";
 
-    const ex=snap.data();
-
-    const name=document.getElementById("name").value.trim();
-    const phone=document.getElementById("phone").value.trim();
-    const phone2=document.getElementById("phone2").value.trim();
+    const ref=doc(db,"pets",id);
+    const snap=await getDoc(ref);
 
     await setDoc(ref,{
       name,
       phone,
-      phone2,
-      microchip:document.getElementById("microchip").value.trim()||ex.microchip||"",
-      photo:photoURL||ex.photo||"",
+      phone2:document.getElementById("phone2").value.trim(),
+      microchip:document.getElementById("microchip").value.trim(),
+      photo:photoURL||snap.data().photo||"",
       status:"active",
       activatedAt:new Date().toISOString()
     },{merge:true});
 
     bar.style.width="100%";
-
-    showStep(4);
+    status.innerHTML="✓ ACTIVATED";
+    setStep(3);
     boom();
 
-    setTimeout(()=>{
-      location.href=`https://arkforge3dprinting.github.io/pet-tag/index.html?id=${urlId}`;
-    },2500);
-
   }catch(e){
-    alert(e.message);
+    status.innerText="ERROR: "+e.message;
   }
 };
 
