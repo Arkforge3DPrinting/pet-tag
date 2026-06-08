@@ -208,7 +208,24 @@ const status = document.getElementById("status");
 const fileInfo = document.getElementById("fileInfo");
 const sizeInfo = document.getElementById("sizeInfo");
 
+/* SOUND + HAPTIC */
+const tickSound = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
+tickSound.volume = 0.25;
+
+function feedback(){
+  try {
+    tickSound.currentTime = 0;
+    tickSound.play();
+  } catch(e){}
+
+  if (navigator.vibrate) {
+    navigator.vibrate(25);
+  }
+}
+
 /* STEP SYSTEM */
+let lastStep = 0;
+
 function setStep(n){
   for(let i=1;i<=3;i++){
     const el=document.getElementById("s"+i);
@@ -224,6 +241,11 @@ function setStep(n){
       el.className="step";
       tick.innerText="❌";
     }
+  }
+
+  if(n > lastStep){
+    feedback();
+    lastStep = n;
   }
 }
 
