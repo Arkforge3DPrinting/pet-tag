@@ -51,6 +51,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      transition: all 200ms ease;
     }
 
     .step.active {
@@ -61,6 +62,21 @@
     .step.done {
       background: #dcfce7;
       border: 1px solid #22c55e;
+    }
+
+    /* NEW: error flash state */
+    .step.error {
+      background: #fee2e2;
+      border: 1px solid #ef4444;
+      animation: shake 0.2s linear 2;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
     }
 
     .tick {
@@ -92,7 +108,7 @@
       font-weight: 800;
       cursor: pointer;
       color: white;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
       box-shadow: 0 4px 0 rgba(0,0,0,0.15);
     }
 
@@ -100,11 +116,14 @@
     .gallery { background: #2563eb; }
     .activate { background: #16a34a; font-size: 18px; }
 
-    .file-label {
-      font-size: 12px;
-      color: #6b7280;
-      margin-bottom: 10px;
-      min-height: 16px;
+    .tos-box {
+      text-align: left;
+      font-size: 13px;
+      padding: 10px;
+      background: #fafafa;
+      border: 2px solid #eee;
+      border-radius: 10px;
+      margin: 12px 0;
     }
 
     .progress {
@@ -130,7 +149,6 @@
       min-height: 20px;
     }
 
-    .ok { color: #16a34a; }
     .error { color: #dc2626; }
   </style>
 </head>
@@ -153,14 +171,17 @@
   <input id="phone" placeholder="Primary Contact Number">
   <input id="phone2" placeholder="Secondary Contact (optional)">
   <input id="microchip" placeholder="Microchip number (optional)">
-
   <input type="file" id="photoInput" accept="image/*">
 
   <button class="btn camera" id="cameraBtn">📷 Take Photo</button>
   <button class="btn gallery" id="galleryBtn">📁 Choose Photo</button>
 
-  <!-- FILE CONFIRMATION -->
-  <div class="file-label" id="fileLabel">No image selected</div>
+  <div class="tos-box">
+    <label>
+      <input type="checkbox" id="tosCheckbox">
+      I agree to Terms of Service
+    </label>
+  </div>
 
   <button class="btn activate" id="activateBtn">ACTIVATE TAG</button>
 
@@ -198,14 +219,14 @@ document.getElementById("tagIdDisplay").innerText = id;
 
 const bar = document.getElementById("bar");
 const status = document.getElementById("status");
-const fileLabel = document.getElementById("fileLabel");
-const fileInput = document.getElementById("photoInput");
 
 /* STEP UI */
 function setStep(n){
   for(let i=1;i<=3;i++){
     const el=document.getElementById("s"+i);
     const tick=el.querySelector(".tick");
+
+    el.classList.remove("error");
 
     if(i<n){
       el.className="step done";
@@ -220,29 +241,24 @@ function setStep(n){
   }
 }
 
-/* FILE NAME DISPLAY */
-fileInput.onchange = () => {
-  const file = fileInput.files[0];
-  if(file){
-    fileLabel.innerText = `✓ ${file.name} selected`;
-    fileLabel.style.color = "#16a34a";
-  } else {
-    fileLabel.innerText = "No image selected";
-    fileLabel.style.color = "#6b7280";
-  }
-};
+/* ERROR HIGHLIGHT */
+function stepError(step){
+  const el=document.getElementById("s"+step);
+  el.classList.add("error");
+  setTimeout(()=>el.classList.remove("error"),600);
+}
 
 /* FLOW */
 setStep(1);
 
 document.getElementById("cameraBtn").onclick=()=>{
-  const i=fileInput;
+  const i=document.getElementById("photoInput");
   i.setAttribute("capture","environment");
   i.click();
 };
 
 document.getElementById("galleryBtn").onclick=()=>{
-  const i=fileInput;
+  const i=document.getElementById("photoInput");
   i.removeAttribute("capture");
   i.click();
 };
@@ -251,9 +267,20 @@ document.getElementById("activateBtn").onclick=async()=>{
 
   const name=document.getElementById("name").value.trim();
   const phone=document.getElementById("phone").value.trim();
+  const tos=document.getElementById("tosCheckbox").checked;
 
   if(!name||!phone){
+    stepError(1);
     status.innerText="Fill details";
+    status.className="error";
+    return;
+  }
+
+  /* 🔥 FIXED: TOC ERROR NOW SHOWS VISUALLY */
+  if(!tos){
+    stepError(3);
+    status.innerText="You must accept Terms of Service";
+    status.className="error";
     return;
   }
 
@@ -262,7 +289,7 @@ document.getElementById("activateBtn").onclick=async()=>{
     setStep(2);
     bar.style.width="40%";
 
-    const file=fileInput.files[0];
+    const file=document.getElementById("photoInput").files[0];
     let photoURL="";
 
     if(file){
@@ -295,22 +322,14 @@ document.getElementById("activateBtn").onclick=async()=>{
     },{merge:true});
 
     bar.style.width="100%";
+    status.innerHTML="✓ ACTIVATED";
+
     setStep(3);
 
-    /* COUNTDOWN REDIRECT */
-    let count = 5;
-    status.innerText = `✓ Activated! Redirecting in ${count}...`;
-
-    const timer = setInterval(() => {
-      count--;
-      if(count > 0){
-        status.innerText = `✓ Activated! Redirecting in ${count}...`;
-      } else {
-        clearInterval(timer);
-        window.location.href =
-          `index.html?id=${id}`;
-      }
-    }, 1000);
+    setTimeout(()=>{
+      window.location.href =
+        `index.html?id=${id}`;
+    },2000);
 
   }catch(e){
     status.innerText="ERROR: "+e.message;
