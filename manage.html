@@ -98,6 +98,36 @@
       color:#16a34a;
       margin-top:10px;
     }
+    .editBtn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  margin-top: 8px;
+  background: #3b82f6; /* same as save */
+}
+
+.editBtn:hover {
+  background: #2563eb;
+}
+    .actionBtn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  margin-top: 8px;
+  background: #3b82f6; /* same blue as Save */
+}
+
+.actionBtn:hover {
+  background: #2563eb;
+}
   </style>
 </head>
 
@@ -131,20 +161,22 @@
   <div class="section">
     <label>Pet Name</label>
     <input id="petNameInput" readonly>
-    <button type="button" onclick="togglePetNameEdit()">Edit Name</button>
+ <button type="button" class="editBtn" onclick="togglePetNameEdit()">Edit Name</button>
   </div>
 
   <div class="section">
     <label>Microchip</label>
     <input id="microchipInput" readonly>
-    <button type="button" onclick="toggleMicrochipEdit()">Edit Microchip</button>
+   <button type="button" class="editBtn" onclick="toggleMicrochipEdit()">Edit Microchip</button>
   </div>
 
   <div class="section">
     <label>Photo</label>
     <img id="preview">
     <input type="file" id="fileInput" accept="image/*">
-    <button type="button" onclick="document.getElementById('fileInput').click()">Upload</button>
+    <button type="button" class="actionBtn" onclick="document.getElementById('fileInput').click()">
+  Upload
+</button>
   </div>
 
   <button class="saveBtn" id="saveBtn" onclick="save()">SAVE</button>
