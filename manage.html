@@ -128,6 +128,40 @@
 .actionBtn:hover {
   background: #2563eb;
 }
+    .editLink {
+  font-size: 13px;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 6px;
+  text-align: right;
+  user-select: none;
+}
+
+.editLink:hover {
+  text-decoration: underline;
+  color: #2563eb;
+}
+    .editLink {
+  font-size: 13px;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 6px;
+  text-align: center;
+  display: block;
+  user-select: none;
+}
+
+.editLink:hover {
+  text-decoration: underline;
+  color: #2563eb;
+}
+    .saveBtn {
+  width: 50%;
+  display: block;
+  margin: 14px auto 0 auto; /* centers it */
+}
   </style>
 </head>
 
@@ -161,13 +195,13 @@
   <div class="section">
     <label>Pet Name</label>
     <input id="petNameInput" readonly>
- <button type="button" class="editBtn" onclick="togglePetNameEdit()">Edit Name</button>
+ <div class="editLink" onclick="togglePetNameEdit()">✏️ Edit name</div>
   </div>
 
   <div class="section">
     <label>Microchip</label>
     <input id="microchipInput" readonly>
-   <button type="button" class="editBtn" onclick="toggleMicrochipEdit()">Edit Microchip</button>
+   <div class="editLink" onclick="toggleMicrochipEdit()">✏️ Edit microchip</div>
   </div>
 
   <div class="section">
