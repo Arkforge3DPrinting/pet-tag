@@ -101,9 +101,6 @@
     /* SAFE (GREEN) */
     .safePhoto {
       animation: petGlowGreen 3s ease-in-out infinite;
-      box-shadow:
-        0 0 0 2px rgba(34, 197, 94, 0.25),
-        0 8px 22px rgba(0,0,0,0.08);
     }
 
     @keyframes petGlowGreen {
@@ -163,6 +160,24 @@
     #locBtn, #locBtn2 { background: #ff9f43; }
 
     .hidden { display: none !important; }
+
+    /* GPS UI */
+    .gps-status {
+      display: none;
+      margin-top: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #22c55e;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .gps-text {
+      display: none;
+      margin-top: 4px;
+      font-size: 11px;
+      color: #777;
+    }
   </style>
 </head>
 
@@ -194,6 +209,9 @@
     <button id="locBtn2">📍 Send Location Secondary</button>
   </div>
 
+  <div id="gpsStatus" class="gps-status"></div>
+  <div id="gpsText" class="gps-text">Acquiring your location...</div>
+
 </div>
 
 <script type="module">
@@ -214,18 +232,33 @@ const main = document.getElementById("main");
 
 let gpsBusy = false;
 
+/* GPS */
 function getGPS() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
+/* GPS BUTTON BIND */
 function bindGPS(btnId, phone, pet) {
   const btn = document.getElementById(btnId);
 
   btn.onclick = async () => {
     if (gpsBusy) return;
     gpsBusy = true;
+
+    const gpsStatus = document.getElementById("gpsStatus");
+    const gpsText = document.getElementById("gpsText");
+
+    const frames = ["●○○", "●●○", "●●●"];
+    let frame = 0;
+
+    gpsStatus.style.display = "block";
+    gpsText.style.display = "block";
+
+    const anim = setInterval(() => {
+      gpsStatus.innerText = frames[frame++ % frames.length];
+    }, 350);
 
     btn.disabled = true;
     btn.innerText = "📡 Acquiring GPS...";
@@ -241,13 +274,19 @@ function bindGPS(btnId, phone, pet) {
       window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, "_self");
 
     } finally {
+      clearInterval(anim);
+
+      gpsStatus.style.display = "none";
+      gpsText.style.display = "none";
+
       btn.disabled = false;
-      gpsBusy = false;
       btn.innerText = "📍 Send Location";
+      gpsBusy = false;
     }
   };
 }
 
+/* LOAD */
 async function loadPet() {
 
   const snap = await getDoc(doc(db, "pets", id));
@@ -279,8 +318,7 @@ async function loadPet() {
 
   if (pet.photo) photo.src = pet.photo;
 
-  /* ===== BUTTONS RESTORED ===== */
-
+  /* BUTTONS */
   document.getElementById("callBtn").onclick =
     () => window.location.href = "tel:" + pet.phone;
 
