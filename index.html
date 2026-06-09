@@ -245,6 +245,21 @@ function loadPet() {
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
     document.getElementById("message").innerText = "Help get them home safely.";
+    /* MICROCHIP DISPLAY (FIX) */
+    if (pet.microchip) {
+    let chip = document.getElementById("microchipText");
+
+    if (!chip) {
+    chip = document.createElement("div");
+    chip.id = "microchipText";
+    chip.style.marginTop = "8px";
+    chip.style.fontSize = "12px";
+    chip.style.color = "#666";
+    document.getElementById("main").insertBefore(chip, document.getElementById("btnGrid"));
+  }
+
+  chip.innerText = "Microchip: " + pet.microchip;
+}
 
     const photo = document.getElementById("petPhoto");
     const badge = document.getElementById("statusBadge");
