@@ -207,7 +207,7 @@
 
 <div class="container">
 
-  <h1>Manage Portal Beta v4</h1>
+  <h1>Manage Portal</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -296,17 +296,6 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const id = new URLSearchParams(location.search).get("id");
-
-if (!id) {
-  document.body.innerHTML = `
-    <div style="font-family:Arial;text-align:center;padding:40px;">
-      <h2>Invalid or Missing Pet ID</h2>
-      <p>Please scan the correct QR code again.</p>
-    </div>
-  `;
-  throw new Error("Missing pet ID");
-}
-
 const ref = doc(db, "pets", id);
 
 let petData = null;
@@ -315,10 +304,7 @@ let selectedFile = null;
 /* LOAD */
 async function load() {
   const snap = await getDoc(ref);
-  if (!snap.exists()) {
-  document.getElementById("statusDisplay").innerText = "Pet not found";
-  return;
-}
+  if (!snap.exists()) return;
 
   petData = snap.data();
 
@@ -350,7 +336,7 @@ function updateStatusUI() {
   const box = document.getElementById("statusDisplay");
   if (!petData) return;
 
-  if (!petData || petData.petStatus === "lost") {
+  if (petData.petStatus === "lost") {
     box.className = "statusBox lost";
     box.innerText = "Status: LOST";
   } else {
@@ -386,18 +372,13 @@ window.openGallery = () => {
 };
 
 document.getElementById("fileInput").addEventListener("change", (e) => {
-  const file = e.target.files && e.target.files[0];
+  const file = e.target.files[0];
   if (!file) return;
 
   selectedFile = file;
 
-  // force UI update
-  const info = document.getElementById("fileInfo");
-  info.innerText =
+  document.getElementById("fileInfo").innerText =
     `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-
-  // IMPORTANT: allows re-selecting same file again (common bug)
-  e.target.value = "";
 });
 
 /* SAVE */
@@ -409,12 +390,6 @@ window.save = async () => {
   let photoURL = petData.photo || "";
 
   if (selectedFile) {
-    if (typeof compressImage !== "function" || typeof uploadToCloudinary !== "function") {
-      alert("Image upload functions missing (compressImage / uploadToCloudinary)");
-      btn.disabled = false;
-      return;
-    }
-
     const compressed = await compressImage(selectedFile);
     photoURL = await uploadToCloudinary(compressed);
   }
@@ -438,18 +413,14 @@ window.save = async () => {
     updatedAt: new Date()
   });
 
-  // UI update AFTER save
-  document.getElementById("preview").src = photoURL + "?t=" + Date.now();
-  petData.photo = photoURL;
-  selectedFile = null;
-  document.getElementById("fileInfo").innerText = "";
-
   document.getElementById("successMsg").style.display = "block";
   document.getElementById("successSub").style.display = "block";
-
-  btn.disabled = false;
-  load();
 };
+
+load();
+
+/* (keep your existing compressImage + cloudinary functions unchanged) */
 </script>
+
 </body>
 </html>
