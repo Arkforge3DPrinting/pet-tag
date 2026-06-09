@@ -207,7 +207,7 @@
 
 <div class="container">
 
-  <h1>Manage Portal</h1>
+  <h1>Manage Portal v100</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -387,12 +387,24 @@ window.save = async () => {
   const btn = document.getElementById("saveBtn");
   btn.disabled = true;
 
-  let photoURL = petData.photo || "";
+let photoURL = petData.photo || "";
 
-  if (selectedFile) {
-    const compressed = await compressImage(selectedFile);
-    photoURL = await uploadToCloudinary(compressed);
-  }
+if (selectedFile) {
+  const formData = new FormData();
+  formData.append("file", selectedFile);
+  formData.append("upload_preset", "YOUR_UPLOAD_PRESET"); // IMPORTANT
+
+  const res = await fetch(
+    "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload",
+    {
+      method: "POST",
+      body: formData
+    }
+  );
+
+  const data = await res.json();
+  photoURL = data.secure_url;
+}
 
   const microchipVal =
     document.getElementById("microchipInput").style.display === "block"
