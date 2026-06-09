@@ -272,7 +272,18 @@
   </div>
 
   <button class="saveBtn" id="saveBtn" onclick="save()">💾 Save Changes</button>
+  <div id="saveProgressWrap" ...>
+<div id="saveProgressWrap" style="margin-top:12px; display:none;">
+  <div id="saveProgressText" style="font-size:12px; margin-bottom:6px; color:#555;">
+    Preparing...
+  </div>
 
+  <div style="width:100%; height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden;">
+    <div id="saveProgressBar"
+         style="height:100%; width:0%; background:#3b82f6; transition:0.25s ease;">
+    </div>
+  </div>
+</div>
   <div class="successMsg" id="successMsg">
     Information has been successfully updated.
   </div>
@@ -300,7 +311,18 @@ const ref = doc(db, "pets", id);
 
 let petData = null;
 let selectedFile = null;
+function setProgress(percent, text) {
+  document.getElementById("saveProgressWrap").style.display = "block";
+  document.getElementById("saveProgressBar").style.width = percent + "%";
+  document.getElementById("saveProgressText").innerText = text;
+}
 
+function lockSaveButton(lock) {
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = lock;
+  btn.innerText = lock ? "Processing..." : "💾 Save Changes";
+}
+  
 /* LOAD */
 async function load() {
   const snap = await getDoc(ref);
