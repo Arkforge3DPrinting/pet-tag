@@ -273,7 +273,7 @@ input {
 
 <div class="container">
 
-  <h1>Manage Portal PLS 4</h1>
+  <h1>Manage Portal PLS 5</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -415,19 +415,6 @@ function updateStatusUI() {
     box.innerText = "Status: SAFE";
   }
 }
-
-/* TOGGLES */
-window.toggleMicrochipEdit = () => {
-  const input = document.getElementById("microchipInput");
-  input.style.display = input.style.display === "block" ? "none" : "block";
-  input.value = petData.microchip || "";
-};
-
-window.togglePetNameEdit = () => {
-  const input = document.getElementById("petNameInput");
-  input.style.display = input.style.display === "block" ? "none" : "block";
-  input.value = petData.name || "";
-};
 
 /* PHOTO */
 window.openCamera = () => {
@@ -602,6 +589,31 @@ window.togglePetNameEdit = () => {
   }
 };
 
+window.toggleMicrochipEdit = () => {
+  const input = document.getElementById("microchipInput");
+
+  if (input.readOnly) {
+    input.readOnly = false;
+    input.focus();
+  } else {
+    input.readOnly = true;
+    input.blur();
+  }
+};
+
+window.togglePetNameEdit = () => {
+  const input = document.getElementById("petNameInput");
+
+  if (input.readOnly) {
+    input.readOnly = false;
+    input.focus();
+  } else {
+    input.readOnly = true;
+    input.blur();
+  }
+};
+
+  
 load();
 </script>
 </body>
