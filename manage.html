@@ -187,7 +187,7 @@ input {
 
 <div class="container">
 
-  <h1>Manage Portal PLS 13</h1>
+  <h1>Manage Portal PLS 14</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -261,18 +261,22 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const id = new URLSearchParams(window.location.search).get("id");
-const ref = doc(db, "pets", id);
+
+if (!id) {
+  console.error("Missing pet ID in URL");
+}
+
+const ref = id ? doc(db, "pets", id) : null;
 
 let petData = null;
 let selectedFile = null;
 let previewURL = null;
 
-/* LOAD */
+/* =========================
+   LOAD PET
+========================= */
 async function load() {
-  if (!id) {
-    console.error("No ID in URL");
-    return;
-  }
+  if (!ref) return;
 
   const snap = await getDoc(ref);
 
@@ -287,7 +291,9 @@ async function load() {
   document.getElementById("phone2").value = petData.phone2 || "";
   document.getElementById("preview").src = petData.photo || "";
 
-  document.getElementById("petNameLabel").innerText = petData.name || "Unknown Pet";
+  document.getElementById("petNameLabel").innerText =
+    petData.name || "Unknown Pet";
+
   document.getElementById("tagIdLabel").innerText = id;
 
   document.getElementById("petNameInput").value = petData.name || "";
@@ -296,8 +302,12 @@ async function load() {
   updateStatusUI();
 }
 
-/* STATUS */
+/* =========================
+   STATUS
+========================= */
 window.setStatus = async (status) => {
+  if (!ref) return;
+
   await updateDoc(ref, {
     petStatus: status,
     updatedAt: new Date()
@@ -311,11 +321,15 @@ function updateStatusUI() {
   const box = document.getElementById("statusDisplay");
   if (!petData) return;
 
-  box.className = "statusBox " + (petData.petStatus === "lost" ? "lost" : "safe");
-  box.innerText = petData.petStatus === "lost" ? "Status: LOST" : "Status: SAFE";
+  const isLost = petData.petStatus === "lost";
+
+  box.className = "statusBox " + (isLost ? "lost" : "safe");
+  box.innerText = isLost ? "Status: LOST" : "Status: SAFE";
 }
 
-/* TOGGLES */
+/* =========================
+   TOGGLES
+========================= */
 window.togglePetNameEdit = () => {
   const input = document.getElementById("petNameInput");
   input.readOnly = !input.readOnly;
@@ -328,6 +342,9 @@ window.toggleMicrochipEdit = () => {
   if (!input.readOnly) input.focus();
 };
 
+/* =========================
+   IMAGE PICKER
+========================= */
 window.openCamera = () => {
   const i = document.getElementById("fileInput");
   i.setAttribute("capture", "environment");
@@ -339,25 +356,27 @@ window.openGallery = () => {
   i.removeAttribute("capture");
   i.click();
 };
-  document.getElementById("fileInput").addEventListener("change", (e) => {
+
+/* Instant preview */
+document.getElementById("fileInput").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
   selectedFile = file;
 
-  if (previewURL) {
-    URL.revokeObjectURL(previewURL);
-  }
+  if (previewURL) URL.revokeObjectURL(previewURL);
 
   previewURL = URL.createObjectURL(file);
-
   document.getElementById("preview").src = previewURL;
 
   document.getElementById("fileInfo").innerText =
-    `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+    `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
 });
 
- function uploadToCloudinary(file) {
+/* =========================
+   CLOUDINARY UPLOAD
+========================= */
+function uploadToCloudinary(file) {
   return new Promise((resolve, reject) => {
 
     const form = new FormData();
@@ -365,16 +384,22 @@ window.openGallery = () => {
     form.append("upload_preset", "arkforge-pets");
 
     const xhr = new XMLHttpRequest();
-
-    xhr.open(
-      "POST",
-      "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload"
-    );
+    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
 
     xhr.onload = () => {
-      const data = JSON.parse(xhr.responseText);
-      if (data.secure_url) resolve(data.secure_url);
-      else reject("Upload failed");
+      try {
+        const data = JSON.parse(xhr.responseText);
+
+        if (!data.secure_url) {
+          console.error("Cloudinary error:", data);
+          reject("Upload failed");
+          return;
+        }
+
+        resolve(data.secure_url);
+      } catch (err) {
+        reject("Invalid response");
+      }
     };
 
     xhr.onerror = () => reject("Network error");
@@ -382,8 +407,10 @@ window.openGallery = () => {
     xhr.send(form);
   });
 }
-  
-/* SAVE */
+
+/* =========================
+   SAVE
+========================= */
 window.save = async () => {
 
   const btn = document.getElementById("saveBtn");
@@ -393,13 +420,13 @@ window.save = async () => {
 
     const nameVal = document.getElementById("petNameInput").value.trim();
     const microchipVal = document.getElementById("microchipInput").value.trim();
+
     const phone = document.getElementById("phone").value;
     const phone2 = document.getElementById("phone2").value;
 
     let photoURL = petData?.photo || "";
 
-    // only upload if file exists
-    if (typeof selectedFile !== "undefined" && selectedFile) {
+    if (selectedFile) {
       photoURL = await uploadToCloudinary(selectedFile);
     }
 
@@ -424,6 +451,9 @@ window.save = async () => {
     btn.disabled = false;
   }
 };
+
+/* INIT */
+load();
 </script>
 
 </body>
