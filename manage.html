@@ -187,7 +187,7 @@ input {
 
 <div class="container">
 
-  <h1>Manage Portal PLS 15</h1>
+  <h1>Manage Portal PLS 16</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -264,9 +264,16 @@ const id = new URLSearchParams(window.location.search).get("id");
 
 if (!id) {
   console.error("Missing pet ID in URL");
+
+  document.getElementById("petNameLabel").innerText = "No ID in URL";
+  document.getElementById("statusDisplay").innerText = "Missing Pet ID";
+
+  // stop only load, not whole script
+} else {
+  load();
 }
 
-const ref = id ? doc(db, "pets", id) : null;
+const ref = doc(db, "pets", id);
 
 let petData = null;
 let selectedFile = null;
