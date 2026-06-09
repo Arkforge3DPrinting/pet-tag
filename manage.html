@@ -318,14 +318,13 @@ window.save = async () => {
     microchip: microchipVal,
     updatedAt: new Date()
   });
-  
-document.getElementById("successMsg").style.display = "block";
 
-// refresh after a short delay so user sees success state
-setTimeout(() => {
-  location.reload();
-}, 800);
-load();
+  document.getElementById("successMsg").style.display = "block";
+
+  setTimeout(() => {
+    location.reload();
+  }, 800);
+};
 </script>
 
 </body>
