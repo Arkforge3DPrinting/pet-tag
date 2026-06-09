@@ -167,6 +167,17 @@
       border-radius: 10px;
       font-weight: bold;
       text-decoration: none;
+
+      .gps-status {
+  display: none;
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: #22c55e;
+  font-weight: bold;
+  letter-spacing: 2px;
+  opacity: 0.8;
+}
     }
   </style>
 </head>
@@ -208,7 +219,7 @@
     <button id="locBtn2">📍 Send Location Secondary</button>
 
   </div>
-
+  <div id="gpsStatus" class="gps-status">●○○</div>
   <div class="footer">Powered by ArkLink Pet ID ®</div>
 
 </div>
@@ -311,36 +322,54 @@ async function loadPet() {
     img.src = pet.photo;
   }
 
-  function bindGPS(btnId, phone, label) {
-    const btn = document.getElementById(btnId);
+ function bindGPS(btnId, phone, label) {
+  const btn = document.getElementById(btnId);
 
-    btn.onclick = async () => {
-      if (gpsBusy) return;
-      gpsBusy = true;
+  btn.onclick = async () => {
+    if (gpsBusy) return;
+    gpsBusy = true;
 
-      const original = btn.innerText;
-      btn.disabled = true;
-      btn.innerText = "📡 Getting location...";
+    const gpsStatus = document.getElementById("gpsStatus");
 
-      try {
-        const pos = await getGPS();
+    const frames = ["●○○", "●●○", "●●●"];
+    let frame = 0;
 
-        const msg =
-          "I found " + pet.name +
-          ". Location: https://maps.google.com/?q=" +
-          pos.coords.latitude + "," + pos.coords.longitude;
+    gpsStatus.innerText = frames[0];
+    gpsStatus.style.display = "block";
 
-        window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, "_self");
+    const gpsAnimation = setInterval(() => {
+      frame = (frame + 1) % frames.length;
+      gpsStatus.innerText = frames[frame];
+    }, 350);
 
-      } catch (e) {
-        alert("Unable to get GPS location.");
-      } finally {
-        btn.disabled = false;
-        btn.innerText = label;
-        gpsBusy = false;
-      }
-    };
-  }
+    btn.disabled = true;
+    btn.innerText = "📡 Acquiring GPS...";
+
+    try {
+      const pos = await getGPS();
+
+      const msg =
+        "I found " + pet.name +
+        ". Location: https://maps.google.com/?q=" +
+        pos.coords.latitude + "," + pos.coords.longitude;
+
+      window.open(
+        `sms:${phone}?body=${encodeURIComponent(msg)}`,
+        "_self"
+      );
+
+    } catch (e) {
+      alert("Unable to get GPS location.");
+    } finally {
+      clearInterval(gpsAnimation);
+      gpsStatus.style.display = "none";
+
+      btn.disabled = false;
+      btn.innerText = label;
+      gpsBusy = false;
+    }
+  };
+}
 
   document.getElementById("callBtn").onclick =
     () => window.location.href = "tel:" + pet.phone;
