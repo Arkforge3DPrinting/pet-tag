@@ -167,8 +167,9 @@
       border-radius: 10px;
       font-weight: bold;
       text-decoration: none;
+}
 
-      .gps-status {
+.gps-status {
   display: none;
   margin-top: 8px;
   text-align: center;
@@ -178,7 +179,15 @@
   letter-spacing: 2px;
   opacity: 0.8;
 }
-    }
+
+.gps-text {
+  display: none;
+  margin-top: 3px;
+  text-align: center;
+  font-size: 11px;
+  color: #777;
+  opacity: 0.9;
+}
   </style>
 </head>
 
@@ -220,6 +229,7 @@
 
   </div>
   <div id="gpsStatus" class="gps-status">●○○</div>
+<div id="gpsText" class="gps-text">Acquiring your location...</div>
   <div class="footer">Powered by ArkLink Pet ID ®</div>
 
 </div>
@@ -330,12 +340,14 @@ async function loadPet() {
     gpsBusy = true;
 
     const gpsStatus = document.getElementById("gpsStatus");
+    const gpsText = document.getElementById("gpsText");
 
     const frames = ["●○○", "●●○", "●●●"];
     let frame = 0;
 
     gpsStatus.innerText = frames[0];
     gpsStatus.style.display = "block";
+    gpsText.style.display = "block";
 
     const gpsAnimation = setInterval(() => {
       frame = (frame + 1) % frames.length;
@@ -362,7 +374,9 @@ async function loadPet() {
       alert("Unable to get GPS location.");
     } finally {
       clearInterval(gpsAnimation);
+
       gpsStatus.style.display = "none";
+      gpsText.style.display = "none";
 
       btn.disabled = false;
       btn.innerText = label;
