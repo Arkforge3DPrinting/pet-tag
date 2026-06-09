@@ -187,7 +187,7 @@ input {
 
 <div class="container">
 
-  <h1>Manage Portal PLS 14</h1>
+  <h1>Manage Portal PLS 15</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -241,7 +241,7 @@ input {
   </div>
 </div>
 
-  <button class="saveBtn" onclick="save()">💾 Save Changes</button>
+  <button id="saveBtn" class="saveBtn" onclick="save()">💾 Save Changes</button>
 
   <div class="successMsg" id="successMsg">Saved successfully</div>
   <div class="successSub" id="successSub">Please reload if needed.</div>
@@ -412,15 +412,13 @@ function uploadToCloudinary(file) {
    SAVE
 ========================= */
 window.save = async () => {
-
   const btn = document.getElementById("saveBtn");
-  btn.disabled = true;
+
+  if (btn) btn.disabled = true;
 
   try {
-
     const nameVal = document.getElementById("petNameInput").value.trim();
     const microchipVal = document.getElementById("microchipInput").value.trim();
-
     const phone = document.getElementById("phone").value;
     const phone2 = document.getElementById("phone2").value;
 
@@ -446,14 +444,12 @@ window.save = async () => {
     }, 800);
 
   } catch (err) {
-    console.error(err);
+    console.error("SAVE ERROR:", err);
     alert("Save failed: " + err);
-    btn.disabled = false;
+  } finally {
+    if (btn) btn.disabled = false;
   }
 };
-
-/* INIT */
-load();
 </script>
 
 </body>
