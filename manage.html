@@ -297,18 +297,27 @@ input {
     <input id="phone2">
   </div>
 
-  <div class="section">
-    <label>Pet Name</label>
-    <div class="microchipEditToggle" onclick="togglePetNameEdit()">Update pet name</div>
-    <input id="petNameInput">
+<div class="section">
+  <label>Pet Name</label>
+
+  <div class="microchipEditToggle" onclick="togglePetNameEdit()">
+    Update pet name
   </div>
 
-  <div class="section">
-    <label>Microchip</label>
-    <div class="microchipBox" id="microchipDisplay">Loading...</div>
-    <div class="microchipEditToggle" onclick="toggleMicrochipEdit()">Update microchip</div>
-    <input id="microchipInput">
+  <input id="petNameInput" style="display:none;">
+</div>
+
+<div class="section">
+  <label>Microchip</label>
+
+  <div class="microchipBox" id="microchipDisplay">Loading...</div>
+
+  <div class="microchipEditToggle" onclick="toggleMicrochipEdit()">
+    Update microchip
   </div>
+
+  <input id="microchipInput" style="display:none;">
+</div>
 
   <div class="section">
     <label>Photo</label>
