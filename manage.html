@@ -431,12 +431,13 @@ window.save = async () => {
       ? document.getElementById("microchipInput").value.trim()
       : petData.microchip;
 
-  await updateDoc(ref, {
-    phone: document.getElementById("phone").value,
-    phone2: document.getElementById("phone2").value,
-    photo: photoURL,
-    microchip: microchipVal
-  });
+await updateDoc(ref, {
+  phone: document.getElementById("phone").value,
+  phone2: document.getElementById("phone2").value,
+  photo: photoURL,
+  microchip: microchipVal,
+  updatedAt: new Date()   // 👈 THIS IS THE FIX
+});
 
   document.getElementById("successMsg").style.display = "block";
   document.getElementById("successSub").style.display = "block";
