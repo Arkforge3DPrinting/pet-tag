@@ -78,24 +78,26 @@
 
     /* SAFE */
     .safePhoto {
-      animation: petGlowGreen 3s ease-in-out infinite;
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.4);
+      animation: glowGreen 3s infinite;
     }
 
-    @keyframes petGlowGreen {
-      0% { box-shadow: 0 0 0 2px rgba(34,197,94,0.18), 0 8px 20px rgba(0,0,0,0.08); }
-      50% { box-shadow: 0 0 0 4px rgba(34,197,94,0.35), 0 0 16px rgba(34,197,94,0.25); }
-      100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.18), 0 8px 20px rgba(0,0,0,0.08); }
+    @keyframes glowGreen {
+      0% { box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
+      50% { box-shadow: 0 0 0 5px rgba(34,197,94,0.4); }
+      100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
     }
 
     /* LOST */
     .lostPhoto {
-      animation: petGlowRed 1.6s ease-in-out infinite;
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.5);
+      animation: glowRed 1.4s infinite;
     }
 
-    @keyframes petGlowRed {
-      0% { box-shadow: 0 0 0 2px rgba(239,68,68,0.25), 0 8px 20px rgba(0,0,0,0.08); }
-      50% { box-shadow: 0 0 0 5px rgba(239,68,68,0.65), 0 0 18px rgba(239,68,68,0.45); }
-      100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.25), 0 8px 20px rgba(0,0,0,0.08); }
+    @keyframes glowRed {
+      0% { box-shadow: 0 0 0 2px rgba(239,68,68,0.25); }
+      50% { box-shadow: 0 0 0 6px rgba(239,68,68,0.6); }
+      100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.25); }
     }
 
     .statusBadge {
@@ -139,7 +141,21 @@
 
     .hidden { display: none !important; }
 
-    /* LAST UPDATED */
+    #gpsStatus {
+      margin-top: 8px;
+      font-weight: bold;
+      color: #22c55e;
+      letter-spacing: 2px;
+      display: none;
+    }
+
+    #gpsText {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #777;
+      display: none;
+    }
+
     #lastUpdated {
       margin-top: 10px;
       font-size: 12px;
@@ -174,11 +190,10 @@
     <button id="locBtn2">📍 Send Location Secondary</button>
   </div>
 
-  <div id="gpsStatus"></div>
+  <div id="gpsStatus">●○○</div>
   <div id="gpsText">Acquiring your location...</div>
 
   <div id="lastUpdated">Last updated: —</div>
-
 </div>
 
 <script type="module">
@@ -192,63 +207,55 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
-
 const id = new URLSearchParams(window.location.search).get("id");
 
 const main = document.getElementById("main");
 
 let gpsBusy = false;
 
-/* TIME FORMAT */
+/* GPS */
+function getGPS() {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 12000
+    });
+  });
+}
+
+/* TIME AGO */
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - date) / 1000);
-
   if (seconds < 60) return `${seconds}s ago`;
   const mins = Math.floor(seconds / 60);
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+  return `${hrs}h ago`;
 }
 
-/* GPS */
-function getGPS() {
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(resolve, reject);
-  });
-}
-
-/* LIVE FIRESTORE */
+/* LIVE */
 function loadPet() {
 
   const ref = doc(db, "pets", id);
 
   onSnapshot(ref, (snap) => {
-
     if (!snap.exists()) return;
 
     const pet = snap.data();
 
     main.style.display = "block";
 
-    document.getElementById("title").innerText =
-      "🐾 You found " + pet.name;
-
-    document.getElementById("message").innerText =
-      "Help get them home safely.";
+    document.getElementById("title").innerText = "🐾 You found " + pet.name;
+    document.getElementById("message").innerText = "Help get them home safely.";
 
     const photo = document.getElementById("petPhoto");
     const badge = document.getElementById("statusBadge");
 
-    /* PHOTO */
-    if (pet.photo) photo.src = pet.photo;
+    /* RESET */
+    photo.classList.remove("lostPhoto", "safePhoto");
+    badge.classList.remove("hidden", "status-lost", "status-safe");
 
     const status = pet.petStatus || "safe";
-
-    badge.classList.remove("hidden");
-
-    photo.classList.remove("lostPhoto", "safePhoto");
 
     if (status === "lost") {
       badge.innerText = "🔴 LOST";
@@ -260,20 +267,16 @@ function loadPet() {
       photo.classList.add("safePhoto");
     }
 
+    if (pet.photo) photo.src = pet.photo;
+
     /* LAST UPDATED */
     const last = pet.updatedAt?.toDate?.() || pet.updatedAt;
-
     if (last) {
-      const updateUI = () => {
-        document.getElementById("lastUpdated").innerText =
-          "Last updated: " + timeAgo(last);
-      };
-
-      updateUI();
-      setInterval(updateUI, 10000);
+      document.getElementById("lastUpdated").innerText =
+        "Last updated: " + timeAgo(last);
     }
 
-    /* BUTTONS */
+    /* BUTTONS (SAFE ONCE ONLY) */
     document.getElementById("callBtn").onclick =
       () => window.location.href = "tel:" + pet.phone;
 
@@ -284,51 +287,37 @@ function loadPet() {
       if (gpsBusy) return;
       gpsBusy = true;
 
-      const pos = await getGPS();
+      const gpsStatus = document.getElementById("gpsStatus");
+      const gpsText = document.getElementById("gpsText");
 
-      window.open(
-        `sms:${pet.phone}?body=${encodeURIComponent(
-          "I found " + pet.name +
-          " https://maps.google.com/?q=" +
-          pos.coords.latitude + "," + pos.coords.longitude
-        )}`,
-        "_self"
-      );
+      const frames = ["●○○", "●●○", "●●●"];
+      let i = 0;
 
-      gpsBusy = false;
-    };
+      gpsStatus.style.display = "block";
+      gpsText.style.display = "block";
 
-    if (pet.phone2?.trim()) {
-      document.getElementById("callBtn2").onclick =
-        () => window.location.href = "tel:" + pet.phone2;
+      const anim = setInterval(() => {
+        gpsStatus.innerText = frames[i++ % frames.length];
+      }, 350);
 
-      document.getElementById("textBtn2").onclick =
-        () => window.open(`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
-
-      document.getElementById("locBtn2").onclick = async () => {
-        if (gpsBusy) return;
-        gpsBusy = true;
-
+      try {
         const pos = await getGPS();
 
         window.open(
-          `sms:${pet.phone2}?body=${encodeURIComponent(
+          `sms:${pet.phone}?body=${encodeURIComponent(
             "I found " + pet.name +
             " https://maps.google.com/?q=" +
             pos.coords.latitude + "," + pos.coords.longitude
           )}`,
           "_self"
         );
-
+      } finally {
+        clearInterval(anim);
+        gpsStatus.style.display = "none";
+        gpsText.style.display = "none";
         gpsBusy = false;
-      };
-
-    } else {
-      document.getElementById("btnGrid").classList.add("single");
-      ["callBtn2","textBtn2","locBtn2"].forEach(id =>
-        document.getElementById(id).classList.add("hidden")
-      );
-    }
+      }
+    };
 
   });
 }
