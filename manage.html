@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ArkLink Pet ID - Manage your ArkTag!</title>
+  <title>ArkLink Pet ID - Manage Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -105,55 +105,6 @@
     .safe { background: #eafff1; color: #1a7f3c; }
     .lost { background: #ffecec; color: #a31212; }
 
-    .photoWrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
-    #preview {
-      width: 160px;
-      height: 160px;
-      border-radius: 18px;
-      object-fit: cover;
-      border: 3px solid rgba(34,197,94,0.35);
-      box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
-      animation: pulseGlow 2.8s infinite;
-    }
-
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
-      50% { box-shadow: 0 0 18px rgba(34,197,94,0.35); }
-      100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
-    }
-
-    .photoBtns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .photoBtn {
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    .photoBtn.cam { background: #f97316; }
-    .photoBtn.up { background: #2563eb; }
-
-    input[type="file"] { display: none; }
-
-    .fileInfo {
-      font-size: 12px;
-      color: #555;
-      text-align: center;
-      margin-top: 6px;
-    }
-
     .microchipBox {
       margin-top: 8px;
       padding: 10px;
@@ -185,6 +136,27 @@
       cursor: not-allowed;
     }
 
+    #saveProgressWrap {
+      margin-top: 12px;
+      display: none;
+    }
+
+    #saveProgressBar {
+      height: 10px;
+      width: 0%;
+      background: #3b82f6;
+      border-radius: 999px;
+      transition: 0.25s ease;
+    }
+
+    .barOuter {
+      width: 100%;
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
     .successMsg {
       margin-top: 12px;
       font-weight: 900;
@@ -207,8 +179,7 @@
 
 <div class="container">
 
-  <h1>Manage your ArkLink Pet Tag here</h1>
-  <p>Update your pet’s details instantly</p>
+  <h1>ArkLink ID Tag - Owner Portal</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -218,7 +189,6 @@
   <div id="statusDisplay" class="statusBox">Loading...</div>
 
   <div class="section">
-    <label>Status - Use these buttons below to reflect your pets current safety. This will update their pet profile immediately.</label>
     <button class="lostBtn" onclick="setStatus('lost')">🔴 Mark as Lost</button>
     <button class="safeBtn" onclick="setStatus('safe')">🟢 Mark as Safe</button>
   </div>
@@ -231,67 +201,24 @@
     <input id="phone2">
   </div>
 
-  <!-- PET NAME EDIT -->
   <div class="section">
-    <label>Pet Name</label>
-
-    <div class="microchipEditToggle" onclick="togglePetNameEdit()">
-      Incorrect? Update pet name
-    </div>
-
-    <input id="petNameInput" placeholder="Enter corrected pet name">
-  </div>
-
-  <!-- MICROCHIP -->
-  <div class="section">
-    <label>Microchip (read-only identifier)</label>
-
+    <label>Microchip</label>
     <div class="microchipBox" id="microchipDisplay">Loading...</div>
 
-    <div class="microchipEditToggle" onclick="toggleMicrochipEdit()">
-      Incorrect? Update microchip
-    </div>
-
-    <input id="microchipInput" placeholder="Enter corrected microchip number">
+    <input id="microchipInput" placeholder="Edit microchip">
   </div>
 
-  <div class="section">
-    <label>Photo</label>
+  <button class="saveBtn" id="saveBtn" onclick="save()">💾 Save Changes</button>
 
-    <div class="photoWrap">
-      <img id="preview">
-
-      <div class="photoBtns">
-        <button class="photoBtn cam" onclick="openCamera()">📷 Camera</button>
-        <button class="photoBtn up" onclick="openGallery()">📁 Upload</button>
-      </div>
-
-      <input type="file" id="fileInput" accept="image/*">
-      <div class="fileInfo" id="fileInfo"></div>
+  <div id="saveProgressWrap">
+    <div style="margin-bottom:6px;font-size:12px;" id="saveProgressText">Preparing...</div>
+    <div class="barOuter">
+      <div id="saveProgressBar"></div>
     </div>
   </div>
 
-<button class="saveBtn" id="saveBtn" onclick="save()">💾 Save Changes</button>
-
-<!-- PROGRESS -->
-<div id="saveProgressWrap" style="margin-top:12px; display:none;">
-  <div id="saveProgressText" style="font-size:12px; margin-bottom:6px; color:#555;">
-    Preparing...
-  </div>
-
-  <div style="width:100%; height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden;">
-    <div id="saveProgressBar"
-         style="height:100%; width:0%; background:#3b82f6; transition:0.25s ease;">
-    </div>
-  </div>
-</div>
-  <div class="successMsg" id="successMsg">
-    Information has been successfully updated.
-  </div>
-
-  <div class="successSub" id="successSub">
-    If you require additional changes, please reload the page.
-  </div>
+  <div class="successMsg" id="successMsg">Saved!</div>
+  <div class="successSub" id="successSub">You can close this page.</div>
 
 </div>
 
@@ -306,41 +233,29 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
-
 const id = new URLSearchParams(location.search).get("id");
 const ref = doc(db, "pets", id);
 
 let petData = null;
-let selectedFile = null;
-function setProgress(percent, text) {
-  const wrap = document.getElementById("saveProgressWrap");
-  const bar = document.getElementById("saveProgressBar");
-  const label = document.getElementById("saveProgressText");
 
-  wrap.style.display = "block";
-  bar.style.width = percent + "%";
-  label.innerText = text;
+function setProgress(p, text) {
+  document.getElementById("saveProgressWrap").style.display = "block";
+  document.getElementById("saveProgressBar").style.width = p + "%";
+  document.getElementById("saveProgressText").innerText = text;
 }
 
-function lockSaveButton(lock) {
-  const btn = document.getElementById("saveBtn");
-  btn.disabled = lock;
-  btn.innerText = lock ? "Saving..." : "💾 Save Changes";
-}
-  
-/* LOAD */
+/* LOAD FIXED */
 async function load() {
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
 
   petData = snap.data();
 
+  document.getElementById("petNameLabel").innerText = petData.name || "Unknown";
+  document.getElementById("tagIdLabel").innerText = id;
+
   document.getElementById("phone").value = petData.phone || "";
   document.getElementById("phone2").value = petData.phone2 || "";
-  document.getElementById("preview").src = petData.photo || "";
-
-  document.getElementById("petNameLabel").innerText = petData.name || "Unknown Pet";
-  document.getElementById("tagIdLabel").innerText = id;
 
   document.getElementById("microchipDisplay").innerText =
     petData.microchip || "Not set";
@@ -350,7 +265,7 @@ async function load() {
 
 /* STATUS */
 window.setStatus = async (status) => {
-  await updateDoc(ref, { 
+  await updateDoc(ref, {
     petStatus: status,
     updatedAt: new Date()
   });
@@ -361,9 +276,8 @@ window.setStatus = async (status) => {
 
 function updateStatusUI() {
   const box = document.getElementById("statusDisplay");
-  if (!petData) return;
 
-  if (petData.petStatus === "lost") {
+  if (petData?.petStatus === "lost") {
     box.className = "statusBox lost";
     box.innerText = "Status: LOST";
   } else {
@@ -372,110 +286,34 @@ function updateStatusUI() {
   }
 }
 
-/* TOGGLES */
-window.toggleMicrochipEdit = () => {
-  const input = document.getElementById("microchipInput");
-  input.style.display = input.style.display === "block" ? "none" : "block";
-  input.value = petData.microchip || "";
-};
-
-window.togglePetNameEdit = () => {
-  const input = document.getElementById("petNameInput");
-  input.style.display = input.style.display === "block" ? "none" : "block";
-  input.value = petData.name || "";
-};
-
-/* PHOTO */
-window.openCamera = () => {
-  const i = document.getElementById("fileInput");
-  i.setAttribute("capture", "environment");
-  i.click();
-};
-
-window.openGallery = () => {
-  const i = document.getElementById("fileInput");
-  i.removeAttribute("capture");
-  i.click();
-};
-
-document.getElementById("fileInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  selectedFile = file;
-
-  document.getElementById("fileInfo").innerText =
-    `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-});
-
-/* SAVE */
+/* SAVE FIXED */
 window.save = async () => {
   const btn = document.getElementById("saveBtn");
 
   if (btn.disabled) return;
+  btn.disabled = true;
 
   try {
-    btn.disabled = true;
-
-    setProgress(5, "Starting save...");
-
-    let photoURL = petData.photo || "";
-
-    /* PHOTO UPLOAD FLOW */
-    if (selectedFile) {
-      setProgress(15, "Preparing image...");
-
-      const compressed = await compressImage(selectedFile);
-
-      setProgress(40, "Uploading photo...");
-
-      photoURL = await uploadToCloudinary(compressed);
-    }
-
-    setProgress(65, "Preparing data...");
-
-    const microchipVal =
-      document.getElementById("microchipInput").style.display === "block"
-        ? document.getElementById("microchipInput").value.trim()
-        : petData.microchip;
-
-    const nameVal =
-      document.getElementById("petNameInput").style.display === "block"
-        ? document.getElementById("petNameInput").value.trim()
-        : petData.name;
-
-    setProgress(85, "Saving to database...");
+    setProgress(10, "Saving...");
 
     await updateDoc(ref, {
       phone: document.getElementById("phone").value,
       phone2: document.getElementById("phone2").value,
-      photo: photoURL,
-      microchip: microchipVal,
-      name: nameVal,
+      microchip: document.getElementById("microchipInput").value || petData.microchip,
       updatedAt: new Date()
     });
 
-    setProgress(100, "Done!");
+    setProgress(100, "Done");
 
     document.getElementById("successMsg").style.display = "block";
     document.getElementById("successSub").style.display = "block";
 
-    setTimeout(() => {
-      document.getElementById("saveProgressWrap").style.display = "none";
-    }, 1200);
-
-  } catch (err) {
-    console.error("SAVE FAILED:", err);
-    setProgress(100, "Error saving");
-
-    alert("Save failed. Check console for details.");
-
   } finally {
     btn.disabled = false;
-    btn.innerText = "💾 Save Changes";
   }
 };
-  loadPet();
+
+load();   // ✅ FIXED (was loadPet)
 </script>
 
 </body>
