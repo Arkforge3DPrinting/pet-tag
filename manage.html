@@ -105,93 +105,12 @@
     .safe { background: #eafff1; color: #1a7f3c; }
     .lost { background: #ffecec; color: #a31212; }
 
-    .photoWrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
     #preview {
       width: 160px;
       height: 160px;
       border-radius: 18px;
       object-fit: cover;
       border: 3px solid rgba(34,197,94,0.35);
-      box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
-      animation: pulseGlow 2.8s infinite;
-    }
-
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
-      50% { box-shadow: 0 0 18px rgba(34,197,94,0.35); }
-      100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
-    }
-
-    .photoBtns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .photoBtn {
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    .photoBtn.cam { background: #f97316; }
-    .photoBtn.up { background: #2563eb; }
-
-    input[type="file"] { display: none; }
-
-    .fileInfo {
-      font-size: 12px;
-      color: #555;
-      text-align: center;
-      margin-top: 6px;
-    }
-
-    /* ✅ NEW UPLOAD UI */
-    .uploadProgressWrap {
-      width: 100%;
-      margin-top: 8px;
-      display: none;
-    }
-
-    .progressBar {
-      width: 100%;
-      height: 10px;
-      background: #e5e7eb;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .progressFill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg,#3b82f6,#22c55e);
-      transition: width 0.2s ease;
-    }
-
-    .uploadText {
-      font-size: 12px;
-      text-align: center;
-      margin-top: 6px;
-      color: #2563eb;
-      font-weight: 700;
-    }
-
-    .microchipBox {
-      margin-top: 8px;
-      padding: 10px;
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      font-size: 13px;
-      font-family: monospace;
     }
 
     .microchipEditToggle {
@@ -204,16 +123,11 @@
       user-select: none;
     }
 
-    #microchipInput,
-    #petNameInput {
-      display: none;
-      margin-top: 10px;
+    input[readonly] {
+      background: #f3f4f6;
     }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    input[type="file"] { display: none; }
 
     .successMsg {
       margin-top: 12px;
@@ -230,42 +144,6 @@
       margin-top: 4px;
       display: none;
     }
-    /* =========================
-   UNIFIED FIELD SYSTEM
-   (this fixes EVERYTHING)
-========================= */
-
-:root {
-  --field-bg: #ffffff;
-  --field-border: #e5e7eb;
-  --field-radius: 10px;
-  --field-padding: 10px;
-  --field-font: 13px;
-}
-
-/* apply to ALL inputs */
-input {
-  width: 100%;
-  padding: var(--field-padding);
-  border-radius: var(--field-radius);
-  border: 1px solid var(--field-border);
-  font-size: var(--field-font);
-  background: var(--field-bg);
-  box-sizing: border-box;
-  margin-bottom: 8px;
-}
-
-/* Make all input fields same var */
-.microchipBox {
-  width: 100%;
-  padding: var(--field-padding);
-  border-radius: var(--field-radius);
-  border: 1px solid var(--field-border);
-  font-size: var(--field-font);
-  background: var(--field-bg);
-  box-sizing: border-box;
-  font-family: inherit; /* important: removes monospace mismatch */
-}
   </style>
 </head>
 
@@ -284,7 +162,7 @@ input {
   <div id="statusDisplay" class="statusBox">Loading...</div>
 
   <div class="section">
-    <label>Status - Use these buttons below</label>
+    <label>Status</label>
     <button class="lostBtn" onclick="setStatus('lost')">🔴 Mark as Lost</button>
     <button class="safeBtn" onclick="setStatus('safe')">🟢 Mark as Safe</button>
   </div>
@@ -297,59 +175,28 @@ input {
     <input id="phone2">
   </div>
 
-<div class="section">
-  <label>Pet Name</label>
-
-  <!-- SINGLE LOCKED FIELD -->
-  <input id="petNameInput" readonly>
-
-  <!-- EDIT TOGGLE -->
-  <div class="microchipEditToggle" onclick="togglePetNameEdit()">
-    ✏️ Edit pet name
+  <div class="section">
+    <label>Pet Name</label>
+    <input id="petNameInput" readonly>
+    <div class="microchipEditToggle" onclick="togglePetNameEdit()">✏️ Edit pet name</div>
   </div>
-</div>
 
-<div class="section">
-  <label>Microchip</label>
-
-  <!-- SINGLE FIELD (LOCKED BY DEFAULT) -->
-  <input id="microchipInput" readonly>
-
-  <!-- EDIT BUTTON -->
-  <div class="microchipEditToggle" onclick="toggleMicrochipEdit()">
-    ✏️ Edit microchip
+  <div class="section">
+    <label>Microchip</label>
+    <input id="microchipInput" readonly>
+    <div class="microchipEditToggle" onclick="toggleMicrochipEdit()">✏️ Edit microchip</div>
   </div>
-</div>
 
   <div class="section">
     <label>Photo</label>
-
-    <div class="photoWrap">
-      <img id="preview">
-
-      <div class="photoBtns">
-        <button class="photoBtn cam" onclick="openCamera()">📷 Camera</button>
-        <button class="photoBtn up" onclick="openGallery()">📁 Upload</button>
-      </div>
-
-      <input type="file" id="fileInput" accept="image/*">
-      <div class="fileInfo" id="fileInfo"></div>
-
-      <!-- ✅ NEW PROGRESS -->
-      <div class="uploadProgressWrap" id="uploadBox">
-        <div class="progressBar">
-          <div class="progressFill" id="progressFill"></div>
-        </div>
-        <div class="uploadText" id="uploadText"></div>
-      </div>
-
-    </div>
+    <img id="preview">
+    <input type="file" id="fileInput" accept="image/*">
   </div>
 
-  <button class="saveBtn" id="saveBtn" onclick="save()">💾 Save Changes</button>
+  <button class="saveBtn" onclick="save()">💾 Save Changes</button>
 
   <div class="successMsg" id="successMsg">Saved successfully</div>
-  <div class="successSub" id="successSub">Please reload the page to make any additional changes if required.</div>
+  <div class="successSub" id="successSub">Please reload if needed.</div>
 
 </div>
 
@@ -369,8 +216,6 @@ const id = new URLSearchParams(location.search).get("id");
 const ref = doc(db, "pets", id);
 
 let petData = null;
-let selectedFile = null;
-let previewURL = null;
 
 /* LOAD */
 async function load() {
@@ -386,15 +231,15 @@ async function load() {
   document.getElementById("petNameLabel").innerText = petData.name || "Unknown Pet";
   document.getElementById("tagIdLabel").innerText = id;
 
-  document.getElementById("microchipDisplay").innerText =
-    petData.microchip || "Not set";
+  document.getElementById("petNameInput").value = petData.name || "";
+  document.getElementById("microchipInput").value = petData.microchip || "";
 
   updateStatusUI();
 }
 
 /* STATUS */
 window.setStatus = async (status) => {
-  await updateDoc(ref, { 
+  await updateDoc(ref, {
     petStatus: status,
     updatedAt: new Date()
   });
@@ -407,214 +252,42 @@ function updateStatusUI() {
   const box = document.getElementById("statusDisplay");
   if (!petData) return;
 
-  if (petData.petStatus === "lost") {
-    box.className = "statusBox lost";
-    box.innerText = "Status: LOST";
-  } else {
-    box.className = "statusBox safe";
-    box.innerText = "Status: SAFE";
-  }
+  box.className = "statusBox " + (petData.petStatus === "lost" ? "lost" : "safe");
+  box.innerText = petData.petStatus === "lost" ? "Status: LOST" : "Status: SAFE";
 }
 
-/* PHOTO */
-window.openCamera = () => {
-  const i = document.getElementById("fileInput");
-  i.setAttribute("capture", "environment");
-  i.click();
+/* TOGGLES (FIXED) */
+window.togglePetNameEdit = () => {
+  const input = document.getElementById("petNameInput");
+  input.readOnly = !input.readOnly;
+  if (!input.readOnly) input.focus();
 };
 
-window.openGallery = () => {
-  const i = document.getElementById("fileInput");
-  i.removeAttribute("capture");
-  i.click();
+window.toggleMicrochipEdit = () => {
+  const input = document.getElementById("microchipInput");
+  input.readOnly = !input.readOnly;
+  if (!input.readOnly) input.focus();
 };
 
-/* ✅ INSTANT PREVIEW + FILE STORE */
-document.getElementById("fileInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  selectedFile = file;
-
-  // 🔥 INSTANT PREVIEW (NO UPLOAD)
-  if (previewURL) URL.revokeObjectURL(previewURL);
-  previewURL = URL.createObjectURL(file);
-  document.getElementById("preview").src = previewURL;
-
-  document.getElementById("fileInfo").innerText =
-    `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-});
-
-/* =========================
-   CLOUDINARY WITH PROGRESS
-========================= */
-function uploadToCloudinary(file, onProgress) {
-  return new Promise((resolve, reject) => {
-    const form = new FormData();
-    form.append("file", file);
-    form.append("upload_preset", "arkforge-pets");
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable && onProgress) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        onProgress(percent);
-      }
-    };
-
-    xhr.onload = () => {
-      const data = JSON.parse(xhr.responseText);
-      if (!data.secure_url) reject("Upload failed");
-      else resolve(data.secure_url);
-    };
-
-    xhr.onerror = () => reject("Network error");
-
-    xhr.send(form);
-  });
-}
-
-/* =========================
-   IMAGE COMPRESSION
-========================= */
-async function compressImage(file, maxSize = 1600, quality = 0.82) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const img = new Image();
-
-      img.onload = () => {
-        let w = img.width;
-        let h = img.height;
-
-        if (w > h && w > maxSize) {
-          h = h * (maxSize / w);
-          w = maxSize;
-        } else if (h > maxSize) {
-          w = w * (maxSize / h);
-          h = maxSize;
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-
-        canvas.toBlob(blob => {
-          resolve(new File([blob], "photo.jpg", {
-            type: "image/jpeg",
-            lastModified: Date.now()
-          }));
-        }, "image/jpeg", quality);
-      };
-
-      img.src = e.target.result;
-    };
-
-    reader.readAsDataURL(file);
-  });
-}
-
-/* =========================
-   SAVE WITH UPLOAD PROGRESS UI
-========================= */
+/* SAVE */
 window.save = async () => {
 
-  const btn = document.getElementById("saveBtn");
-  const statusBox = document.getElementById("statusDisplay");
+  const nameVal = document.getElementById("petNameInput").value.trim();
+  const microchipVal = document.getElementById("microchipInput").value.trim();
 
-  btn.disabled = true;
+  await updateDoc(ref, {
+    phone: document.getElementById("phone").value,
+    phone2: document.getElementById("phone2").value,
+    name: nameVal,
+    microchip: microchipVal,
+    updatedAt: new Date()
+  });
 
-  let photoURL = petData.photo || "";
-
-  try {
-
-    if (selectedFile) {
-
-      // show upload state
-      statusBox.className = "statusBox safe";
-      statusBox.innerText = "Uploading image... 0%";
-
-      const compressed = await compressImage(selectedFile);
-
-      photoURL = await uploadToCloudinary(compressed, (percent) => {
-        statusBox.innerText = `Uploading image... ${percent}%`;
-      });
-
-      statusBox.innerText = "Upload complete ✔";
-    }
-window.toggleMicrochipEdit = () => {
-  const input = document.getElementById("microchipInput");
-
-  if (input.readOnly) {
-    input.readOnly = false;
-    input.focus();
-  } else {
-    input.readOnly = true;
-    input.blur();
-  }
+  document.getElementById("successMsg").style.display = "block";
 };
 
-window.togglePetNameEdit = () => {
-  const input = document.getElementById("petNameInput");
-
-  if (input.readOnly) {
-    input.readOnly = false;
-    input.focus();
-  } else {
-    input.readOnly = true;
-    input.blur();
-  }
-};
-
-    await updateDoc(ref, {
-      phone: document.getElementById("phone").value,
-      phone2: document.getElementById("phone2").value,
-      photo: photoURL,
-      microchip: microchipVal,
-      name: nameVal,
-      updatedAt: new Date()
-    });
-
-    document.getElementById("successMsg").style.display = "block";
-    document.getElementById("successSub").style.display = "block";
-
-  } catch (err) {
-    statusBox.innerText = "Upload failed: " + err;
-    btn.disabled = false;
-  }
-};
-
-window.toggleMicrochipEdit = () => {
-  const input = document.getElementById("microchipInput");
-
-  if (input.readOnly) {
-    input.readOnly = false;
-    input.focus();
-  } else {
-    input.readOnly = true;
-    input.blur();
-  }
-};
-
-window.togglePetNameEdit = () => {
-  const input = document.getElementById("petNameInput");
-
-  if (input.readOnly) {
-    input.readOnly = false;
-    input.focus();
-  } else {
-    input.readOnly = true;
-    input.blur();
-  }
-};
-
-  
 load();
 </script>
+
 </body>
 </html>
