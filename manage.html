@@ -273,7 +273,7 @@ input {
 
 <div class="container">
 
-  <h1>Manage Portal PLS 3</h1>
+  <h1>Manage Portal PLS 4</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -560,16 +560,29 @@ window.save = async () => {
 
       statusBox.innerText = "Upload complete ✔";
     }
+window.toggleMicrochipEdit = () => {
+  const input = document.getElementById("microchipInput");
 
-    const microchipVal =
-      document.getElementById("microchipInput").style.display === "block"
-        ? document.getElementById("microchipInput").value.trim()
-        : petData.microchip;
+  if (input.readOnly) {
+    input.readOnly = false;
+    input.focus();
+  } else {
+    input.readOnly = true;
+    input.blur();
+  }
+};
 
-    const nameVal =
-      document.getElementById("petNameInput").style.display === "block"
-        ? document.getElementById("petNameInput").value.trim()
-        : petData.name;
+window.togglePetNameEdit = () => {
+  const input = document.getElementById("petNameInput");
+
+  if (input.readOnly) {
+    input.readOnly = false;
+    input.focus();
+  } else {
+    input.readOnly = true;
+    input.blur();
+  }
+};
 
     await updateDoc(ref, {
       phone: document.getElementById("phone").value,
