@@ -70,25 +70,13 @@
       color: #444;
     }
 
-    /* =========================
-       FIXED INPUT STYLE (THIS IS THE CHANGE)
-    ========================= */
     input {
       width: 100%;
-      padding: 10px 11px;   /* was 12px */
+      padding: 12px;
       border-radius: 10px;
-      border: 1px solid #e5e7eb; /* softer */
-      font-size: 13px;      /* was 14px */
-      margin-bottom: 6px;   /* reduced */
-      background: #fff;
-      box-sizing: border-box;
-      outline: none;
-      transition: border 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    input:focus {
-      border-color: rgba(59,130,246,0.5);
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+      border: 1px solid #ddd;
+      font-size: 14px;
+      margin-bottom: 10px;
     }
 
     button {
@@ -166,9 +154,10 @@
       margin-top: 6px;
     }
 
+    /* ✅ NEW UPLOAD UI */
     .uploadProgressWrap {
       width: 100%;
-      margin-top: 6px;
+      margin-top: 8px;
       display: none;
     }
 
@@ -259,7 +248,7 @@
   <div id="statusDisplay" class="statusBox">Loading...</div>
 
   <div class="section">
-    <label>Status</label>
+    <label>Status - Use these buttons below</label>
     <button class="lostBtn" onclick="setStatus('lost')">🔴 Mark as Lost</button>
     <button class="safeBtn" onclick="setStatus('safe')">🟢 Mark as Safe</button>
   </div>
@@ -299,6 +288,7 @@
       <input type="file" id="fileInput" accept="image/*">
       <div class="fileInfo" id="fileInfo"></div>
 
+      <!-- ✅ NEW PROGRESS -->
       <div class="uploadProgressWrap" id="uploadBox">
         <div class="progressBar">
           <div class="progressFill" id="progressFill"></div>
@@ -312,13 +302,247 @@
   <button class="saveBtn" id="saveBtn" onclick="save()">💾 Save Changes</button>
 
   <div class="successMsg" id="successMsg">Saved successfully</div>
-  <div class="successSub" id="successSub">Please reload if needed.</div>
+  <div class="successSub" id="successSub">Please reload the page to make any additional changes if required.</div>
 
 </div>
 
 <script type="module">
-/* unchanged JS */
-</script>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+const app = initializeApp({
+  apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
+  authDomain: "arkforge-pets.firebaseapp.com",
+  projectId: "arkforge-pets",
+});
+
+const db = getFirestore(app);
+
+const id = new URLSearchParams(location.search).get("id");
+const ref = doc(db, "pets", id);
+
+let petData = null;
+let selectedFile = null;
+let previewURL = null;
+
+/* LOAD */
+async function load() {
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  petData = snap.data();
+
+  document.getElementById("phone").value = petData.phone || "";
+  document.getElementById("phone2").value = petData.phone2 || "";
+  document.getElementById("preview").src = petData.photo || "";
+
+  document.getElementById("petNameLabel").innerText = petData.name || "Unknown Pet";
+  document.getElementById("tagIdLabel").innerText = id;
+
+  document.getElementById("microchipDisplay").innerText =
+    petData.microchip || "Not set";
+
+  updateStatusUI();
+}
+
+/* STATUS */
+window.setStatus = async (status) => {
+  await updateDoc(ref, { 
+    petStatus: status,
+    updatedAt: new Date()
+  });
+
+  petData.petStatus = status;
+  updateStatusUI();
+};
+
+function updateStatusUI() {
+  const box = document.getElementById("statusDisplay");
+  if (!petData) return;
+
+  if (petData.petStatus === "lost") {
+    box.className = "statusBox lost";
+    box.innerText = "Status: LOST";
+  } else {
+    box.className = "statusBox safe";
+    box.innerText = "Status: SAFE";
+  }
+}
+
+/* TOGGLES */
+window.toggleMicrochipEdit = () => {
+  const input = document.getElementById("microchipInput");
+  input.style.display = input.style.display === "block" ? "none" : "block";
+  input.value = petData.microchip || "";
+};
+
+window.togglePetNameEdit = () => {
+  const input = document.getElementById("petNameInput");
+  input.style.display = input.style.display === "block" ? "none" : "block";
+  input.value = petData.name || "";
+};
+
+/* PHOTO */
+window.openCamera = () => {
+  const i = document.getElementById("fileInput");
+  i.setAttribute("capture", "environment");
+  i.click();
+};
+
+window.openGallery = () => {
+  const i = document.getElementById("fileInput");
+  i.removeAttribute("capture");
+  i.click();
+};
+
+/* ✅ INSTANT PREVIEW + FILE STORE */
+document.getElementById("fileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  selectedFile = file;
+
+  // 🔥 INSTANT PREVIEW (NO UPLOAD)
+  if (previewURL) URL.revokeObjectURL(previewURL);
+  previewURL = URL.createObjectURL(file);
+  document.getElementById("preview").src = previewURL;
+
+  document.getElementById("fileInfo").innerText =
+    `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+});
+
+/* =========================
+   CLOUDINARY WITH PROGRESS
+========================= */
+function uploadToCloudinary(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", "arkforge-pets");
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        onProgress(percent);
+      }
+    };
+
+    xhr.onload = () => {
+      const data = JSON.parse(xhr.responseText);
+      if (!data.secure_url) reject("Upload failed");
+      else resolve(data.secure_url);
+    };
+
+    xhr.onerror = () => reject("Network error");
+
+    xhr.send(form);
+  });
+}
+
+/* =========================
+   IMAGE COMPRESSION
+========================= */
+async function compressImage(file, maxSize = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+
+        if (w > h && w > maxSize) {
+          h = h * (maxSize / w);
+          w = maxSize;
+        } else if (h > maxSize) {
+          w = w * (maxSize / h);
+          h = maxSize;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+        canvas.toBlob(blob => {
+          resolve(new File([blob], "photo.jpg", {
+            type: "image/jpeg",
+            lastModified: Date.now()
+          }));
+        }, "image/jpeg", quality);
+      };
+
+      img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+/* =========================
+   SAVE WITH UPLOAD PROGRESS UI
+========================= */
+window.save = async () => {
+
+  const btn = document.getElementById("saveBtn");
+  const statusBox = document.getElementById("statusDisplay");
+
+  btn.disabled = true;
+
+  let photoURL = petData.photo || "";
+
+  try {
+
+    if (selectedFile) {
+
+      // show upload state
+      statusBox.className = "statusBox safe";
+      statusBox.innerText = "Uploading image... 0%";
+
+      const compressed = await compressImage(selectedFile);
+
+      photoURL = await uploadToCloudinary(compressed, (percent) => {
+        statusBox.innerText = `Uploading image... ${percent}%`;
+      });
+
+      statusBox.innerText = "Upload complete ✔";
+    }
+
+    const microchipVal =
+      document.getElementById("microchipInput").style.display === "block"
+        ? document.getElementById("microchipInput").value.trim()
+        : petData.microchip;
+
+    const nameVal =
+      document.getElementById("petNameInput").style.display === "block"
+        ? document.getElementById("petNameInput").value.trim()
+        : petData.name;
+
+    await updateDoc(ref, {
+      phone: document.getElementById("phone").value,
+      phone2: document.getElementById("phone2").value,
+      photo: photoURL,
+      microchip: microchipVal,
+      name: nameVal,
+      updatedAt: new Date()
+    });
+
+    document.getElementById("successMsg").style.display = "block";
+    document.getElementById("successSub").style.display = "block";
+
+  } catch (err) {
+    statusBox.innerText = "Upload failed: " + err;
+    btn.disabled = false;
+  }
+};
+
+load();
+</script>
 </body>
 </html>
