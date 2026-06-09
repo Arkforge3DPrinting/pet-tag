@@ -253,20 +253,17 @@ function loadPet() {
     photo.classList.remove("lostPhoto", "safePhoto");
     badge.classList.remove("hidden", "status-lost", "status-safe");
 
-    const status = pet.petStatus || "safe";
+const status = pet.petStatus;
 
-    if (status === "lost") {
-      badge.innerText = "🔴 LOST";
-      badge.classList.add("status-lost");
-      photo.classList.add("lostPhoto");
-    } else {
-      badge.innerText = "🟢 SAFE";
-      badge.classList.add("status-safe");
-      photo.classList.add("safePhoto");
-    }
-
-    if (pet.photo) photo.src = pet.photo;
-
+if (status === "lost") {
+  badge.innerText = "🔴 LOST";
+  badge.classList.add("status-lost");
+  photo.classList.add("lostPhoto");
+} else {
+  badge.innerText = "";
+  badge.classList.remove("status-lost");
+  badge.classList.remove("status-safe");
+}
 /* LAST UPDATED (FINAL FIX) */
 const raw = pet.updatedAt;
 
