@@ -187,7 +187,7 @@ input {
 
 <div class="container">
 
-  <h1>Manage Portal PLS 7</h1>
+  <h1>Manage Portal PLS 8</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -248,15 +248,24 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-const id = new URLSearchParams(location.search).get("id");
+const id = new URLSearchParams(window.location.search).get("id");
 const ref = doc(db, "pets", id);
 
 let petData = null;
 
 /* LOAD */
 async function load() {
+  if (!id) {
+    console.error("No ID in URL");
+    return;
+  }
+
   const snap = await getDoc(ref);
-  if (!snap.exists()) return;
+
+  if (!snap.exists()) {
+    console.error("Pet not found:", id);
+    return;
+  }
 
   petData = snap.data();
 
@@ -292,7 +301,7 @@ function updateStatusUI() {
   box.innerText = petData.petStatus === "lost" ? "Status: LOST" : "Status: SAFE";
 }
 
-/* TOGGLES (FIXED) */
+/* TOGGLES */
 window.togglePetNameEdit = () => {
   const input = document.getElementById("petNameInput");
   input.readOnly = !input.readOnly;
@@ -325,6 +334,9 @@ window.save = async () => {
     location.reload();
   }, 800);
 };
+
+/* INIT */
+load();
 </script>
 
 </body>
