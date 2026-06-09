@@ -414,13 +414,14 @@ if (selectedFile) {
       ? document.getElementById("petNameInput").value.trim()
       : petData.name;
 
-  await updateDoc(ref, {
-    phone: document.getElementById("phone").value,
-    phone2: document.getElementById("phone2").value,
-    photo: photoURL,
-    microchip: microchipVal,
-    name: nameVal,
-    updatedAt: new Date()
+await updateDoc(ref, {
+  phone: document.getElementById("phone").value,
+  phone2: document.getElementById("phone2").value,
+  photo: photoURL,
+  microchip: microchipVal,
+  name: nameVal,
+  updatedAt: new Date()
+});
 
 document.getElementById("preview").src = photoURL + "?t=" + Date.now();
 petData.photo = photoURL;
