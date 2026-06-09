@@ -232,8 +232,10 @@ input {
     <div class="photoBtns">
       <button type="button" class="photoBtn cam" onclick="openCamera()">📷 Camera</button>
       <button type="button" class="photoBtn up" onclick="openGallery()">📁 Upload</button>
+      
     </div>
 
+    
     <input type="file" id="fileInput" accept="image/*">
     <div class="fileInfo" id="fileInfo"></div>
   </div>
@@ -262,6 +264,8 @@ const id = new URLSearchParams(window.location.search).get("id");
 const ref = doc(db, "pets", id);
 
 let petData = null;
+let selectedFile = null;
+let previewURL = null;
 
 /* LOAD */
 async function load() {
