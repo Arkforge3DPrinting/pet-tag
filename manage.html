@@ -372,13 +372,18 @@ window.openGallery = () => {
 };
 
 document.getElementById("fileInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
+  const file = e.target.files && e.target.files[0];
   if (!file) return;
 
   selectedFile = file;
 
-  document.getElementById("fileInfo").innerText =
+  // force UI update
+  const info = document.getElementById("fileInfo");
+  info.innerText =
     `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+
+  // IMPORTANT: allows re-selecting same file again (common bug)
+  e.target.value = "";
 });
 
 /* SAVE */
@@ -389,10 +394,15 @@ window.save = async () => {
 
   let photoURL = petData.photo || "";
 
-  if (selectedFile) {
-    const compressed = await compressImage(selectedFile);
-    photoURL = await uploadToCloudinary(compressed);
+if (selectedFile) {
+  if (typeof compressImage !== "function" || typeof uploadToCloudinary !== "function") {
+    alert("Image upload functions missing (compressImage / uploadToCloudinary)");
+    return;
   }
+
+  const compressed = await compressImage(selectedFile);
+  photoURL = await uploadToCloudinary(compressed);
+}
 
   const microchipVal =
     document.getElementById("microchipInput").style.display === "block"
@@ -411,6 +421,11 @@ window.save = async () => {
     microchip: microchipVal,
     name: nameVal,
     updatedAt: new Date()
+
+document.getElementById("preview").src = photoURL + "?t=" + Date.now();
+petData.photo = photoURL;
+selectedFile = null;
+document.getElementById("fileInfo").innerText = "";
   });
 
   document.getElementById("successMsg").style.display = "block";
