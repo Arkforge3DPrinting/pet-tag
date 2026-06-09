@@ -84,44 +84,50 @@
 
     p { font-size: 15px; color: #666; margin: 0 0 10px 0; }
 
-#petPhoto {
-  width: 100%;
-  max-width: 240px;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 18px;
-  margin: 10px auto;
+    #petPhoto {
+      width: 100%;
+      max-width: 240px;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 18px;
+      margin: 10px auto;
+      border: none;
+      box-shadow:
+        0 0 0 2px rgba(34, 197, 94, 0.25),
+        0 8px 22px rgba(0,0,0,0.08);
+      animation: petGlow 3s ease-in-out infinite;
+    }
 
-  /* remove harsh border */
-  border: none;
+    @keyframes petGlow {
+      0% {
+        box-shadow:
+          0 0 0 2px rgba(34, 197, 94, 0.18),
+          0 8px 20px rgba(0,0,0,0.08);
+      }
+      50% {
+        box-shadow:
+          0 0 0 4px rgba(34, 197, 94, 0.35),
+          0 0 16px rgba(34, 197, 94, 0.25),
+          0 10px 25px rgba(0,0,0,0.10);
+      }
+      100% {
+        box-shadow:
+          0 0 0 2px rgba(34, 197, 94, 0.18),
+          0 8px 20px rgba(0,0,0,0.08);
+      }
+    }
 
-  /* soft premium base glow */
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35),
-              0 10px 25px rgba(0, 0, 0, 0.08);
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+      align-items: stretch;
+    }
 
-  animation: petGlow 2.8s ease-in-out infinite;
-}
-
-/* subtle breathing green glow */
-@keyframes petGlow {
-  0% {
-    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25),
-                0 0 10px rgba(34, 197, 94, 0.15),
-                0 10px 25px rgba(0, 0, 0, 0.08);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.45),
-                0 0 18px rgba(34, 197, 94, 0.25),
-                0 10px 25px rgba(0, 0, 0, 0.10);
-  }
-  100% {
-    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25),
-                0 0 10px rgba(34, 197, 94, 0.15),
-                0 10px 25px rgba(0, 0, 0, 0.08);
-  }
-}
-
-    .single { grid-template-columns: 1fr !important; }
+    .single {
+      grid-template-columns: 1fr !important;
+    }
 
     button {
       width: 100%;
@@ -132,13 +138,20 @@
       font-weight: bold;
       cursor: pointer;
       color: white;
+      box-sizing: border-box;
     }
 
-    button:disabled { opacity: 0.7; }
+    button:disabled {
+      opacity: 0.7;
+    }
 
     #callBtn, #callBtn2 { background: #28c76f; }
     #textBtn, #textBtn2 { background: #3b82f6; }
     #locBtn, #locBtn2 { background: #ff9f43; }
+
+    .hidden {
+      display: none !important;
+    }
 
     .footer {
       margin-top: 14px;
@@ -186,27 +199,27 @@
       border-radius: 10px;
       font-weight: bold;
       text-decoration: none;
-}
+    }
 
-.gps-status {
-  display: none;
-  margin-top: 8px;
-  text-align: center;
-  font-size: 12px;
-  color: #22c55e;
-  font-weight: bold;
-  letter-spacing: 2px;
-  opacity: 0.8;
-}
+    .gps-status {
+      display: none;
+      margin-top: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #22c55e;
+      font-weight: bold;
+      letter-spacing: 2px;
+      opacity: 0.8;
+    }
 
-.gps-text {
-  display: none;
-  margin-top: 3px;
-  text-align: center;
-  font-size: 11px;
-  color: #777;
-  opacity: 0.9;
-}
+    .gps-text {
+      display: none;
+      margin-top: 3px;
+      text-align: center;
+      font-size: 11px;
+      color: #777;
+      opacity: 0.9;
+    }
   </style>
 </head>
 
@@ -247,10 +260,11 @@
     <button id="locBtn2">📍 Send Location Secondary</button>
 
   </div>
-  <div id="gpsStatus" class="gps-status">●○○</div>
-<div id="gpsText" class="gps-text">Acquiring your location...</div>
-  <div class="footer">Powered by ArkLink Pet ID ®</div>
 
+  <div id="gpsStatus" class="gps-status">●○○</div>
+  <div id="gpsText" class="gps-text">Acquiring your location...</div>
+
+  <div class="footer">Powered by ArkLink Pet ID ®</div>
 </div>
 
 <script type="module">
@@ -280,16 +294,9 @@ document.getElementById("tagCode").innerText = id;
 document.getElementById("tagLinkBtn").href =
   "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
 
-/* =========================
-   GPS FIX (REUSABLE)
-   ========================= */
-
 function getGPS() {
   return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("No GPS"));
-      return;
-    }
+    if (!navigator.geolocation) return reject(new Error("No GPS"));
 
     const timeout = setTimeout(() => reject(new Error("timeout")), 12000);
 
@@ -313,25 +320,15 @@ function getGPS() {
 
 let gpsBusy = false;
 
-/* =========================
-   MAIN LOAD
-   ========================= */
-
 async function loadPet() {
 
   const snap = await getDoc(doc(db, "pets", id));
 
-  if (!snap.exists()) {
-    locked.style.display = "block";
-    return;
-  }
+  if (!snap.exists()) return locked.style.display = "block";
 
   const pet = snap.data();
 
-  if (pet.status !== "active") {
-    locked.style.display = "block";
-    return;
-  }
+  if (pet.status !== "active") return locked.style.display = "block";
 
   main.style.display = "block";
 
@@ -341,68 +338,55 @@ async function loadPet() {
   document.getElementById("message").innerText =
     "Help get " + (pet.name || "this pet") + " home safely.";
 
-  if (pet.microchip) {
-    document.getElementById("microchipText").innerHTML =
-      "Microchip: <b>" + pet.microchip + "</b>";
-  }
-
   if (pet.photo) {
-    const img = document.getElementById("petPhoto");
-    img.src = pet.photo;
+    document.getElementById("petPhoto").src = pet.photo;
   }
 
- function bindGPS(btnId, phone, label) {
-  const btn = document.getElementById(btnId);
+  function bindGPS(btnId, phone, label) {
+    const btn = document.getElementById(btnId);
 
-  btn.onclick = async () => {
-    if (gpsBusy) return;
-    gpsBusy = true;
+    btn.onclick = async () => {
+      if (gpsBusy) return;
+      gpsBusy = true;
 
-    const gpsStatus = document.getElementById("gpsStatus");
-    const gpsText = document.getElementById("gpsText");
+      const gpsStatus = document.getElementById("gpsStatus");
+      const gpsText = document.getElementById("gpsText");
 
-    const frames = ["●○○", "●●○", "●●●"];
-    let frame = 0;
+      const frames = ["●○○", "●●○", "●●●"];
+      let frame = 0;
 
-    gpsStatus.innerText = frames[0];
-    gpsStatus.style.display = "block";
-    gpsText.style.display = "block";
+      gpsStatus.style.display = "block";
+      gpsText.style.display = "block";
 
-    const gpsAnimation = setInterval(() => {
-      frame = (frame + 1) % frames.length;
-      gpsStatus.innerText = frames[frame];
-    }, 350);
+      const anim = setInterval(() => {
+        gpsStatus.innerText = frames[frame++ % frames.length];
+      }, 350);
 
-    btn.disabled = true;
-    btn.innerText = "📡 Acquiring GPS...";
+      btn.disabled = true;
+      btn.innerText = "📡 Acquiring GPS...";
 
-    try {
-      const pos = await getGPS();
+      try {
+        const pos = await getGPS();
 
-      const msg =
-        "I found " + pet.name +
-        ". Location: https://maps.google.com/?q=" +
-        pos.coords.latitude + "," + pos.coords.longitude;
+        const msg =
+          "I found " + pet.name +
+          ". Location: https://maps.google.com/?q=" +
+          pos.coords.latitude + "," + pos.coords.longitude;
 
-      window.open(
-        `sms:${phone}?body=${encodeURIComponent(msg)}`,
-        "_self"
-      );
+        window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, "_self");
 
-    } catch (e) {
-      alert("Unable to get GPS location.");
-    } finally {
-      clearInterval(gpsAnimation);
+      } finally {
+        clearInterval(anim);
 
-      gpsStatus.style.display = "none";
-      gpsText.style.display = "none";
+        gpsStatus.style.display = "none";
+        gpsText.style.display = "none";
 
-      btn.disabled = false;
-      btn.innerText = label;
-      gpsBusy = false;
-    }
-  };
-}
+        btn.disabled = false;
+        btn.innerText = label;
+        gpsBusy = false;
+      }
+    };
+  }
 
   document.getElementById("callBtn").onclick =
     () => window.location.href = "tel:" + pet.phone;
@@ -422,9 +406,9 @@ async function loadPet() {
     bindGPS("locBtn2", pet.phone2, "📍 Send Location Secondary");
 
   } else {
-    document.getElementById("callBtn2").style.display = "none";
-    document.getElementById("textBtn2").style.display = "none";
-    document.getElementById("locBtn2").style.display = "none";
+    document.getElementById("callBtn2").classList.add("hidden");
+    document.getElementById("textBtn2").classList.add("hidden");
+    document.getElementById("locBtn2").classList.add("hidden");
     document.getElementById("btnGrid").classList.add("single");
   }
 }
