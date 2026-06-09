@@ -300,23 +300,25 @@ input {
 <div class="section">
   <label>Pet Name</label>
 
-  <div class="microchipEditToggle" onclick="togglePetNameEdit()">
-    ✏️ Edit pet namess
-  </div>
+  <!-- SINGLE LOCKED FIELD -->
+  <input id="petNameInput" readonly>
 
-  <input id="petNameInput" style="display:none;">
+  <!-- EDIT TOGGLE -->
+  <div class="microchipEditToggle" onclick="togglePetNameEdit()">
+    ✏️ Edit pet name
+  </div>
 </div>
 
 <div class="section">
   <label>Microchip</label>
 
-  <div class="microchipBox" id="microchipDisplay">Loading...</div>
+  <!-- SINGLE FIELD (LOCKED BY DEFAULT) -->
+  <input id="microchipInput" readonly>
 
+  <!-- EDIT BUTTON -->
   <div class="microchipEditToggle" onclick="toggleMicrochipEdit()">
-    ✏️ Edit microchipss
+    ✏️ Edit microchip
   </div>
-
-  <input id="microchipInput" style="display:none;">
 </div>
 
   <div class="section">
