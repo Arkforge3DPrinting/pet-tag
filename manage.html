@@ -3,7 +3,7 @@
 <head>
   <title>ArkLink Pet ID - Manage Pet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -162,6 +162,22 @@
   display: block;
   margin: 14px auto 0 auto; /* centers it */
 }
+    #uploadBarWrap {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  margin-top: 10px;
+  overflow: hidden;
+  display: none;
+}
+
+#uploadBar {
+  height: 100%;
+  width: 0%;
+  background: #3b82f6;
+  transition: width 0.2s ease;
+}
   </style>
 </head>
 
@@ -180,8 +196,12 @@
 
   <div class="section">
     <label>Status</label>
-    <button class="lostBtn" onclick="setStatus('lost')">Mark Lost</button>
-    <button class="safeBtn" onclick="setStatus('safe')">Mark Safe</button>
+    <button class="lostBtn" onclick="setStatus('lost')">
+  <i class="fa-solid fa-xmark"></i> Mark Lost
+  </button>
+  <button class="safeBtn" onclick="setStatus('safe')">
+  <i class="fa-solid fa-check"></i> Mark Safe
+</button>
   </div>
 
   <div class="section">
@@ -203,17 +223,35 @@
     <input id="microchipInput" readonly>
    <div class="editLink" onclick="toggleMicrochipEdit()">✏️ Edit microchip</div>
   </div>
+<div class="section">
+  <label>Photo</label>
 
-  <div class="section">
-    <label>Photo</label>
-    <img id="preview">
-    <input type="file" id="fileInput" accept="image/*">
-    <button type="button" class="actionBtn" onclick="document.getElementById('fileInput').click()">
-  Upload
-</button>
+  <img id="preview">
+
+  <div style="display:flex; gap:10px; margin-top:10px;">
+    <button type="button" class="primaryBtn" onclick="openCamera()">
+      <i class="fa-solid fa-camera"></i> Camera
+    </button>
+
+    <button type="button" class="primaryBtn" onclick="openGallery()">
+      <i class="fa-solid fa-upload"></i> Upload
+    </button>
   </div>
 
-  <button class="saveBtn" id="saveBtn" onclick="save()">SAVE</button>
+  <input type="file" id="fileInput" accept="image/*">
+
+  <!-- PROGRESS BAR -->
+  <div id="uploadBarWrap">
+    <div id="uploadBar"></div>
+  </div>
+
+  <div id="fileInfo"></div>
+</div>
+  <div class="saveWrap">
+  <button id="saveBtn" class="saveBtn primaryBtn" onclick="save()">
+    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+  </button>
+</div>
 
   <div class="successMsg" id="successMsg">Saved!</div>
 
@@ -322,23 +360,54 @@ document.getElementById("fileInput").addEventListener("change", (e) => {
 /* ================= CLOUDINARY ================= */
 function upload(file) {
   return new Promise((resolve, reject) => {
+
     const form = new FormData();
     form.append("file", file);
     form.append("upload_preset", "arkforge-pets");
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
 
-    xhr.onload = () => {
-      const data = JSON.parse(xhr.responseText);
-      resolve(data.secure_url);
+    const barWrap = document.getElementById("uploadBarWrap");
+    const bar = document.getElementById("uploadBar");
+
+    barWrap.style.display = "block";
+    bar.style.width = "0%";
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const percent = (e.loaded / e.total) * 100;
+        bar.style.width = percent + "%";
+      }
     };
 
-    xhr.onerror = reject;
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+
+        if (!data.secure_url) {
+          reject("Upload failed");
+          return;
+        }
+
+        bar.style.width = "100%";
+
+        setTimeout(() => {
+          barWrap.style.display = "none";
+        }, 500);
+
+        resolve(data.secure_url);
+
+      } catch (err) {
+        reject("Invalid response");
+      }
+    };
+
+    xhr.onerror = () => reject("Network error");
+
+    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
     xhr.send(form);
   });
 }
-
 /* ================= SAVE ================= */
 window.save = async () => {
   const btn = document.getElementById("saveBtn");
