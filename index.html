@@ -267,13 +267,25 @@ function loadPet() {
 
     if (pet.photo) photo.src = pet.photo;
 
-    /* LAST UPDATED (FIXED) */
-    const lastRaw = pet.updatedAt?.toDate?.() || pet.updatedAt;
-    const last = lastRaw ? new Date(lastRaw) : null;
+/* LAST UPDATED (FIXED PROPERLY) */
+const raw = pet.updatedAt;
 
-    if (last && !isNaN(last.getTime())) {
-      document.getElementById("lastUpdated").innerText =
-        "Last updated: " + timeAgo(last);
+let last = null;
+
+if (raw?.toDate) {
+  last = raw.toDate(); // Firestore Timestamp
+} else if (raw) {
+  last = new Date(raw); // fallback string/number
+}
+
+if (last && !isNaN(last.getTime())) {
+  document.getElementById("lastUpdated").innerText =
+    "Last updated: " + timeAgo(last);
+}
+
+if (last && !isNaN(last.getTime())) {
+  document.getElementById("lastUpdated").innerText =
+    "Last updated: " + timeAgo(last);
     }
 
     /* ===== BUTTONS FIXED (NO OVERWRITING, SECONDARY INCLUDED) ===== */
