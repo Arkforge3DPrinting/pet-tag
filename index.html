@@ -84,23 +84,42 @@
 
     p { font-size: 15px; color: #666; margin: 0 0 10px 0; }
 
-    #petPhoto {
-      width: 100%;
-      max-width: 240px;
-      aspect-ratio: 1 / 1;
-      object-fit: cover;
-      border-radius: 18px;
-      margin: 10px auto;
-      border: 4px solid #fff;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.9);
-    }
+#petPhoto {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 18px;
+  margin: 10px auto;
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 14px;
-    }
+  /* remove harsh border */
+  border: none;
+
+  /* soft premium base glow */
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35),
+              0 10px 25px rgba(0, 0, 0, 0.08);
+
+  animation: petGlow 2.8s ease-in-out infinite;
+}
+
+/* subtle breathing green glow */
+@keyframes petGlow {
+  0% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25),
+                0 0 10px rgba(34, 197, 94, 0.15),
+                0 10px 25px rgba(0, 0, 0, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.45),
+                0 0 18px rgba(34, 197, 94, 0.25),
+                0 10px 25px rgba(0, 0, 0, 0.10);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25),
+                0 0 10px rgba(34, 197, 94, 0.15),
+                0 10px 25px rgba(0, 0, 0, 0.08);
+  }
+}
 
     .single { grid-template-columns: 1fr !important; }
 
