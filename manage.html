@@ -323,7 +323,11 @@ async function load() {
 
 /* STATUS */
 window.setStatus = async (status) => {
-  await updateDoc(ref, { petStatus: status });
+  await updateDoc(ref, { 
+    petStatus: status,
+    updatedAt: new Date()
+  });
+
   petData.petStatus = status;
   updateStatusUI();
 };
