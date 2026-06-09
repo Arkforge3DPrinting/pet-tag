@@ -187,7 +187,7 @@ input {
 
 <div class="container">
 
-  <h1>Manage Portal PLS 10</h1>
+  <h1>Manage Portal PLS 11</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -356,6 +356,36 @@ window.openGallery = () => {
   document.getElementById("fileInfo").innerText =
     `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
 });
+
+  function uploadToCloudinary(file) {
+  return new Promise((resolve, reject) => {
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", "arkforge-pets"); // your preset
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.open(
+      "POST",
+      "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload"
+    );
+
+    xhr.onload = () => {
+      const data = JSON.parse(xhr.responseText);
+
+      if (data.secure_url) {
+        resolve(data.secure_url);
+      } else {
+        reject("Upload failed");
+      }
+    };
+
+    xhr.onerror = () => reject("Network error");
+
+    xhr.send(form);
+  });
+}
   
 /* SAVE */
 window.save = async () => {
@@ -363,23 +393,40 @@ window.save = async () => {
   const nameVal = document.getElementById("petNameInput").value.trim();
   const microchipVal = document.getElementById("microchipInput").value.trim();
 
-  await updateDoc(ref, {
-    phone: document.getElementById("phone").value,
-    phone2: document.getElementById("phone2").value,
-    name: nameVal,
-    microchip: microchipVal,
-    updatedAt: new Date()
-  });
+  const phone = document.getElementById("phone").value;
+  const phone2 = document.getElementById("phone2").value;
 
-  document.getElementById("successMsg").style.display = "block";
+  let photoURL = petData.photo || "";
 
-  setTimeout(() => {
-    location.reload();
-  }, 800);
+  try {
+
+    // STEP 1: upload image if new one selected
+    if (selectedFile) {
+      photoURL = await uploadToCloudinary(selectedFile);
+    }
+
+    // STEP 2: save everything to Firebase
+    await updateDoc(ref, {
+      name: nameVal,
+      microchip: microchipVal,
+      phone,
+      phone2,
+      photo: photoURL,
+      updatedAt: new Date()
+    });
+
+    // success UI
+    document.getElementById("successMsg").style.display = "block";
+
+    setTimeout(() => {
+      location.reload();
+    }, 800);
+
+  } catch (err) {
+    console.error(err);
+    alert("Save failed: " + err);
+  }
 };
-
-/* INIT */
-load();
 </script>
 
 </body>
