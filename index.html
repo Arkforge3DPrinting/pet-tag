@@ -34,33 +34,12 @@
       border: 3px solid #3b82f6;
       box-shadow: 0 0 25px rgba(59,130,246,0.25);
       animation: pulse 1.2s infinite;
-      position: relative;
-    }
-
-    .scanCircle::after {
-      content: "";
-      position: absolute;
-      inset: -10px;
-      border-radius: 50%;
-      border: 2px solid rgba(59,130,246,0.15);
-      animation: ripple 1.6s infinite;
     }
 
     .scanText {
       margin-top: 14px;
       font-weight: bold;
       color: #3b82f6;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.12); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes ripple {
-      0% { transform: scale(1); opacity: 0.6; }
-      100% { transform: scale(1.8); opacity: 0; }
     }
 
     @keyframes fadeOut {
@@ -73,7 +52,6 @@
       background: linear-gradient(180deg, #ffffff, #fbfcfd);
       padding: 16px;
       border-radius: 22px;
-      border: 1px solid rgba(59,130,246,0.15);
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       text-align: center;
       display: none;
@@ -98,7 +76,7 @@
       transition: 0.3s ease;
     }
 
-    /* SAFE (GREEN) */
+    /* SAFE */
     .safePhoto {
       animation: petGlowGreen 3s ease-in-out infinite;
     }
@@ -109,7 +87,7 @@
       100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.18), 0 8px 20px rgba(0,0,0,0.08); }
     }
 
-    /* LOST (RED PULSE) */
+    /* LOST */
     .lostPhoto {
       animation: petGlowRed 1.6s ease-in-out infinite;
     }
@@ -161,22 +139,11 @@
 
     .hidden { display: none !important; }
 
-    /* GPS UI */
-    .gps-status {
-      display: none;
-      margin-top: 8px;
-      text-align: center;
+    /* LAST UPDATED */
+    #lastUpdated {
+      margin-top: 10px;
       font-size: 12px;
-      color: #22c55e;
-      font-weight: bold;
-      letter-spacing: 2px;
-    }
-
-    .gps-text {
-      display: none;
-      margin-top: 4px;
-      font-size: 11px;
-      color: #777;
+      color: #666;
     }
   </style>
 </head>
@@ -187,8 +154,6 @@
   <div class="scanCircle"></div>
   <div class="scanText">Scanning ArkLink Tag...</div>
 </div>
-
-<div id="locked"></div>
 
 <div class="container" id="main">
 
@@ -209,14 +174,16 @@
     <button id="locBtn2">📍 Send Location Secondary</button>
   </div>
 
-  <div id="gpsStatus" class="gps-status"></div>
-  <div id="gpsText" class="gps-text">Acquiring your location...</div>
+  <div id="gpsStatus"></div>
+  <div id="gpsText">Acquiring your location...</div>
+
+  <div id="lastUpdated">Last updated: —</div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyCxFKSE6bXM06hVVswiRN_S9FO2NpDKEHc",
@@ -232,6 +199,19 @@ const main = document.getElementById("main");
 
 let gpsBusy = false;
 
+/* TIME FORMAT */
+function timeAgo(date) {
+  const seconds = Math.floor((Date.now() - date) / 1000);
+
+  if (seconds < 60) return `${seconds}s ago`;
+  const mins = Math.floor(seconds / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
 /* GPS */
 function getGPS() {
   return new Promise((resolve, reject) => {
@@ -239,111 +219,118 @@ function getGPS() {
   });
 }
 
-/* GPS BUTTON BIND */
-function bindGPS(btnId, phone, pet) {
-  const btn = document.getElementById(btnId);
+/* LIVE FIRESTORE */
+function loadPet() {
 
-  btn.onclick = async () => {
-    if (gpsBusy) return;
-    gpsBusy = true;
+  const ref = doc(db, "pets", id);
 
-    const gpsStatus = document.getElementById("gpsStatus");
-    const gpsText = document.getElementById("gpsText");
+  onSnapshot(ref, (snap) => {
 
-    const frames = ["●○○", "●●○", "●●●"];
-    let frame = 0;
+    if (!snap.exists()) return;
 
-    gpsStatus.style.display = "block";
-    gpsText.style.display = "block";
+    const pet = snap.data();
 
-    const anim = setInterval(() => {
-      gpsStatus.innerText = frames[frame++ % frames.length];
-    }, 350);
+    main.style.display = "block";
 
-    btn.disabled = true;
-    btn.innerText = "📡 Acquiring GPS...";
+    document.getElementById("title").innerText =
+      "🐾 You found " + pet.name;
 
-    try {
+    document.getElementById("message").innerText =
+      "Help get them home safely.";
+
+    const photo = document.getElementById("petPhoto");
+    const badge = document.getElementById("statusBadge");
+
+    /* PHOTO */
+    if (pet.photo) photo.src = pet.photo;
+
+    const status = pet.petStatus || "safe";
+
+    badge.classList.remove("hidden");
+
+    photo.classList.remove("lostPhoto", "safePhoto");
+
+    if (status === "lost") {
+      badge.innerText = "🔴 LOST";
+      badge.classList.add("status-lost");
+      photo.classList.add("lostPhoto");
+    } else {
+      badge.innerText = "🟢 SAFE";
+      badge.classList.add("status-safe");
+      photo.classList.add("safePhoto");
+    }
+
+    /* LAST UPDATED */
+    const last = pet.updatedAt?.toDate?.() || pet.updatedAt;
+
+    if (last) {
+      const updateUI = () => {
+        document.getElementById("lastUpdated").innerText =
+          "Last updated: " + timeAgo(last);
+      };
+
+      updateUI();
+      setInterval(updateUI, 10000);
+    }
+
+    /* BUTTONS */
+    document.getElementById("callBtn").onclick =
+      () => window.location.href = "tel:" + pet.phone;
+
+    document.getElementById("textBtn").onclick =
+      () => window.open(`sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+
+    document.getElementById("locBtn").onclick = async () => {
+      if (gpsBusy) return;
+      gpsBusy = true;
+
       const pos = await getGPS();
 
-      const msg =
-        "I found " + pet.name +
-        ". Location: https://maps.google.com/?q=" +
-        pos.coords.latitude + "," + pos.coords.longitude;
+      window.open(
+        `sms:${pet.phone}?body=${encodeURIComponent(
+          "I found " + pet.name +
+          " https://maps.google.com/?q=" +
+          pos.coords.latitude + "," + pos.coords.longitude
+        )}`,
+        "_self"
+      );
 
-      window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, "_self");
-
-    } finally {
-      clearInterval(anim);
-
-      gpsStatus.style.display = "none";
-      gpsText.style.display = "none";
-
-      btn.disabled = false;
-      btn.innerText = "📍 Send Location";
       gpsBusy = false;
+    };
+
+    if (pet.phone2?.trim()) {
+      document.getElementById("callBtn2").onclick =
+        () => window.location.href = "tel:" + pet.phone2;
+
+      document.getElementById("textBtn2").onclick =
+        () => window.open(`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+
+      document.getElementById("locBtn2").onclick = async () => {
+        if (gpsBusy) return;
+        gpsBusy = true;
+
+        const pos = await getGPS();
+
+        window.open(
+          `sms:${pet.phone2}?body=${encodeURIComponent(
+            "I found " + pet.name +
+            " https://maps.google.com/?q=" +
+            pos.coords.latitude + "," + pos.coords.longitude
+          )}`,
+          "_self"
+        );
+
+        gpsBusy = false;
+      };
+
+    } else {
+      document.getElementById("btnGrid").classList.add("single");
+      ["callBtn2","textBtn2","locBtn2"].forEach(id =>
+        document.getElementById(id).classList.add("hidden")
+      );
     }
-  };
-}
 
-/* LOAD */
-async function loadPet() {
-
-  const snap = await getDoc(doc(db, "pets", id));
-  if (!snap.exists()) return;
-
-  const pet = snap.data();
-
-  main.style.display = "block";
-
-  document.getElementById("title").innerText = "🐾 You found " + pet.name;
-  document.getElementById("message").innerText = "Help get them home safely.";
-
-  const photo = document.getElementById("petPhoto");
-  const badge = document.getElementById("statusBadge");
-
-  const status = pet.petStatus || "safe";
-
-  badge.classList.remove("hidden");
-
-  if (status === "lost") {
-    badge.innerText = "🔴 LOST";
-    badge.classList.add("status-lost");
-    photo.classList.add("lostPhoto");
-  } else {
-    badge.innerText = "🟢 SAFE";
-    badge.classList.add("status-safe");
-    photo.classList.add("safePhoto");
-  }
-
-  if (pet.photo) photo.src = pet.photo;
-
-  /* BUTTONS */
-  document.getElementById("callBtn").onclick =
-    () => window.location.href = "tel:" + pet.phone;
-
-  document.getElementById("textBtn").onclick =
-    () => window.open(`sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
-
-  bindGPS("locBtn", pet.phone, pet);
-
-  if (pet.phone2 && pet.phone2.trim()) {
-
-    document.getElementById("callBtn2").onclick =
-      () => window.location.href = "tel:" + pet.phone2;
-
-    document.getElementById("textBtn2").onclick =
-      () => window.open(`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
-
-    bindGPS("locBtn2", pet.phone2, pet);
-
-  } else {
-    document.getElementById("btnGrid").classList.add("single");
-
-    ["callBtn2","textBtn2","locBtn2"].forEach(id =>
-      document.getElementById(id).classList.add("hidden")
-    );
-  }
+  });
 }
 
 loadPet();
