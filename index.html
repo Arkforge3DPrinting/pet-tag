@@ -255,14 +255,15 @@ function loadPet() {
 
 const status = pet.petStatus;
 
+badge.className = "";
+photo.className = "";
+
 if (status === "lost") {
   badge.innerText = "🔴 LOST";
   badge.classList.add("status-lost");
   photo.classList.add("lostPhoto");
 } else {
   badge.innerText = "";
-  badge.classList.remove("status-lost");
-  badge.classList.remove("status-safe");
 }
 /* LAST UPDATED (FINAL FIX) */
 const raw = pet.updatedAt;
