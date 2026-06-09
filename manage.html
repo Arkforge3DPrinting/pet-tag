@@ -144,6 +144,42 @@
       margin-top: 4px;
       display: none;
     }
+        /* =========================
+   UNIFIED FIELD SYSTEM
+   (this fixes EVERYTHING)
+========================= */
+
+:root {
+  --field-bg: #ffffff;
+  --field-border: #e5e7eb;
+  --field-radius: 10px;
+  --field-padding: 10px;
+  --field-font: 13px;
+}
+
+/* apply to ALL inputs */
+input {
+  width: 100%;
+  padding: var(--field-padding);
+  border-radius: var(--field-radius);
+  border: 1px solid var(--field-border);
+  font-size: var(--field-font);
+  background: var(--field-bg);
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+/* Make all input fields same var */
+.microchipBox {
+  width: 100%;
+  padding: var(--field-padding);
+  border-radius: var(--field-radius);
+  border: 1px solid var(--field-border);
+  font-size: var(--field-font);
+  background: var(--field-bg);
+  box-sizing: border-box;
+  font-family: inherit; /* important: removes monospace mismatch */
+}
   </style>
 </head>
 
