@@ -300,23 +300,31 @@ input {
 <div class="section">
   <label>Pet Name</label>
 
-  <div class="microchipEditToggle" onclick="togglePetNameEdit()">
+  <!-- VIEW MODE -->
+  <div id="petNameDisplay">Loading...</div>
+
+  <!-- EDIT BUTTON -->
+  <div class="microchipEditToggle" onclick="enablePetNameEdit()">
     ✏️ Edit pet name
   </div>
 
-  <input id="petNameInput" style="display:none;" />
+  <!-- EDIT MODE INPUT -->
+  <input id="petNameInput" style="display:none;">
 </div>
 
 <div class="section">
   <label>Microchip</label>
 
+  <!-- VIEW MODE -->
   <div class="microchipBox" id="microchipDisplay">Loading...</div>
 
-  <div class="microchipEditToggle" onclick="toggleMicrochipEdit()">
+  <!-- EDIT BUTTON -->
+  <div class="microchipEditToggle" onclick="enableMicrochipEdit()">
     ✏️ Edit microchip
   </div>
 
-  <input id="microchipInput" style="display:none;" />
+  <!-- EDIT MODE INPUT -->
+  <input id="microchipInput" style="display:none;">
 </div>
 
   <div class="section">
