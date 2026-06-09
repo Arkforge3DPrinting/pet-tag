@@ -84,6 +84,12 @@
 
     p { font-size: 15px; color: #666; margin: 0 0 10px 0; }
 
+    /* IMAGE WRAP (IMPORTANT FOR BADGE POSITIONING) */
+    .photoWrap {
+      position: relative;
+      display: inline-block;
+    }
+
     #petPhoto {
       width: 100%;
       max-width: 240px;
@@ -117,6 +123,46 @@
       }
     }
 
+    /* ✅ STATUS BADGE */
+    .statusBadge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: 0.5px;
+      z-index: 10;
+      box-shadow: 0 0 12px rgba(0,0,0,0.2);
+      backdrop-filter: blur(6px);
+    }
+
+    .status-lost {
+      background: #ef4444;
+      box-shadow: 0 0 16px rgba(239,68,68,0.7);
+      animation: pulseRed 1.8s infinite;
+    }
+
+    .status-safe {
+      background: #22c55e;
+      box-shadow: 0 0 16px rgba(34,197,94,0.6);
+      animation: pulseGreen 2.5s infinite;
+    }
+
+    @keyframes pulseRed {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes pulseGreen {
+      0% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.04); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.9; }
+    }
+
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -125,9 +171,7 @@
       align-items: stretch;
     }
 
-    .single {
-      grid-template-columns: 1fr !important;
-    }
+    .single { grid-template-columns: 1fr !important; }
 
     button {
       width: 100%;
@@ -138,20 +182,15 @@
       font-weight: bold;
       cursor: pointer;
       color: white;
-      box-sizing: border-box;
     }
 
-    button:disabled {
-      opacity: 0.7;
-    }
+    button:disabled { opacity: 0.7; }
 
     #callBtn, #callBtn2 { background: #28c76f; }
     #textBtn, #textBtn2 { background: #3b82f6; }
     #locBtn, #locBtn2 { background: #ff9f43; }
 
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     .footer {
       margin-top: 14px;
@@ -245,7 +284,12 @@
   <h1 id="title">Loading...</h1>
   <p id="message"></p>
 
-  <img id="petPhoto">
+  <!-- PHOTO + BADGE -->
+  <div class="photoWrap">
+    <div id="statusBadge" class="statusBadge hidden"></div>
+    <img id="petPhoto">
+  </div>
+
   <div id="microchipText"></div>
 
   <div id="btnGrid" class="grid">
@@ -341,6 +385,20 @@ async function loadPet() {
 
   if (pet.photo) {
     document.getElementById("petPhoto").src = pet.photo;
+  }
+
+  // ===== STATUS BADGE =====
+  const badge = document.getElementById("statusBadge");
+  const status = pet.petStatus || pet.status || "safe";
+
+  badge.classList.remove("hidden");
+
+  if (status === "lost") {
+    badge.innerText = "🔴 LOST";
+    badge.classList.add("status-lost");
+  } else {
+    badge.innerText = "🟢 SAFE";
+    badge.classList.add("status-safe");
   }
 
   function bindGPS(btnId, phone, label) {
