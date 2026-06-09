@@ -245,20 +245,26 @@ function loadPet() {
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
     document.getElementById("message").innerText = "Help get them home safely.";
-    /* MICROCHIP DISPLAY (FIX) */
-    if (pet.microchip) {
-    let chip = document.getElementById("microchipText");
+/* MICROCHIP DISPLAY (FIX) */
+if (pet.microchip) {
+  let chip = document.getElementById("microchipText");
 
-    if (!chip) {
+  if (!chip) {
     chip = document.createElement("div");
     chip.id = "microchipText";
     chip.style.marginTop = "8px";
     chip.style.fontSize = "12px";
     chip.style.color = "#666";
+    chip.style.fontWeight = "600";
     document.getElementById("main").insertBefore(chip, document.getElementById("btnGrid"));
   }
 
-  chip.innerText = "Microchip: " + pet.microchip;
+  let value = pet.microchip;
+
+  // uppercase only letters (safe for mixed alphanumeric chips)
+  value = value.toUpperCase();
+
+  chip.innerHTML = "Microchip: <strong>" + value + "</strong>";
 }
 
     const photo = document.getElementById("petPhoto");
