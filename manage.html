@@ -390,22 +390,23 @@ window.openGallery = () => {
 /* SAVE */
 window.save = async () => {
 
-  const nameVal = document.getElementById("petNameInput").value.trim();
-  const microchipVal = document.getElementById("microchipInput").value.trim();
-
-  const phone = document.getElementById("phone").value;
-  const phone2 = document.getElementById("phone2").value;
-
-  let photoURL = petData.photo || "";
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
 
   try {
 
-    // STEP 1: upload image if new one selected
-    if (selectedFile) {
+    const nameVal = document.getElementById("petNameInput").value.trim();
+    const microchipVal = document.getElementById("microchipInput").value.trim();
+    const phone = document.getElementById("phone").value;
+    const phone2 = document.getElementById("phone2").value;
+
+    let photoURL = petData?.photo || "";
+
+    // only upload if file exists
+    if (typeof selectedFile !== "undefined" && selectedFile) {
       photoURL = await uploadToCloudinary(selectedFile);
     }
 
-    // STEP 2: save everything to Firebase
     await updateDoc(ref, {
       name: nameVal,
       microchip: microchipVal,
@@ -415,7 +416,6 @@ window.save = async () => {
       updatedAt: new Date()
     });
 
-    // success UI
     document.getElementById("successMsg").style.display = "block";
 
     setTimeout(() => {
@@ -425,6 +425,7 @@ window.save = async () => {
   } catch (err) {
     console.error(err);
     alert("Save failed: " + err);
+    btn.disabled = false;
   }
 };
 </script>
