@@ -207,7 +207,7 @@
 
 <div class="container">
 
-  <h1>Manage Portal Beta</h1>
+  <h1>Manage Portal Beta v2</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -394,15 +394,16 @@ window.save = async () => {
 
   let photoURL = petData.photo || "";
 
-if (selectedFile) {
-  if (typeof compressImage !== "function" || typeof uploadToCloudinary !== "function") {
-    alert("Image upload functions missing (compressImage / uploadToCloudinary)");
-    return;
-  }
+  if (selectedFile) {
+    if (typeof compressImage !== "function" || typeof uploadToCloudinary !== "function") {
+      alert("Image upload functions missing (compressImage / uploadToCloudinary)");
+      btn.disabled = false;
+      return;
+    }
 
-  const compressed = await compressImage(selectedFile);
-  photoURL = await uploadToCloudinary(compressed);
-}
+    const compressed = await compressImage(selectedFile);
+    photoURL = await uploadToCloudinary(compressed);
+  }
 
   const microchipVal =
     document.getElementById("microchipInput").style.display === "block"
@@ -414,28 +415,26 @@ if (selectedFile) {
       ? document.getElementById("petNameInput").value.trim()
       : petData.name;
 
-await updateDoc(ref, {
-  phone: document.getElementById("phone").value,
-  phone2: document.getElementById("phone2").value,
-  photo: photoURL,
-  microchip: microchipVal,
-  name: nameVal,
-  updatedAt: new Date()
-});
-
-document.getElementById("preview").src = photoURL + "?t=" + Date.now();
-petData.photo = photoURL;
-selectedFile = null;
-document.getElementById("fileInfo").innerText = "";
+  await updateDoc(ref, {
+    phone: document.getElementById("phone").value,
+    phone2: document.getElementById("phone2").value,
+    photo: photoURL,
+    microchip: microchipVal,
+    name: nameVal,
+    updatedAt: new Date()
   });
+
+  // UI update AFTER save
+  document.getElementById("preview").src = photoURL + "?t=" + Date.now();
+  petData.photo = photoURL;
+  selectedFile = null;
+  document.getElementById("fileInfo").innerText = "";
 
   document.getElementById("successMsg").style.display = "block";
   document.getElementById("successSub").style.display = "block";
+
+  btn.disabled = false;
 };
-
-load();
-
-/* (keep your existing compressImage + cloudinary functions unchanged) */
 </script>
 
 </body>
