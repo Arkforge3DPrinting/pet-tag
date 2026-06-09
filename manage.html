@@ -339,6 +339,23 @@ window.openGallery = () => {
   i.removeAttribute("capture");
   i.click();
 };
+  document.getElementById("fileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  selectedFile = file;
+
+  if (previewURL) {
+    URL.revokeObjectURL(previewURL);
+  }
+
+  previewURL = URL.createObjectURL(file);
+
+  document.getElementById("preview").src = previewURL;
+
+  document.getElementById("fileInfo").innerText =
+    `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+});
   
 /* SAVE */
 window.save = async () => {
