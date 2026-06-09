@@ -296,6 +296,17 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const id = new URLSearchParams(location.search).get("id");
+
+if (!id) {
+  document.body.innerHTML = `
+    <div style="font-family:Arial;text-align:center;padding:40px;">
+      <h2>Invalid or Missing Pet ID</h2>
+      <p>Please scan the correct QR code again.</p>
+    </div>
+  `;
+  throw new Error("Missing pet ID");
+}
+
 const ref = doc(db, "pets", id);
 
 let petData = null;
@@ -304,7 +315,10 @@ let selectedFile = null;
 /* LOAD */
 async function load() {
   const snap = await getDoc(ref);
-  if (!snap.exists()) return;
+  if (!snap.exists()) {
+  document.getElementById("statusDisplay").innerText = "Pet not found";
+  return;
+}
 
   petData = snap.data();
 
@@ -336,7 +350,7 @@ function updateStatusUI() {
   const box = document.getElementById("statusDisplay");
   if (!petData) return;
 
-  if (petData.petStatus === "lost") {
+  if (!petData || petData.petStatus === "lost") {
     box.className = "statusBox lost";
     box.innerText = "Status: LOST";
   } else {
