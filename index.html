@@ -83,15 +83,11 @@
     h1 { font-size: 24px; margin: 0 0 6px 0; }
     p { font-size: 15px; color: #666; margin: 0 0 10px 0; }
 
-    /* PHOTO WRAP */
     .photoWrap {
       position: relative;
       display: inline-block;
     }
 
-    /* =========================
-       DEFAULT SAFE (GREEN)
-    ========================== */
     #petPhoto {
       width: 100%;
       max-width: 240px;
@@ -99,61 +95,34 @@
       object-fit: cover;
       border-radius: 18px;
       margin: 10px auto;
+      transition: 0.3s ease;
+    }
 
+    /* SAFE (GREEN) */
+    .safePhoto {
+      animation: petGlowGreen 3s ease-in-out infinite;
       box-shadow:
         0 0 0 2px rgba(34, 197, 94, 0.25),
         0 8px 22px rgba(0,0,0,0.08);
-
-      animation: petGlowGreen 3s ease-in-out infinite;
-      transition: all 0.3s ease;
     }
 
     @keyframes petGlowGreen {
-      0% {
-        box-shadow:
-          0 0 0 2px rgba(34, 197, 94, 0.18),
-          0 8px 20px rgba(0,0,0,0.08);
-      }
-      50% {
-        box-shadow:
-          0 0 0 4px rgba(34, 197, 94, 0.35),
-          0 0 16px rgba(34, 197, 94, 0.25),
-          0 10px 25px rgba(0,0,0,0.10);
-      }
-      100% {
-        box-shadow:
-          0 0 0 2px rgba(34, 197, 94, 0.18),
-          0 8px 20px rgba(0,0,0,0.08);
-      }
+      0% { box-shadow: 0 0 0 2px rgba(34,197,94,0.18), 0 8px 20px rgba(0,0,0,0.08); }
+      50% { box-shadow: 0 0 0 4px rgba(34,197,94,0.35), 0 0 16px rgba(34,197,94,0.25); }
+      100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.18), 0 8px 20px rgba(0,0,0,0.08); }
     }
 
-    /* =========================
-       LOST (RED + PULSE)
-    ========================== */
+    /* LOST (RED PULSE) */
     .lostPhoto {
-      animation: petGlowRed 1.6s ease-in-out infinite !important;
+      animation: petGlowRed 1.6s ease-in-out infinite;
     }
 
     @keyframes petGlowRed {
-      0% {
-        box-shadow:
-          0 0 0 2px rgba(239, 68, 68, 0.25),
-          0 8px 20px rgba(0,0,0,0.08);
-      }
-      50% {
-        box-shadow:
-          0 0 0 5px rgba(239, 68, 68, 0.65),
-          0 0 18px rgba(239, 68, 68, 0.45),
-          0 10px 28px rgba(0,0,0,0.10);
-      }
-      100% {
-        box-shadow:
-          0 0 0 2px rgba(239, 68, 68, 0.25),
-          0 8px 20px rgba(0,0,0,0.08);
-      }
+      0% { box-shadow: 0 0 0 2px rgba(239,68,68,0.25), 0 8px 20px rgba(0,0,0,0.08); }
+      50% { box-shadow: 0 0 0 5px rgba(239,68,68,0.65), 0 0 18px rgba(239,68,68,0.45); }
+      100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.25), 0 8px 20px rgba(0,0,0,0.08); }
     }
 
-    /* STATUS BADGE */
     .statusBadge {
       position: absolute;
       top: 14px;
@@ -163,20 +132,11 @@
       font-size: 11px;
       font-weight: 900;
       color: white;
-      letter-spacing: 0.5px;
       z-index: 10;
-      box-shadow: 0 0 12px rgba(0,0,0,0.2);
     }
 
-    .status-lost {
-      background: #ef4444;
-      box-shadow: 0 0 16px rgba(239,68,68,0.7);
-    }
-
-    .status-safe {
-      background: #22c55e;
-      box-shadow: 0 0 16px rgba(34,197,94,0.6);
-    }
+    .status-lost { background: #ef4444; }
+    .status-safe { background: #22c55e; }
 
     .grid {
       display: grid;
@@ -203,23 +163,6 @@
     #locBtn, #locBtn2 { background: #ff9f43; }
 
     .hidden { display: none !important; }
-
-    .footer {
-      margin-top: 14px;
-      font-size: 12px;
-      color: #999;
-    }
-
-    #locked {
-      max-width: 420px;
-      margin: auto;
-      background: white;
-      padding: 22px;
-      border-radius: 20px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-      text-align: center;
-      display: none;
-    }
   </style>
 </head>
 
@@ -230,9 +173,7 @@
   <div class="scanText">Scanning ArkLink Tag...</div>
 </div>
 
-<div id="locked">
-  <h2>🐾 Tag Not Activated</h2>
-</div>
+<div id="locked"></div>
 
 <div class="container" id="main">
 
@@ -253,7 +194,6 @@
     <button id="locBtn2">📍 Send Location Secondary</button>
   </div>
 
-  <div class="footer">Powered by ArkLink Pet ID ©</div>
 </div>
 
 <script type="module">
@@ -271,35 +211,57 @@ const db = getFirestore(app);
 const id = new URLSearchParams(window.location.search).get("id");
 
 const main = document.getElementById("main");
-const locked = document.getElementById("locked");
+
+let gpsBusy = false;
+
+function getGPS() {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+}
+
+function bindGPS(btnId, phone, pet) {
+  const btn = document.getElementById(btnId);
+
+  btn.onclick = async () => {
+    if (gpsBusy) return;
+    gpsBusy = true;
+
+    btn.disabled = true;
+    btn.innerText = "📡 Acquiring GPS...";
+
+    try {
+      const pos = await getGPS();
+
+      const msg =
+        "I found " + pet.name +
+        ". Location: https://maps.google.com/?q=" +
+        pos.coords.latitude + "," + pos.coords.longitude;
+
+      window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, "_self");
+
+    } finally {
+      btn.disabled = false;
+      gpsBusy = false;
+      btn.innerText = "📍 Send Location";
+    }
+  };
+}
 
 async function loadPet() {
 
   const snap = await getDoc(doc(db, "pets", id));
-
-  if (!snap.exists()) return locked.style.display = "block";
+  if (!snap.exists()) return;
 
   const pet = snap.data();
 
-  if (pet.status !== "active") return locked.style.display = "block";
-
   main.style.display = "block";
 
-  document.getElementById("title").innerText =
-    "🐾 You found " + (pet.name || "a pet");
+  document.getElementById("title").innerText = "🐾 You found " + pet.name;
+  document.getElementById("message").innerText = "Help get them home safely.";
 
-  document.getElementById("message").innerText =
-    "Help get " + (pet.name || "this pet") + " home safely.";
-
-  if (pet.photo) {
-    document.getElementById("petPhoto").src = pet.photo;
-  }
-
-  /* =========================
-     STATUS BADGE + PHOTO STATE
-  ========================== */
-  const badge = document.getElementById("statusBadge");
   const photo = document.getElementById("petPhoto");
+  const badge = document.getElementById("statusBadge");
 
   const status = pet.petStatus || "safe";
 
@@ -308,15 +270,42 @@ async function loadPet() {
   if (status === "lost") {
     badge.innerText = "🔴 LOST";
     badge.classList.add("status-lost");
-
-    photo.classList.add("lostPhoto");   // 🔥 RED BORDER ACTIVE
+    photo.classList.add("lostPhoto");
   } else {
     badge.innerText = "🟢 SAFE";
     badge.classList.add("status-safe");
-
-    photo.classList.remove("lostPhoto"); // 💚 GREEN DEFAULT
+    photo.classList.add("safePhoto");
   }
 
+  if (pet.photo) photo.src = pet.photo;
+
+  /* ===== BUTTONS RESTORED ===== */
+
+  document.getElementById("callBtn").onclick =
+    () => window.location.href = "tel:" + pet.phone;
+
+  document.getElementById("textBtn").onclick =
+    () => window.open(`sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+
+  bindGPS("locBtn", pet.phone, pet);
+
+  if (pet.phone2 && pet.phone2.trim()) {
+
+    document.getElementById("callBtn2").onclick =
+      () => window.location.href = "tel:" + pet.phone2;
+
+    document.getElementById("textBtn2").onclick =
+      () => window.open(`sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`, "_self");
+
+    bindGPS("locBtn2", pet.phone2, pet);
+
+  } else {
+    document.getElementById("btnGrid").classList.add("single");
+
+    ["callBtn2","textBtn2","locBtn2"].forEach(id =>
+      document.getElementById(id).classList.add("hidden")
+    );
+  }
 }
 
 loadPet();
