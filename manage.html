@@ -207,7 +207,7 @@
 
 <div class="container">
 
-  <h1>Manage Portal</h1>
+  <h1>Manage your ArkLink Pet Tag here</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -271,8 +271,9 @@
     </div>
   </div>
 
-  <button class="saveBtn" id="saveBtn" onclick="save()">💾 Save Changes</button>
-  <div id="saveProgressWrap" ...>
+<button class="saveBtn" id="saveBtn" onclick="save()">💾 Save Changes</button>
+
+<!-- PROGRESS -->
 <div id="saveProgressWrap" style="margin-top:12px; display:none;">
   <div id="saveProgressText" style="font-size:12px; margin-bottom:6px; color:#555;">
     Preparing...
@@ -312,15 +313,19 @@ const ref = doc(db, "pets", id);
 let petData = null;
 let selectedFile = null;
 function setProgress(percent, text) {
-  document.getElementById("saveProgressWrap").style.display = "block";
-  document.getElementById("saveProgressBar").style.width = percent + "%";
-  document.getElementById("saveProgressText").innerText = text;
+  const wrap = document.getElementById("saveProgressWrap");
+  const bar = document.getElementById("saveProgressBar");
+  const label = document.getElementById("saveProgressText");
+
+  wrap.style.display = "block";
+  bar.style.width = percent + "%";
+  label.innerText = text;
 }
 
 function lockSaveButton(lock) {
   const btn = document.getElementById("saveBtn");
   btn.disabled = lock;
-  btn.innerText = lock ? "Processing..." : "💾 Save Changes";
+  btn.innerText = lock ? "Saving..." : "💾 Save Changes";
 }
   
 /* LOAD */
@@ -405,43 +410,72 @@ document.getElementById("fileInput").addEventListener("change", (e) => {
 
 /* SAVE */
 window.save = async () => {
-
   const btn = document.getElementById("saveBtn");
-  btn.disabled = true;
 
-  let photoURL = petData.photo || "";
+  if (btn.disabled) return;
 
-  if (selectedFile) {
-    const compressed = await compressImage(selectedFile);
-    photoURL = await uploadToCloudinary(compressed);
+  try {
+    btn.disabled = true;
+
+    setProgress(5, "Starting save...");
+
+    let photoURL = petData.photo || "";
+
+    /* PHOTO UPLOAD FLOW */
+    if (selectedFile) {
+      setProgress(15, "Preparing image...");
+
+      const compressed = await compressImage(selectedFile);
+
+      setProgress(40, "Uploading photo...");
+
+      photoURL = await uploadToCloudinary(compressed);
+    }
+
+    setProgress(65, "Preparing data...");
+
+    const microchipVal =
+      document.getElementById("microchipInput").style.display === "block"
+        ? document.getElementById("microchipInput").value.trim()
+        : petData.microchip;
+
+    const nameVal =
+      document.getElementById("petNameInput").style.display === "block"
+        ? document.getElementById("petNameInput").value.trim()
+        : petData.name;
+
+    setProgress(85, "Saving to database...");
+
+    await updateDoc(ref, {
+      phone: document.getElementById("phone").value,
+      phone2: document.getElementById("phone2").value,
+      photo: photoURL,
+      microchip: microchipVal,
+      name: nameVal,
+      updatedAt: new Date()
+    });
+
+    setProgress(100, "Done!");
+
+    document.getElementById("successMsg").style.display = "block";
+    document.getElementById("successSub").style.display = "block";
+
+    setTimeout(() => {
+      document.getElementById("saveProgressWrap").style.display = "none";
+    }, 1200);
+
+  } catch (err) {
+    console.error("SAVE FAILED:", err);
+    setProgress(100, "Error saving");
+
+    alert("Save failed. Check console for details.");
+
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "💾 Save Changes";
   }
-
-  const microchipVal =
-    document.getElementById("microchipInput").style.display === "block"
-      ? document.getElementById("microchipInput").value.trim()
-      : petData.microchip;
-
-  const nameVal =
-    document.getElementById("petNameInput").style.display === "block"
-      ? document.getElementById("petNameInput").value.trim()
-      : petData.name;
-
-  await updateDoc(ref, {
-    phone: document.getElementById("phone").value,
-    phone2: document.getElementById("phone2").value,
-    photo: photoURL,
-    microchip: microchipVal,
-    name: nameVal,
-    updatedAt: new Date()
-  });
-
-  document.getElementById("successMsg").style.display = "block";
-  document.getElementById("successSub").style.display = "block";
 };
-
-load();
-
-/* (keep your existing compressImage + cloudinary functions unchanged) */
+  loadPet();
 </script>
 
 </body>
