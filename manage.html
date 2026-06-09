@@ -187,7 +187,7 @@ input {
 
 <div class="container">
 
-  <h1>Manage Portal PLS 8</h1>
+  <h1>Manage Portal PLS 9</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
@@ -223,11 +223,21 @@ input {
     <div class="microchipEditToggle" onclick="toggleMicrochipEdit()">✏️ Edit microchip</div>
   </div>
 
-  <div class="section">
-    <label>Photo</label>
+<div class="section">
+  <label>Photo</label>
+
+  <div class="photoWrap">
     <img id="preview">
+
+    <div class="photoBtns">
+      <button type="button" class="photoBtn cam" onclick="openCamera()">📷 Camera</button>
+      <button type="button" class="photoBtn up" onclick="openGallery()">📁 Upload</button>
+    </div>
+
     <input type="file" id="fileInput" accept="image/*">
+    <div class="fileInfo" id="fileInfo"></div>
   </div>
+</div>
 
   <button class="saveBtn" onclick="save()">💾 Save Changes</button>
 
@@ -314,6 +324,18 @@ window.toggleMicrochipEdit = () => {
   if (!input.readOnly) input.focus();
 };
 
+window.openCamera = () => {
+  const i = document.getElementById("fileInput");
+  i.setAttribute("capture", "environment");
+  i.click();
+};
+
+window.openGallery = () => {
+  const i = document.getElementById("fileInput");
+  i.removeAttribute("capture");
+  i.click();
+};
+  
 /* SAVE */
 window.save = async () => {
 
