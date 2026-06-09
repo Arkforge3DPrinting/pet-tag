@@ -48,12 +48,6 @@
       color: #1f2937;
     }
 
-    .smallId {
-      font-size: 11px;
-      font-weight: 600;
-      color: #6b7280;
-    }
-
     .section {
       margin-top: 14px;
       padding: 12px;
@@ -105,54 +99,16 @@
     .safe { background: #eafff1; color: #1a7f3c; }
     .lost { background: #ffecec; color: #a31212; }
 
-    .photoWrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
     #preview {
       width: 160px;
       height: 160px;
       border-radius: 18px;
       object-fit: cover;
       border: 3px solid rgba(34,197,94,0.35);
-      box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
-      animation: pulseGlow 2.8s infinite;
+      margin-top: 10px;
     }
-
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
-      50% { box-shadow: 0 0 18px rgba(34,197,94,0.35); }
-      100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
-    }
-
-    .photoBtns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .photoBtn {
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    .photoBtn.cam { background: #f97316; }
-    .photoBtn.up { background: #2563eb; }
 
     input[type="file"] { display: none; }
-
-    .fileInfo {
-      font-size: 12px;
-      color: #555;
-      text-align: center;
-      margin-top: 6px;
-    }
 
     .microchipBox {
       margin-top: 8px;
@@ -171,34 +127,12 @@
       cursor: pointer;
       font-weight: bold;
       text-align: center;
-      user-select: none;
     }
 
     #microchipInput,
     #petNameInput {
       display: none;
       margin-top: 10px;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .successMsg {
-      margin-top: 12px;
-      font-weight: 900;
-      color: #16a34a;
-      text-align: center;
-      display: none;
-    }
-
-    .successSub {
-      font-size: 12px;
-      color: #15803d;
-      text-align: center;
-      margin-top: 4px;
-      display: none;
     }
   </style>
 </head>
@@ -207,18 +141,17 @@
 
 <div class="container">
 
-  <h1>Manage Portal v100</h1>
+  <h1>Manage Portal Test 1</h1>
   <p>Update your pet’s details instantly</p>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
-    <span class="smallId">Tag ID: <span id="tagIdLabel"></span></span>
+    Tag ID: <span id="tagIdLabel"></span>
   </div>
 
   <div id="statusDisplay" class="statusBox">Loading...</div>
 
   <div class="section">
-    <label>Status - Use these buttons below to reflect your pets current safety. This will update their pet profile immediately.</label>
     <button class="lostBtn" onclick="setStatus('lost')">🔴 Mark as Lost</button>
     <button class="safeBtn" onclick="setStatus('safe')">🟢 Mark as Safe</button>
   </div>
@@ -231,7 +164,7 @@
     <input id="phone2">
   </div>
 
-  <!-- PET NAME EDIT -->
+  <!-- PET NAME -->
   <div class="section">
     <label>Pet Name</label>
 
@@ -244,7 +177,7 @@
 
   <!-- MICROCHIP -->
   <div class="section">
-    <label>Microchip (read-only identifier)</label>
+    <label>Microchip</label>
 
     <div class="microchipBox" id="microchipDisplay">Loading...</div>
 
@@ -255,31 +188,17 @@
     <input id="microchipInput" placeholder="Enter corrected microchip number">
   </div>
 
+  <!-- PHOTO -->
   <div class="section">
     <label>Photo</label>
 
-    <div class="photoWrap">
-      <img id="preview">
+    <img id="preview">
 
-      <div class="photoBtns">
-        <button class="photoBtn cam" onclick="openCamera()">📷 Camera</button>
-        <button class="photoBtn up" onclick="openGallery()">📁 Upload</button>
-      </div>
-
-      <input type="file" id="fileInput" accept="image/*">
-      <div class="fileInfo" id="fileInfo"></div>
-    </div>
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="document.getElementById('fileInput').click()">Upload Photo</button>
   </div>
 
   <button class="saveBtn" id="saveBtn" onclick="save()">💾 Save Changes</button>
-
-  <div class="successMsg" id="successMsg">
-    Information has been successfully updated.
-  </div>
-
-  <div class="successSub" id="successSub">
-    If you require additional changes, please reload the page.
-  </div>
 
 </div>
 
@@ -301,33 +220,52 @@ const ref = doc(db, "pets", id);
 let petData = null;
 let selectedFile = null;
 
+/* CLOUDINARY */
+const CLOUD_NAME = "ddsp7ps7p";
+const UPLOAD_PRESET = "YOUR_UNSIGNED_PRESET";
+
+async function uploadToCloudinary(file) {
+  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (!data.secure_url) {
+    console.error(data);
+    throw new Error("Cloudinary upload failed");
+  }
+
+  return data.secure_url;
+}
+
 /* LOAD */
 async function load() {
   const snap = await getDoc(ref);
-  if (!snap.exists()) return;
-
   petData = snap.data();
 
   document.getElementById("phone").value = petData.phone || "";
   document.getElementById("phone2").value = petData.phone2 || "";
   document.getElementById("preview").src = petData.photo || "";
 
-  document.getElementById("petNameLabel").innerText = petData.name || "Unknown Pet";
+  document.getElementById("petNameLabel").innerText = petData.name || "";
   document.getElementById("tagIdLabel").innerText = id;
 
-  document.getElementById("microchipDisplay").innerText =
-    petData.microchip || "Not set";
+  document.getElementById("microchipDisplay").innerText = petData.microchip || "";
 
   updateStatusUI();
 }
 
 /* STATUS */
 window.setStatus = async (status) => {
-  await updateDoc(ref, { 
-    petStatus: status,
-    updatedAt: new Date()
-  });
-
+  await updateDoc(ref, { petStatus: status, updatedAt: new Date() });
   petData.petStatus = status;
   updateStatusUI();
 };
@@ -336,49 +274,26 @@ function updateStatusUI() {
   const box = document.getElementById("statusDisplay");
   if (!petData) return;
 
-  if (petData.petStatus === "lost") {
-    box.className = "statusBox lost";
-    box.innerText = "Status: LOST";
-  } else {
-    box.className = "statusBox safe";
-    box.innerText = "Status: SAFE";
-  }
+  box.className = petData.petStatus === "lost" ? "statusBox lost" : "statusBox safe";
+  box.innerText = petData.petStatus === "lost" ? "Status: LOST" : "Status: SAFE";
 }
 
 /* TOGGLES */
-window.toggleMicrochipEdit = () => {
-  const input = document.getElementById("microchipInput");
-  input.style.display = input.style.display === "block" ? "none" : "block";
-  input.value = petData.microchip || "";
-};
-
 window.togglePetNameEdit = () => {
-  const input = document.getElementById("petNameInput");
-  input.style.display = input.style.display === "block" ? "none" : "block";
-  input.value = petData.name || "";
+  const i = document.getElementById("petNameInput");
+  i.style.display = i.style.display === "block" ? "none" : "block";
+  i.value = petData.name || "";
 };
 
-/* PHOTO */
-window.openCamera = () => {
-  const i = document.getElementById("fileInput");
-  i.setAttribute("capture", "environment");
-  i.click();
+window.toggleMicrochipEdit = () => {
+  const i = document.getElementById("microchipInput");
+  i.style.display = i.style.display === "block" ? "none" : "block";
+  i.value = petData.microchip || "";
 };
 
-window.openGallery = () => {
-  const i = document.getElementById("fileInput");
-  i.removeAttribute("capture");
-  i.click();
-};
-
+/* FILE */
 document.getElementById("fileInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  selectedFile = file;
-
-  document.getElementById("fileInfo").innerText =
-    `${file.name} selected (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+  selectedFile = e.target.files[0];
 });
 
 /* SAVE */
@@ -387,51 +302,34 @@ window.save = async () => {
   const btn = document.getElementById("saveBtn");
   btn.disabled = true;
 
-let photoURL = petData.photo || "";
+  let photoURL = petData.photo || "";
 
-if (selectedFile) {
-  const formData = new FormData();
-  formData.append("file", selectedFile);
-  formData.append("upload_preset", "YOUR_UPLOAD_PRESET"); // IMPORTANT
+  if (selectedFile) {
+    photoURL = await uploadToCloudinary(selectedFile);
+  }
 
-  const res = await fetch(
-    "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload",
-    {
-      method: "POST",
-      body: formData
-    }
-  );
+  const nameVal = document.getElementById("petNameInput").style.display === "block"
+    ? document.getElementById("petNameInput").value
+    : petData.name;
 
-  const data = await res.json();
-  photoURL = data.secure_url;
-}
-
-  const microchipVal =
-    document.getElementById("microchipInput").style.display === "block"
-      ? document.getElementById("microchipInput").value.trim()
-      : petData.microchip;
-
-  const nameVal =
-    document.getElementById("petNameInput").style.display === "block"
-      ? document.getElementById("petNameInput").value.trim()
-      : petData.name;
+  const chipVal = document.getElementById("microchipInput").style.display === "block"
+    ? document.getElementById("microchipInput").value
+    : petData.microchip;
 
   await updateDoc(ref, {
     phone: document.getElementById("phone").value,
     phone2: document.getElementById("phone2").value,
     photo: photoURL,
-    microchip: microchipVal,
     name: nameVal,
+    microchip: chipVal,
     updatedAt: new Date()
   });
 
-  document.getElementById("successMsg").style.display = "block";
-  document.getElementById("successSub").style.display = "block";
+  document.getElementById("preview").src = photoURL;
+  btn.disabled = false;
 };
 
 load();
-
-/* (keep your existing compressImage + cloudinary functions unchanged) */
 </script>
 
 </body>
