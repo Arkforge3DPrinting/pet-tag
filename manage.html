@@ -42,13 +42,24 @@
       border: 1px solid #e5e7eb;
     }
 
+    /* ✅ FIXED LABEL ALIGNMENT */
     label {
       font-size: 13px;
       font-weight: bold;
       display: flex;
-      align-items: center;
+      align-items: center;   /* PERFECT vertical centering */
       gap: 8px;
+      line-height: 1;
       margin-bottom: 6px;
+    }
+
+    label i {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
     }
 
     input {
@@ -60,7 +71,7 @@
     }
 
     button {
-      width: 50%;
+      width: 100%;
       padding: 14px;
       border-radius: 12px;
       border: none;
@@ -68,9 +79,6 @@
       cursor: pointer;
       color: white;
       margin-top: 8px;
-      display:block;
-      margin-left:auto;
-      margin-right:auto;
     }
 
     .lostBtn { background:#ef4444; }
@@ -109,28 +117,35 @@
       margin-top:10px;
     }
 
-    #fileInfo {
-      text-align:center;
-      font-size:12px;
-      color:#666;
-      margin-top:6px;
-    }
-
     #uploadBarWrap {
+      display:none;
       width:100%;
       height:8px;
       background:#e5e7eb;
       border-radius:999px;
-      margin-top:10px;
       overflow:hidden;
-      display:none;
+      margin-top:10px;
     }
 
     #uploadBar {
       height:100%;
       width:0%;
       background:#3b82f6;
-      transition:width 0.2s ease;
+    }
+
+    .success {
+      text-align:center;
+      font-weight:bold;
+      color:#16a34a;
+      margin-top:10px;
+      display:none;
+    }
+
+    #fileInfo {
+      text-align:center;
+      font-size:12px;
+      color:#666;
+      margin-top:6px;
     }
   </style>
 </head>
@@ -139,7 +154,7 @@
 
 <div class="container" id="main">
 
-  <h2 style="text-align:center;">ArkLink - Manage Pet</h2>
+  <h2 style="text-align:center;">ArkForge Pet ID</h2>
 
   <div class="contextBox">
     You are editing:<br>
@@ -191,9 +206,13 @@
     <div id="uploadBarWrap">
       <div id="uploadBar"></div>
     </div>
+
+    <div class="success" id="uploadSuccess">Image uploaded successfully</div>
   </div>
 
   <button class="saveBtn" onclick="save()">Save Changes</button>
+
+  <div class="success" id="saveSuccess">Saved successfully</div>
 
 </div>
 
@@ -210,13 +229,11 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const id = new URLSearchParams(location.search).get("id");
+const main = document.getElementById("main");
 
 let ref;
 let petData;
 let selectedFile = null;
-let previewURL = null;
-
-const main = document.getElementById("main");
 
 /* INIT */
 function init() {
@@ -228,19 +245,13 @@ function init() {
 
   ref = doc(db, "pets", id);
   document.getElementById("tagIdLabel").innerText = id;
-
   load();
 }
 
 /* LOAD */
 async function load() {
   const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    document.getElementById("petNameLabel").innerText = "Not found";
-    main.style.opacity = "1";
-    return;
-  }
+  if (!snap.exists()) return;
 
   petData = snap.data();
 
@@ -262,126 +273,46 @@ window.setStatus = async (status) => {
   });
 };
 
-/* FILE PICK */
+/* FILE */
 document.getElementById("fileInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  if (previewURL) URL.revokeObjectURL(previewURL);
-
-  const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+  const sizeMB = (file.size / 1024 / 1024).toFixed(2);
   document.getElementById("fileInfo").innerText =
     `${file.name} • ${sizeMB} MB`;
 
-  previewURL = URL.createObjectURL(file);
-  document.getElementById("preview").src = previewURL;
-
-  selectedFile = file.size > 5 * 1024 * 1024
-    ? await compressImage(file, 0.75)
-    : file;
+  selectedFile = file;
+  document.getElementById("preview").src = URL.createObjectURL(file);
 });
 
-/* CAMERA / GALLERY */
+/* CAMERA */
 window.openCamera = () => {
   const i = document.getElementById("fileInput");
   i.setAttribute("capture","environment");
   i.click();
 };
 
+/* GALLERY */
 window.openGallery = () => {
   const i = document.getElementById("fileInput");
   i.removeAttribute("capture");
   i.click();
 };
 
-/* COMPRESS */
-function compressImage(file, quality) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const img = new Image();
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        const scale = Math.min(1, 1600 / img.width);
-
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob((blob) => {
-          resolve(new File([blob], file.name, {
-            type: "image/jpeg",
-            lastModified: Date.now()
-          }));
-        }, "image/jpeg", quality);
-      };
-
-      img.src = e.target.result;
-    };
-
-    reader.readAsDataURL(file);
-  });
-}
-
-/* UPLOAD */
-function upload(file) {
-  return new Promise((resolve, reject) => {
-
-    const form = new FormData();
-    form.append("file", file);
-    form.append("upload_preset", "arkforge-pets");
-
-    const xhr = new XMLHttpRequest();
-
-    const barWrap = document.getElementById("uploadBarWrap");
-    const bar = document.getElementById("uploadBar");
-
-    barWrap.style.display = "block";
-    bar.style.width = "0%";
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        bar.style.width = (e.loaded / e.total) * 100 + "%";
-      }
-    };
-
-    xhr.onload = () => {
-      const data = JSON.parse(xhr.responseText);
-      if (data.secure_url) resolve(data.secure_url);
-      else reject("upload failed");
-    };
-
-    xhr.onerror = () => reject("network error");
-
-    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
-    xhr.send(form);
-  });
-}
-
 /* SAVE */
 window.save = async () => {
-
-  let photo = petData.photo || "";
-
-  if (selectedFile) {
-    photo = await upload(selectedFile);
-  }
-
   await updateDoc(ref, {
     name: document.getElementById("petNameInput").value,
     microchip: document.getElementById("microchipInput").value,
     phone: document.getElementById("phone").value,
     phone2: document.getElementById("phone2").value,
-    photo,
     updatedAt: new Date()
   });
 
-  alert("Saved ✔");
+  document.getElementById("saveSuccess").style.display = "block";
+
+  setTimeout(() => location.reload(), 500);
 };
 
 init();
