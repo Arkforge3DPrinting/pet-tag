@@ -45,7 +45,6 @@
 
     label { font-size:12px; font-weight:bold; display:block; margin-bottom:6px; }
 
-    /* INPUTS (consistent + soft) */
 input {
   width: 100%;
   max-width: 440px;
@@ -59,7 +58,7 @@ input {
   font-size: 14px;
   transition: 0.15s ease;
     }
-
+    
     button {
       width: 100%;
       padding: 14px;
@@ -192,7 +191,7 @@ input {
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.0</h1>
+  <h1>ArkLink - Update Pet Details v1.1</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -265,6 +264,11 @@ input {
   <button id="saveBtn" class="saveBtn primaryBtn" onclick="save()">
     <i class="fa-solid fa-floppy-disk"></i> Save Changes
   </button>
+</div>
+
+  <div class="successMsg" id="successMsg">Save successfull. Please reload the page for additional changes.</div>
+
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -457,6 +461,18 @@ window.openGallery = () => {
   const input = document.getElementById("fileInput");
   input.removeAttribute("capture");
   input.click();
+};
+  // ✅ refresh after 1 second
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+
+  } catch (e) {
+    console.error(e);
+    alert("Save failed");
+  } finally {
+    btn.disabled = false;
+  }
 };
 
 /* ================= START HERE ================= */
