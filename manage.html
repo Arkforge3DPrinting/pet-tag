@@ -195,7 +195,7 @@
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.1 - Progress bar/save lock for upload</h1>
+  <h1>ArkLink - Update Pet Details v1.2 - Progress bar/save lock for upload</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -466,6 +466,7 @@ btn.textContent = "⏳ Saving...";
 window.save = async () => {
   const btn = document.getElementById("saveBtn");
   btn.disabled = true;
+  btn.textContent = "⏳ Saving...";
 
   try {
     let photo = petData.photo || "";
@@ -475,53 +476,33 @@ window.save = async () => {
     }
 
     await updateDoc(ref, {
-      await load(); // Reload fresh data from Firebase
       name: document.getElementById("petNameInput").value,
       microchip: document.getElementById("microchipInput").value,
       phone: document.getElementById("phone").value,
       phone2: document.getElementById("phone2").value,
       photo,
       updatedAt: new Date()
-        selectedFile = null;
-
-if (previewURL) {
-  URL.revokeObjectURL(previewURL);
-  previewURL = null;
-}
     });
 
-    document.getElementById("successMsg").style.display = "block";
+    await load(); // refresh UI properly
+
+    const msg = document.getElementById("successMsg");
+    msg.style.display = "block";
+
+    setTimeout(() => {
+      msg.style.display = "none";
+    }, 2000);
+
+    selectedFile = null;
+    previewURL = null;
 
   } catch (e) {
     console.error(e);
     alert("Save failed");
   } finally {
     btn.disabled = false;
+    btn.textContent = "💾 Save Changes";
   }
-};
-  const msg = document.getElementById("successMsg");
-msg.style.display = "block";
-
-setTimeout(() => {
-  msg.style.opacity = "0";
-}, 2000);
-
-setTimeout(() => {
-  msg.style.display = "none";
-  msg.style.opacity = "1";
-}, 3000);
-  btn.disabled = false;
-btn.textContent = "💾 Save Changes";
-window.openCamera = () => {
-  const input = document.getElementById("fileInput");
-  input.setAttribute("capture", "environment");
-  input.click();
-};
-
-window.openGallery = () => {
-  const input = document.getElementById("fileInput");
-  input.removeAttribute("capture");
-  input.click();
 };
 
 /* ================= START HERE ================= */
