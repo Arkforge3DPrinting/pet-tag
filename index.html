@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ArkLink Pet ID - Found Pet</title>
+  <title>ArkLink Pet ID - Found Pet v1.2</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -240,6 +240,12 @@ function loadPet() {
     if (!snap.exists()) return;
 
     const pet = snap.data();
+    
+    if (pet.status === "inactive") {
+  window.location.href =
+    "activate.html?id=" + encodeURIComponent(id);
+  return;
+}
 
     main.style.display = "block";
 
