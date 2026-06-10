@@ -271,14 +271,13 @@ input {
     </button>
   </div>
 
-  <input type="file" id="fileInput" accept="image/*">
+
 
   <!-- PROGRESS BAR -->
   <div id="uploadBarWrap">
     <div id="uploadBar"></div>
   </div>
 
-  <div id="fileInfo"></div>
 </div>
   <div class="saveWrap">
   <button id="saveBtn" class="saveBtn primaryBtn" onclick="save()">
@@ -378,7 +377,7 @@ window.toggleMicrochipEdit = () => {
 };
 
 /* ================= FILE ================= */
-document.getElementById("fileInput").addEventListener("change", (e) => {
+document.getElementById("fileInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
