@@ -217,7 +217,7 @@ input[type="file"] { display:none; }
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.2</h1>
+  <h1>ArkLink - Update Pet Details v1.3</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -471,23 +471,17 @@ window.save = async () => {
 
     document.getElementById("successMsg").style.display = "block";
 
+    // ✅ refresh AFTER save completes
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
+
   } catch (e) {
     console.error(e);
     alert("Save failed");
   } finally {
     btn.disabled = false;
   }
-};
-window.openCamera = () => {
-  const input = document.getElementById("fileInput");
-  input.setAttribute("capture", "environment");
-  input.click();
-};
-
-window.openGallery = () => {
-  const input = document.getElementById("fileInput");
-  input.removeAttribute("capture");
-  input.click();
 };
 
 /* ================= START HERE ================= */
