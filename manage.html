@@ -315,6 +315,8 @@ let petData = null;
 let selectedFile = null;
 let previewURL = null;
 
+const main = document.querySelector(".container");
+
 /* ================= SAFE INIT ================= */
 function init() {
   if (!id) {
@@ -354,13 +356,13 @@ if (status === "inactive") {
   document.getElementById("microchipInput").value = petData.microchip || "";
   document.getElementById("preview").src = petData.photo || "";
 
-  updateStatus();
-}
-  main.style.display = "block";
+updateStatus();
 
-setTimeout(() => {
+main.style.display = "block";
+
+requestAnimationFrame(() => {
   main.style.opacity = "1";
-}, 50);
+});
 
 /* ================= STATUS ================= */
 window.setStatus = async (status) => {
