@@ -184,6 +184,25 @@ input {
   background: #3b82f6;
   transition: width 0.2s ease;
 }
+.primaryBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: 0.15s ease;
+}
+
+.primaryBtn:hover {
+  background: #2563eb;
+}
   </style>
 </head>
 
@@ -191,7 +210,7 @@ input {
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.1</h1>
+  <h1>ArkLink - Update Pet Details v1.0</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -461,18 +480,6 @@ window.openGallery = () => {
   const input = document.getElementById("fileInput");
   input.removeAttribute("capture");
   input.click();
-};
-  // ✅ refresh after 1 second
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-
-  } catch (e) {
-    console.error(e);
-    alert("Save failed");
-  } finally {
-    btn.disabled = false;
-  }
 };
 
 /* ================= START HERE ================= */
