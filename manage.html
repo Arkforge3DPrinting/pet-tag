@@ -3,7 +3,6 @@
 <head>
   <title>ArkLink Pet ID - Manage Pet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
@@ -42,24 +41,13 @@
       border: 1px solid #e5e7eb;
     }
 
-    /* ✅ FIXED LABEL ALIGNMENT */
     label {
       font-size: 13px;
       font-weight: bold;
       display: flex;
-      align-items: center;   /* PERFECT vertical centering */
-      gap: 8px;
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-
-    label i {
-      width: 18px;
-      height: 18px;
-      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      font-size: 14px;
+      gap: 8px;
+      margin-bottom: 6px;
     }
 
     input {
@@ -79,11 +67,12 @@
       cursor: pointer;
       color: white;
       margin-top: 8px;
+      background: #999;
     }
 
-    .lostBtn { background:#ef4444; }
-    .safeBtn { background:#28c76f; }
-    .saveBtn { background:#3b82f6; }
+    .lostBtn { background:#ef4444 !important; }
+    .safeBtn { background:#28c76f !important; }
+    .saveBtn { background:#3b82f6 !important; }
 
     #preview {
       width:160px;
@@ -111,6 +100,8 @@
       gap:8px;
     }
 
+    .primaryBtn:hover { background:#2563eb; }
+
     .btnRow {
       display:flex;
       gap:10px;
@@ -118,27 +109,20 @@
     }
 
     #uploadBarWrap {
-      display:none;
       width:100%;
       height:8px;
       background:#e5e7eb;
       border-radius:999px;
-      overflow:hidden;
       margin-top:10px;
+      overflow:hidden;
+      display:none;
     }
 
     #uploadBar {
       height:100%;
       width:0%;
       background:#3b82f6;
-    }
-
-    .success {
-      text-align:center;
-      font-weight:bold;
-      color:#16a34a;
-      margin-top:10px;
-      display:none;
+      transition:width 0.2s ease;
     }
 
     #fileInfo {
@@ -147,6 +131,37 @@
       color:#666;
       margin-top:6px;
     }
+
+    .successOverlay {
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,0.9);
+      z-index:999;
+    }
+
+    .check {
+      width:90px;
+      height:90px;
+      border-radius:50%;
+      border:4px solid #28c76f;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      animation: pop 0.35s ease;
+    }
+
+    .check i {
+      font-size:42px;
+      color:#28c76f;
+    }
+
+    @keyframes pop {
+      0% { transform:scale(0.6); opacity:0; }
+      100% { transform:scale(1); opacity:1; }
+    }
   </style>
 </head>
 
@@ -154,7 +169,7 @@
 
 <div class="container" id="main">
 
-  <h2 style="text-align:center;">ArkForge Pet ID</h2>
+  <h2 style="text-align:center;">ArkForge - Manage Pet</h2>
 
   <div class="contextBox">
     You are editing:<br>
@@ -180,7 +195,9 @@
     <label><i class="fa-solid fa-dog"></i> Pet Name</label>
     <input id="petNameInput" readonly>
 
-    <label><i class="fa-solid fa-microchip"></i> Microchip</label>
+    <label style="margin-top:10px;">
+      <i class="fa-solid fa-microchip"></i> Microchip
+    </label>
     <input id="microchipInput" readonly>
   </div>
 
@@ -206,14 +223,14 @@
     <div id="uploadBarWrap">
       <div id="uploadBar"></div>
     </div>
-
-    <div class="success" id="uploadSuccess">Image uploaded successfully</div>
   </div>
 
   <button class="saveBtn" onclick="save()">Save Changes</button>
 
-  <div class="success" id="saveSuccess">Saved successfully</div>
+</div>
 
+<div class="successOverlay" id="successOverlay">
+  <div class="check"><i class="fa-solid fa-check"></i></div>
 </div>
 
 <script type="module">
@@ -229,6 +246,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const id = new URLSearchParams(location.search).get("id");
+
 const main = document.getElementById("main");
 
 let ref;
@@ -245,15 +263,36 @@ function init() {
 
   ref = doc(db, "pets", id);
   document.getElementById("tagIdLabel").innerText = id;
+
   load();
 }
 
 /* LOAD */
 async function load() {
   const snap = await getDoc(ref);
-  if (!snap.exists()) return;
+
+  if (!snap.exists()) {
+    document.getElementById("petNameLabel").innerText = "Not found";
+    main.style.opacity = "1";
+    return;
+  }
 
   petData = snap.data();
+
+  const status = String(petData.status || "").toLowerCase().trim();
+
+  if (status === "inactive") {
+    document.body.innerHTML = `
+      <div style="text-align:center;padding:40px;font-family:Arial;">
+        <h2>INVALID TAG. NOT ACTIVATED.</h2>
+        <a href="https://arkforge3dprinting.github.io/pet-tag/activate.html?id=${id}">
+          <button style="padding:14px 20px;background:#3b82f6;color:white;border:none;border-radius:10px;margin-top:10px;">
+            Activate Tag
+          </button>
+        </a>
+      </div>`;
+    return;
+  }
 
   document.getElementById("petNameLabel").innerText = petData.name || "";
   document.getElementById("phone").value = petData.phone || "";
@@ -271,6 +310,8 @@ window.setStatus = async (status) => {
     petStatus: status,
     updatedAt: new Date()
   });
+
+  petData.petStatus = status;
 };
 
 /* FILE */
@@ -278,42 +319,130 @@ document.getElementById("fileInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const sizeMB = (file.size / 1024 / 1024).toFixed(2);
-  document.getElementById("fileInfo").innerText =
-    `${file.name} • ${sizeMB} MB`;
-
   selectedFile = file;
+
+  document.getElementById("fileInfo").innerText =
+    file.name + " • " + (file.size / 1024 / 1024).toFixed(2) + " MB";
+
   document.getElementById("preview").src = URL.createObjectURL(file);
+
+  if (file.size > 5 * 1024 * 1024) {
+    selectedFile = await compressImage(file, 0.75);
+  }
 });
 
-/* CAMERA */
+/* UPLOAD */
+function upload(file) {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", "arkforge-pets");
+
+    const xhr = new XMLHttpRequest();
+
+    const wrap = document.getElementById("uploadBarWrap");
+    const bar = document.getElementById("uploadBar");
+
+    wrap.style.display = "block";
+    bar.style.width = "0%";
+
+    xhr.upload.onprogress = (e) => {
+      bar.style.width = (e.loaded / e.total) * 100 + "%";
+    };
+
+    xhr.onload = () => {
+      const data = JSON.parse(xhr.responseText);
+      if (!data.secure_url) return reject("fail");
+      resolve(data.secure_url);
+    };
+
+    xhr.onerror = () => reject("error");
+
+    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
+    xhr.send(form);
+  });
+}
+
+/* SAVE */
+window.save = async () => {
+  const btn = document.querySelector(".saveBtn");
+  btn.disabled = true;
+
+  try {
+    let photo = petData.photo || "";
+
+    if (selectedFile) {
+      photo = await upload(selectedFile);
+    }
+
+    await updateDoc(ref, {
+      name: document.getElementById("petNameInput").value,
+      microchip: document.getElementById("microchipInput").value,
+      phone: document.getElementById("phone").value,
+      phone2: document.getElementById("phone2").value,
+      photo,
+      updatedAt: new Date()
+    });
+
+    document.getElementById("successOverlay").style.display = "flex";
+
+    setTimeout(() => {
+      location.reload();
+    }, 500);
+
+  } catch (e) {
+    alert("Save failed");
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+/* CAMERA / GALLERY */
 window.openCamera = () => {
   const i = document.getElementById("fileInput");
   i.setAttribute("capture","environment");
   i.click();
 };
 
-/* GALLERY */
 window.openGallery = () => {
   const i = document.getElementById("fileInput");
   i.removeAttribute("capture");
   i.click();
 };
 
-/* SAVE */
-window.save = async () => {
-  await updateDoc(ref, {
-    name: document.getElementById("petNameInput").value,
-    microchip: document.getElementById("microchipInput").value,
-    phone: document.getElementById("phone").value,
-    phone2: document.getElementById("phone2").value,
-    updatedAt: new Date()
+/* COMPRESSION */
+function compressImage(file, quality) {
+  return new Promise((resolve) => {
+    const r = new FileReader();
+
+    r.onload = (e) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        const ctx = c.getContext("2d");
+
+        const scale = Math.min(1, 1600 / img.width);
+
+        c.width = img.width * scale;
+        c.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+
+        c.toBlob((b) => {
+          resolve(new File([b], file.name, {
+            type: "image/jpeg",
+            lastModified: Date.now()
+          }));
+        }, "image/jpeg", quality);
+      };
+
+      img.src = e.target.result;
+    };
+
+    r.readAsDataURL(file);
   });
-
-  document.getElementById("saveSuccess").style.display = "block";
-
-  setTimeout(() => location.reload(), 500);
-};
+}
 
 init();
 </script>
