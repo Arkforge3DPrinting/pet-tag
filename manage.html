@@ -178,16 +178,6 @@
   background: #3b82f6;
   transition: width 0.2s ease;
 }
-
-    .successMsg {
-  display: none;
-  opacity: 1;
-  transition: opacity 1s ease;
-  text-align: center;
-  font-weight: bold;
-  color: #16a34a;
-  margin-top: 10px;
-}
   </style>
 </head>
 
@@ -195,7 +185,7 @@
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.8 - Progress bar/save lock for upload</h1>
+  <h1>ArkLink - Update Pet Details v1.0</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -221,8 +211,7 @@
     <label>Secondary Phone</label>
     <input id="phone2">
   </div>
-  
-<!-- EDIT BUTTONS FOR CHIP/NAME -->
+
   <div class="section">
     <label>Pet Name</label>
     <input id="petNameInput" readonly>
@@ -237,7 +226,6 @@
 <div class="section">
   <label>Photo</label>
 
-  <!-- IMAGE PREIVEW -->
   <img id="preview">
 
   <input
@@ -246,12 +234,6 @@
   accept="image/*"
   style="display:none;"
 >
-  <div id="uploadContainer" style="display:none; margin-top:10px;">
-  <progress id="uploadProgress" value="0" max="100" style="width:100%;"></progress>
-  <div id="uploadText" style="text-align:center; font-size:12px; margin-top:4px;">
-    Uploading... 0%
-  </div>
-</div>
 
   <div style="display:flex; gap:10px; margin-top:10px;">
     <button type="button" class="primaryBtn" onclick="openCamera()">
@@ -283,7 +265,6 @@
 </div>
 
 <script type="module">
-console.log("SCRIPT STARTED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -296,7 +277,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const id = new URLSearchParams(window.location.search).get("id");
-console.log("ID FROM URL:", id);
+
 let ref = null;
 let petData = null;
 let selectedFile = null;
@@ -305,7 +286,6 @@ let previewURL = null;
 /* ================= SAFE INIT ================= */
 function init() {
   if (!id) {
-    console.error("Missing ID in URL");
     document.getElementById("statusDisplay").innerText = "Missing ID";
     return;
   }
@@ -313,12 +293,9 @@ function init() {
   ref = doc(db, "pets", id);
   document.getElementById("tagIdLabel").innerText = id;
 
-  console.log("Firestore ref created:", ref.path);
-getDoc(ref).then(snap => {
-  console.log("TEST SNAPSHOT:", snap.exists());
-});
   load();
 }
+
 /* ================= LOAD ================= */
 async function load() {
   const snap = await getDoc(ref);
@@ -377,11 +354,6 @@ window.toggleMicrochipEdit = () => {
 /* ================= FILE ================= */
 document.getElementById("fileInput").addEventListener("change", (e) => {
   const file = e.target.files[0];
-  if (file && file.size > 15 * 1024 * 1024) {
-  alert("Please choose an image smaller than 10 MB.");
-  e.target.value = "";
-  return;
-}
   if (!file) return;
 
   selectedFile = file;
@@ -401,70 +373,19 @@ function upload(file) {
     form.append("upload_preset", "arkforge-pets");
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
 
-    const progressBar = document.getElementById("uploadProgress");
-    const progressText = document.getElementById("uploadText");
-    const progressContainer = document.getElementById("uploadContainer");
+    const barWrap = document.getElementById("uploadBarWrap");
+    const bar = document.getElementById("uploadBar");
 
-    if (progressContainer) progressContainer.style.display = "block";
+    barWrap.style.display = "block";
+    bar.style.width = "0%";
 
     xhr.upload.onprogress = (e) => {
-      if (!e.lengthComputable) return;
-
-      const percent = Math.round((e.loaded / e.total) * 100);
-
-      if (progressBar) progressBar.value = percent;
-      if (progressText) progressText.textContent = `Uploading... ${percent}%`;
-    };
-
-    xhr.onload = () => {
-      try {
-        const data = JSON.parse(xhr.responseText);
-
-        if (!data.secure_url) {
-          reject("Upload failed");
-          return;
-        }
-
-        if (progressText) progressText.textContent = "Upload complete!";
-
-        setTimeout(() => {
-          if (progressContainer) progressContainer.style.display = "none";
-        }, 500);
-
-        resolve(data.secure_url);
-
-      } catch (err) {
-        reject("Bad response");
+      if (e.lengthComputable) {
+        const percent = (e.loaded / e.total) * 100;
+        bar.style.width = percent + "%";
       }
     };
-
-    xhr.onerror = () => reject("Network error");
-
-    xhr.send(form);
-  });
-}
-/* =================PROGRESS BAR ================= */
-    const progressBar = document.getElementById("uploadProgress");
-const progressText = document.getElementById("uploadText");
-const progressContainer = document.getElementById("uploadContainer");
-
-progressContainer.style.display = "block";
-
-    progressBar.value = 100;
-progressText.textContent = "Upload complete!";
-setTimeout(() => {
-  progressContainer.style.display = "none";
-}, 1000)
-
-xhr.upload.onprogress = (e) => {
-  if (e.lengthComputable) {
-    const percent = Math.round((e.loaded / e.total) * 100);
-    progressBar.value = percent;
-    progressText.textContent = `Uploading... ${percent}%`;
-  }
-};
 
     xhr.onload = () => {
       try {
@@ -498,7 +419,6 @@ xhr.upload.onprogress = (e) => {
 window.save = async () => {
   const btn = document.getElementById("saveBtn");
   btn.disabled = true;
-  btn.textContent = "⏳ Saving...";
 
   try {
     let photo = petData.photo || "";
@@ -516,25 +436,25 @@ window.save = async () => {
       updatedAt: new Date()
     });
 
-    await load(); // refresh UI properly
-
-    const msg = document.getElementById("successMsg");
-    msg.style.display = "block";
-
-    setTimeout(() => {
-      msg.style.display = "none";
-    }, 2000);
-
-    selectedFile = null;
-    previewURL = null;
+    document.getElementById("successMsg").style.display = "block";
 
   } catch (e) {
     console.error(e);
     alert("Save failed");
   } finally {
     btn.disabled = false;
-    btn.textContent = "💾 Save Changes";
   }
+};
+window.openCamera = () => {
+  const input = document.getElementById("fileInput");
+  input.setAttribute("capture", "environment");
+  input.click();
+};
+
+window.openGallery = () => {
+  const input = document.getElementById("fileInput");
+  input.removeAttribute("capture");
+  input.click();
 };
 
 /* ================= START HERE ================= */
