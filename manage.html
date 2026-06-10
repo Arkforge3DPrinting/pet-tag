@@ -217,7 +217,7 @@ input[type="file"] { display:none; }
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.3</h1>
+  <h1>ArkLink - Update Pet Details v1.4</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -291,8 +291,6 @@ input[type="file"] { display:none; }
     <i class="fa-solid fa-floppy-disk"></i> Save Changes
   </button>
 </div>
-
-  <div class="successMsg" id="successMsg">Save successfull. Please reload the page for additional changes.</div>
 
 </div>
   
@@ -469,9 +467,9 @@ window.save = async () => {
       updatedAt: new Date()
     });
 
-    document.getElementById("successMsg").style.display = "block";
+    const msg = document.getElementById("successMsg");
+    msg.style.display = "block";
 
-    // ✅ refresh AFTER save completes
     setTimeout(() => {
       window.location.reload();
     }, 800);
@@ -483,6 +481,7 @@ window.save = async () => {
     btn.disabled = false;
   }
 };
+  
 
 /* ================= START HERE ================= */
 init();
