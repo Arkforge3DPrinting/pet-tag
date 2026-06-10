@@ -210,7 +210,7 @@ input {
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.4</h1>
+  <h1>ArkLink - Update Pet Details v1.3</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -331,13 +331,6 @@ async function load() {
   }
 
   petData = snap.data();
-
-   // 🔒 GATE: redirect if not active
-  if (petData.petStatus !== "active") {
-    window.location.href =
-      "https://arkforge3dprinting.github.io/pet-tag/activate.html?id=" + id;
-    return;
-  }
 
   document.getElementById("petNameLabel").innerText = petData.name || "";
   document.getElementById("phone").value = petData.phone || "";
