@@ -178,6 +178,16 @@
   background: #3b82f6;
   transition: width 0.2s ease;
 }
+
+    .successMsg {
+  display: none;
+  opacity: 1;
+  transition: opacity 1s ease;
+  text-align: center;
+  font-weight: bold;
+  color: #16a34a;
+  margin-top: 10px;
+}
   </style>
 </head>
 
@@ -185,7 +195,7 @@
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.0</h1>
+  <h1>ArkLink - Update Pet Details v1.1 - Progress bar/save lock for upload</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -211,7 +221,8 @@
     <label>Secondary Phone</label>
     <input id="phone2">
   </div>
-
+  
+<!-- EDIT BUTTONS FOR CHIP/NAME -->
   <div class="section">
     <label>Pet Name</label>
     <input id="petNameInput" readonly>
@@ -226,6 +237,7 @@
 <div class="section">
   <label>Photo</label>
 
+  <!-- IMAGE PREIVEW -->
   <img id="preview">
 
   <input
@@ -234,6 +246,12 @@
   accept="image/*"
   style="display:none;"
 >
+  <div id="uploadContainer" style="display:none; margin-top:10px;">
+  <progress id="uploadProgress" value="0" max="100" style="width:100%;"></progress>
+  <div id="uploadText" style="text-align:center; font-size:12px; margin-top:4px;">
+    Uploading... 0%
+  </div>
+</div>
 
   <div style="display:flex; gap:10px; margin-top:10px;">
     <button type="button" class="primaryBtn" onclick="openCamera()">
@@ -354,6 +372,11 @@ window.toggleMicrochipEdit = () => {
 /* ================= FILE ================= */
 document.getElementById("fileInput").addEventListener("change", (e) => {
   const file = e.target.files[0];
+  if (file && file.size > 15 * 1024 * 1024) {
+  alert("Please choose an image smaller than 10 MB.");
+  e.target.value = "";
+  return;
+}
   if (!file) return;
 
   selectedFile = file;
@@ -386,6 +409,26 @@ function upload(file) {
         bar.style.width = percent + "%";
       }
     };
+/* =================PROGRESS BAR ================= */
+    const progressBar = document.getElementById("uploadProgress");
+const progressText = document.getElementById("uploadText");
+const progressContainer = document.getElementById("uploadContainer");
+
+progressContainer.style.display = "block";
+
+    progressBar.value = 100;
+progressText.textContent = "Upload complete!";
+setTimeout(() => {
+  progressContainer.style.display = "none";
+}, 1000)
+
+xhr.upload.onprogress = (e) => {
+  if (e.lengthComputable) {
+    const percent = Math.round((e.loaded / e.total) * 100);
+    progressBar.value = percent;
+    progressText.textContent = `Uploading... ${percent}%`;
+  }
+};
 
     xhr.onload = () => {
       try {
@@ -416,6 +459,10 @@ function upload(file) {
   });
 }
 /* ================= SAVE ================= */
+const btn = document.getElementById("saveBtn");
+btn.disabled = true;
+btn.textContent = "⏳ Saving...";
+  
 window.save = async () => {
   const btn = document.getElementById("saveBtn");
   btn.disabled = true;
@@ -428,12 +475,19 @@ window.save = async () => {
     }
 
     await updateDoc(ref, {
+      await load(); // Reload fresh data from Firebase
       name: document.getElementById("petNameInput").value,
       microchip: document.getElementById("microchipInput").value,
       phone: document.getElementById("phone").value,
       phone2: document.getElementById("phone2").value,
       photo,
       updatedAt: new Date()
+        selectedFile = null;
+
+if (previewURL) {
+  URL.revokeObjectURL(previewURL);
+  previewURL = null;
+}
     });
 
     document.getElementById("successMsg").style.display = "block";
@@ -445,6 +499,19 @@ window.save = async () => {
     btn.disabled = false;
   }
 };
+  const msg = document.getElementById("successMsg");
+msg.style.display = "block";
+
+setTimeout(() => {
+  msg.style.opacity = "0";
+}, 2000);
+
+setTimeout(() => {
+  msg.style.display = "none";
+  msg.style.opacity = "1";
+}, 3000);
+  btn.disabled = false;
+btn.textContent = "💾 Save Changes";
 window.openCamera = () => {
   const input = document.getElementById("fileInput");
   input.setAttribute("capture", "environment");
