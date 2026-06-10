@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Found Pet</title>
+  <title>ArkLink Pet ID - Found Pet</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -172,6 +172,12 @@
 
     <button id="locBtn">📍 Send Location</button>
     <button id="locBtn2">📍 Send Location Secondary</button>
+    <div id="gpsStatus" style="display:none; margin-top:10px; font-weight:bold;">
+  ●○○
+</div>
+<div id="gpsText" style="display:none; font-size:12px; color:#777;">
+  Acquiring your location...
+</div>
 
   </div>
 
@@ -297,7 +303,43 @@ async function loadPet() {
       "_self"
     );
 
-  document.getElementById("locBtn").onclick = () => {
+ document.getElementById("locBtn").onclick = () => {
+
+  const btn = document.getElementById("locBtn");
+
+  btn.disabled = true;
+
+  const { anim, gpsStatus, gpsText } = runGpsAnimation(btn);
+
+  navigator.geolocation.getCurrentPosition(pos => {
+
+    clearInterval(anim);
+    gpsStatus.style.display = "none";
+    gpsText.style.display = "none";
+
+    btn.disabled = false;
+
+    const msg =
+      "I found " + pet.name +
+      ". Location: https://maps.google.com/?q=" +
+      pos.coords.latitude + "," + pos.coords.longitude;
+
+    window.open(
+      `sms:${pet.phone}?body=${encodeURIComponent(msg)}`,
+      "_self"
+    );
+
+  }, () => {
+
+    clearInterval(anim);
+    gpsStatus.style.display = "none";
+    gpsText.style.display = "none";
+
+    btn.disabled = false;
+
+    alert("Unable to get GPS location.");
+  });
+};
 
     const btn = document.getElementById("locBtn");
 
@@ -335,31 +377,43 @@ async function loadPet() {
         "_self"
       );
 
-    document.getElementById("locBtn2").onclick = () => {
+document.getElementById("locBtn2").onclick = () => {
 
-      const btn = document.getElementById("locBtn2");
+  const btn = document.getElementById("locBtn2");
 
-      btn.disabled = true;
-      btn.innerText = "📡 Acquiring GPS...";
+  btn.disabled = true;
 
-      navigator.geolocation.getCurrentPosition(pos => {
+  const { anim, gpsStatus, gpsText } = runGpsAnimation(btn);
 
-        const msg =
-          "I found " + pet.name +
-          ". Location: https://maps.google.com/?q=" +
-          pos.coords.latitude + "," + pos.coords.longitude;
+  navigator.geolocation.getCurrentPosition(pos => {
 
-        btn.disabled = false;
-        btn.innerText = "📍 Send Location Secondary";
+    clearInterval(anim);
+    gpsStatus.style.display = "none";
+    gpsText.style.display = "none";
 
-        window.open(`sms:${pet.phone2}?body=${encodeURIComponent(msg)}`, "_self");
+    btn.disabled = false;
 
-      }, () => {
-        btn.disabled = false;
-        btn.innerText = "📍 Send Location Secondary";
-        alert("Unable to get GPS location.");
-      });
-    };
+    const msg =
+      "I found " + pet.name +
+      ". Location: https://maps.google.com/?q=" +
+      pos.coords.latitude + "," + pos.coords.longitude;
+
+    window.open(
+      `sms:${pet.phone2}?body=${encodeURIComponent(msg)}`,
+      "_self"
+    );
+
+  }, () => {
+
+    clearInterval(anim);
+    gpsStatus.style.display = "none";
+    gpsText.style.display = "none";
+
+    btn.disabled = false;
+
+    alert("Unable to get GPS location.");
+  });
+};
 
   } else {
     hide("callBtn2");
@@ -367,6 +421,22 @@ async function loadPet() {
     hide("locBtn2");
     setSingle();
   }
+}
+  function runGpsAnimation(btn) {
+  const gpsStatus = document.getElementById("gpsStatus");
+  const gpsText = document.getElementById("gpsText");
+
+  const frames = ["●○○", "●●○", "●●●"];
+  let i = 0;
+
+  gpsStatus.style.display = "block";
+  gpsText.style.display = "block";
+
+  const anim = setInterval(() => {
+    gpsStatus.innerText = frames[i++ % frames.length];
+  }, 350);
+
+  return { anim, gpsStatus, gpsText };
 }
 
 loadPet();
