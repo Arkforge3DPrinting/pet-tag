@@ -195,7 +195,7 @@
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.4 - Progress bar/save lock for upload</h1>
+  <h1>ArkLink - Update Pet Details v1.5 - Progress bar/save lock for upload</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -396,24 +396,7 @@ function upload(file) {
     form.append("upload_preset", "arkforge-pets");
 
     const xhr = new XMLHttpRequest();
-
     xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
-
-    // OPTIONAL UI (safe checks so nothing breaks)
-    const progressContainer = document.getElementById("uploadContainer");
-    const progressBar = document.getElementById("uploadProgress");
-    const progressText = document.getElementById("uploadText");
-
-    if (progressContainer) progressContainer.style.display = "block";
-
-    xhr.upload.onprogress = (e) => {
-      if (!e.lengthComputable) return;
-
-      const percent = Math.round((e.loaded / e.total) * 100);
-
-      if (progressBar) progressBar.value = percent;
-      if (progressText) progressText.textContent = `Uploading... ${percent}%`;
-    };
 
     xhr.onload = () => {
       try {
@@ -424,16 +407,10 @@ function upload(file) {
           return;
         }
 
-        if (progressText) progressText.textContent = "Upload complete!";
-
-        setTimeout(() => {
-          if (progressContainer) progressContainer.style.display = "none";
-        }, 600);
-
         resolve(data.secure_url);
 
       } catch (err) {
-        reject("Invalid response");
+        reject("Bad response");
       }
     };
 
