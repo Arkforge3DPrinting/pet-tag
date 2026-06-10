@@ -185,7 +185,7 @@
 
 <div class="container">
 
-  <h1>Manage Pet v2 - adjusting buttons</h1>
+  <h1>ArkLink - Update Pet Details v1.0</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -228,6 +228,13 @@
 
   <img id="preview">
 
+  <input
+  type="file"
+  id="fileInput"
+  accept="image/*"
+  style="display:none;"
+>
+
   <div style="display:flex; gap:10px; margin-top:10px;">
     <button type="button" class="primaryBtn" onclick="openCamera()">
       <i class="fa-solid fa-camera"></i> Camera
@@ -253,7 +260,7 @@
   </button>
 </div>
 
-  <div class="successMsg" id="successMsg">Saved!</div>
+  <div class="successMsg" id="successMsg">Save successfull. Please reload the page for additional changes.</div>
 
 </div>
 
@@ -437,6 +444,17 @@ window.save = async () => {
   } finally {
     btn.disabled = false;
   }
+};
+window.openCamera = () => {
+  const input = document.getElementById("fileInput");
+  input.setAttribute("capture", "environment");
+  input.click();
+};
+
+window.openGallery = () => {
+  const input = document.getElementById("fileInput");
+  input.removeAttribute("capture");
+  input.click();
 };
 
 /* ================= START HERE ================= */
