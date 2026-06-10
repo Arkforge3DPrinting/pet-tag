@@ -210,7 +210,7 @@ input {
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.0</h1>
+  <h1>ArkLink - Update Pet Details v1.1</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -285,7 +285,7 @@ input {
   </button>
 </div>
 
-  <div class="successMsg" id="successMsg">Save successfull. Please reload the page for additional changes.</div>
+  <div class="successMsg" id="successMsg">Save successful.</div>
 
 </div>
 
@@ -462,6 +462,9 @@ window.save = async () => {
     });
 
     document.getElementById("successMsg").style.display = "block";
+    setTimeout(() => {
+  window.location.reload();
+}, 1000);
 
   } catch (e) {
     console.error(e);
