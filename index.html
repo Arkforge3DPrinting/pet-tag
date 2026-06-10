@@ -23,8 +23,6 @@
       justify-content: center;
       flex-direction: column;
       z-index: 9999;
-      animation: fadeOut 1.2s ease forwards;
-      animation-delay: 2.8s;
     }
 
     .scanCircle {
@@ -208,8 +206,22 @@ const db = getFirestore(app);
 const id = new URLSearchParams(window.location.search).get("id");
 
 const main = document.getElementById("main");
+const scanIntro = document.getElementById("scanIntro");
 
 let gpsBusy = false;
+
+/* START STATE */
+main.style.display = "none";
+
+/* SIMPLE SCAN TIMER (reliable UX) */
+setTimeout(() => {
+  scanIntro.style.opacity = "0";
+  scanIntro.style.transition = "opacity 0.4s ease";
+
+  setTimeout(() => {
+    scanIntro.style.display = "none";
+  }, 400);
+}, 1200);
 
 /* FIXED TIME AGO */
 function timeAgo(date) {
@@ -240,80 +252,66 @@ function loadPet() {
     if (!snap.exists()) return;
 
     const pet = snap.data();
+    if (!pet) return;
 
+    /* SHOW MAIN ONLY WHEN DATA IS READY */
     main.style.display = "block";
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
     document.getElementById("message").innerText = "Help get them home safely.";
-/* MICROCHIP DISPLAY (FIX) */
-if (pet.microchip) {
-  let chip = document.getElementById("microchipText");
 
-  if (!chip) {
-    chip = document.createElement("div");
-    chip.id = "microchipText";
-    chip.style.marginTop = "8px";
-    chip.style.fontSize = "12px";
-    chip.style.color = "#666";
-    chip.style.fontWeight = "600";
-    document.getElementById("main").insertBefore(chip, document.getElementById("btnGrid"));
-  }
+    /* MICROCHIP */
+    if (pet.microchip) {
+      let chip = document.getElementById("microchipText");
 
-  let value = pet.microchip;
+      if (!chip) {
+        chip = document.createElement("div");
+        chip.id = "microchipText";
+        chip.style.marginTop = "8px";
+        chip.style.fontSize = "12px";
+        chip.style.color = "#666";
+        chip.style.fontWeight = "600";
+        document.getElementById("main").insertBefore(chip, document.getElementById("btnGrid"));
+      }
 
-  // uppercase only letters (safe for mixed alphanumeric chips)
-  value = value.toUpperCase();
-
-  chip.innerHTML = "Microchip: <strong>" + value + "</strong>";
-}
+      chip.innerHTML = "Microchip: <strong>" + pet.microchip.toUpperCase() + "</strong>";
+    }
 
     const photo = document.getElementById("petPhoto");
     const badge = document.getElementById("statusBadge");
 
-    /* RESET */
     photo.classList.remove("lostPhoto", "safePhoto");
-    badge.classList.remove("hidden", "status-lost", "status-safe");
+    badge.classList.add("hidden");
+    badge.classList.remove("status-lost", "status-safe");
 
-const status = pet.petStatus;
+    const status = pet.petStatus;
 
-badge.classList.add("hidden");
-badge.classList.remove("status-lost", "status-safe");
-
-photo.classList.remove("lostPhoto", "safePhoto");
-
-if (status === "lost") {
-  badge.innerText = "🔴 LOST";
-  badge.classList.remove("hidden");
-  badge.classList.add("status-lost");
-
-  photo.classList.add("lostPhoto");
-} else {
-  // SAFE (or default)
-  photo.classList.add("safePhoto");
-}
+    if (status === "lost") {
+      badge.innerText = "🔴 LOST";
+      badge.classList.remove("hidden");
+      badge.classList.add("status-lost");
+      photo.classList.add("lostPhoto");
+    } else {
+      photo.classList.add("safePhoto");
+    }
 
     if (pet.photo) photo.src = pet.photo;
 
-/* LAST UPDATED (FINAL FIX) */
-const raw = pet.updatedAt;
+    /* LAST UPDATED */
+    const raw = pet.updatedAt;
 
-let last = null;
+    let last = null;
 
-if (raw?.toDate) {
-  last = raw.toDate(); // Firestore Timestamp (correct path)
-} else if (raw?.seconds) {
-  last = new Date(raw.seconds * 1000); // fallback
-} else {
-  last = new Date(raw); // string / number fallback
-}
+    if (raw?.toDate) last = raw.toDate();
+    else if (raw?.seconds) last = new Date(raw.seconds * 1000);
+    else last = new Date(raw);
 
-if (!isNaN(last.getTime())) {
-  document.getElementById("lastUpdated").innerText =
-    "Last updated: " + timeAgo(last);
-}
+    if (!isNaN(last.getTime())) {
+      document.getElementById("lastUpdated").innerText =
+        "Last updated: " + timeAgo(last);
+    }
 
-    /* ===== BUTTONS FIXED (NO OVERWRITING, SECONDARY INCLUDED) ===== */
-
+    /* BUTTONS */
     document.getElementById("callBtn").onclick =
       () => window.location.href = "tel:" + pet.phone;
 
