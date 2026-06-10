@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+    
     body {
       font-family: Arial, sans-serif;
       background: radial-gradient(circle at top, #e9f0f7, #f4f6f8);
@@ -178,6 +179,70 @@
   background: #3b82f6;
   transition: width 0.2s ease;
 }
+    .btnRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.primaryBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: 0.15s ease;
+}
+
+.primaryBtn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.primaryBtn:active {
+  transform: translateY(0px);
+}
+
+.editLink {
+  font-size: 13px;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 6px;
+  text-align: center;
+  user-select: none;
+  transition: 0.15s ease;
+}
+
+.editLink:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.saveWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.saveBtn {
+  width: 55%;
+  max-width: 240px;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
   </style>
 </head>
 
@@ -185,7 +250,7 @@
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.0</h1>
+  <h1>ArkLink - Update Pet Details v1.1</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -235,7 +300,7 @@
   style="display:none;"
 >
 
-  <div style="display:flex; gap:10px; margin-top:10px;">
+  <div class="btnRow">
     <button type="button" class="primaryBtn" onclick="openCamera()">
       <i class="fa-solid fa-camera"></i> Camera
     </button>
