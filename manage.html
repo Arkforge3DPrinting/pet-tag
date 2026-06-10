@@ -195,7 +195,7 @@
 
 <div class="container">
 
-  <h1>ArkLink - Update Pet Details v1.2 - Progress bar/save lock for upload</h1>
+  <h1>ArkLink - Update Pet Details v1.3 - Progress bar/save lock for upload</h1>
 
   <div class="contextBox">
     You are editing: <span id="petNameLabel">Loading...</span><br>
@@ -459,10 +459,6 @@ xhr.upload.onprogress = (e) => {
   });
 }
 /* ================= SAVE ================= */
-const btn = document.getElementById("saveBtn");
-btn.disabled = true;
-btn.textContent = "⏳ Saving...";
-  
 window.save = async () => {
   const btn = document.getElementById("saveBtn");
   btn.disabled = true;
