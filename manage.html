@@ -3,15 +3,14 @@
 <head>
   <title>ArkLink Pet ID - Manage Pet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: radial-gradient(circle at top, #e9f0f7, #f4f6f8);
       margin: 0;
       padding: 12px;
+      color: #222;
     }
 
     .container {
@@ -20,165 +19,273 @@
       background: #fff;
       padding: 16px;
       border-radius: 22px;
+      border: 1px solid rgba(59,130,246,0.15);
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      opacity: 0;
-      transition: opacity 0.4s ease;
     }
 
+    h1 { text-align:center; font-size:22px; }
+    p { text-align:center; font-size:13px; color:#666; }
+
     .contextBox {
-      text-align:center;
-      background:#eef6ff;
-      padding:10px;
-      border-radius:12px;
-      font-weight:bold;
-      margin-bottom: 10px;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      text-align: center;
+      font-weight: bold;
     }
 
     .section {
-      margin-top: 12px;
+      margin-top: 14px;
       padding: 12px;
       background: #f9fafb;
       border-radius: 14px;
       border: 1px solid #e5e7eb;
     }
 
-    label {
-      font-size: 13px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
+    label { font-size:12px; font-weight:bold; display:block; margin-bottom:6px; }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      box-sizing: border-box;
+input {
+  width: 100%;
+  max-width: 440px;
+  display: block;
+  margin: 0 auto 10px auto;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  box-sizing: border-box;
+  font-size: 14px;
+  transition: 0.15s ease;
     }
-
+    
     button {
-      width: 50%;
+      width: 100%;
       padding: 14px;
       border-radius: 12px;
       border: none;
       font-weight: bold;
-      cursor: pointer;
       color: white;
+      cursor: pointer;
       margin-top: 8px;
-
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-      background: #999; /* default fallback */
     }
 
-    /* STATUS BUTTONS */
-    .lostBtn {
-      background: #ef4444 !important;
-    }
-
-    .safeBtn {
-      background: #28c76f !important;
-    }
-
-    .saveBtn {
-      background: #3b82f6 !important;
-    }
+    .lostBtn { background:#ef4444; }
+    .safeBtn { background:#28c76f; }
+    .saveBtn { background:#3b82f6; }
 
     #preview {
       width:160px;
       height:160px;
       border-radius:18px;
       object-fit:cover;
+      border:3px solid #22c55e55;
       display:block;
       margin:auto;
     }
 
-    #fileInput { display:none; }
+    input[type="file"] { display:none; }
 
-    .primaryBtn {
-      flex:1;
-      padding:12px;
-      border-radius:14px;
-      border:none;
-      cursor:pointer;
-      font-weight:600;
-      color:white;
-      background:#3b82f6;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-    }
-
-    .primaryBtn:hover { background:#2563eb; }
-
-    .btnRow {
-      display:flex;
-      gap:10px;
+    .statusBox {
+      text-align:center;
+      padding:10px;
+      border-radius:12px;
+      font-weight:bold;
       margin-top:10px;
     }
+
+    .safe { background:#eafff1; color:#1a7f3c; }
+    .lost { background:#ffecec; color:#a31212; }
+
+    .successMsg {
+      display:none;
+      text-align:center;
+      font-weight:bold;
+      color:#16a34a;
+      margin-top:10px;
+    }
+    .editBtn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  margin-top: 8px;
+  background: #3b82f6; /* same as save */
+}
+
+.editBtn:hover {
+  background: #2563eb;
+}
+    .actionBtn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  margin-top: 8px;
+  background: #3b82f6; /* same blue as Save */
+}
+
+.actionBtn:hover {
+  background: #2563eb;
+}
+    .editLink {
+  font-size: 13px;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 6px;
+  text-align: right;
+  user-select: none;
+}
+
+.editLink:hover {
+  text-decoration: underline;
+  color: #2563eb;
+}
+    .editLink {
+  font-size: 13px;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 6px;
+  text-align: center;
+  display: block;
+  user-select: none;
+}
+
+.editLink:hover {
+  text-decoration: underline;
+  color: #2563eb;
+}
+    .saveBtn {
+  width: 50%;
+  display: block;
+  margin: 14px auto 0 auto; /* centers it */
+}
+    #uploadBarWrap {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  margin-top: 10px;
+  overflow: hidden;
+  display: none;
+}
+
+#uploadBar {
+  height: 100%;
+  width: 0%;
+  background: #3b82f6;
+  transition: width 0.2s ease;
+}
+.primaryBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: 0.15s ease;
+}
+
+.primaryBtn:hover {
+  background: #2563eb;
+}
   </style>
 </head>
 
 <body>
 
-<div class="container" id="main">
+<div class="container">
 
-  <h2 style="text-align:center;">ArkLink - Manage Pet</h2>
+  <h1>ArkLink - Update Pet Details v1.3</h1>
 
   <div class="contextBox">
-    You are editing:<br>
-    <span id="petNameLabel">Loading...</span><br>
-    <small>ID: <span id="tagIdLabel"></span></small>
+    You are editing: <span id="petNameLabel">Loading...</span><br>
+    Tag ID: <span id="tagIdLabel"></span>
+  </div>
+
+  <div id="statusDisplay" class="statusBox">Loading...</div>
+
+  <div class="section">
+    <label>Status</label>
+    <button class="lostBtn" onclick="setStatus('lost')">
+  <i class="fa-solid fa-xmark"></i> Mark Lost
+  </button>
+  <button class="safeBtn" onclick="setStatus('safe')">
+  <i class="fa-solid fa-check"></i> Mark Safe
+</button>
   </div>
 
   <div class="section">
-    <label><i class="fa-solid fa-heart-crack"></i> Status</label>
-    <button class="lostBtn" onclick="setStatus('lost')">Mark Lost</button>
-    <button class="safeBtn" onclick="setStatus('safe')">Mark Safe</button>
-  </div>
-
-  <div class="section">
-    <label><i class="fa-solid fa-phone"></i> Primary Phone</label>
+    <label>Primary Phone</label>
     <input id="phone">
 
-    <label><i class="fa-solid fa-phone"></i> Secondary Phone</label>
+    <label>Secondary Phone</label>
     <input id="phone2">
   </div>
 
   <div class="section">
-    <label><i class="fa-solid fa-dog"></i> Pet Name</label>
+    <label>Pet Name</label>
     <input id="petNameInput" readonly>
-
-    <label style="margin-top:10px;">
-      <i class="fa-solid fa-microchip"></i> Microchip
-    </label>
-    <input id="microchipInput" readonly>
+ <div class="editLink" onclick="togglePetNameEdit()">✏️ Edit name</div>
   </div>
 
   <div class="section">
-    <label><i class="fa-solid fa-image"></i> Photo</label>
+    <label>Microchip</label>
+    <input id="microchipInput" readonly>
+   <div class="editLink" onclick="toggleMicrochipEdit()">✏️ Edit microchip</div>
+  </div>
+<div class="section">
+  <label>Photo</label>
 
-    <img id="preview">
+  <img id="preview">
+  <div id="fileInfo" style="text-align:center; font-size:12px; color:#666; margin-top:6px;"></div>
+  
+  <input
+  type="file"
+  id="fileInput"
+  accept="image/*"
+  style="display:none;"
+>
 
-    <input type="file" id="fileInput" accept="image/*">
+  <div style="display:flex; gap:10px; margin-top:10px;">
+    <button type="button" class="primaryBtn" onclick="openCamera()">
+      <i class="fa-solid fa-camera"></i> Camera
+    </button>
 
-    <div class="btnRow">
-      <button type="button" class="primaryBtn" onclick="openCamera()">
-        <i class="fa-solid fa-camera"></i> Camera
-      </button>
-
-      <button type="button" class="primaryBtn" onclick="openGallery()">
-        <i class="fa-solid fa-upload"></i> Upload
-      </button>
-    </div>
+    <button type="button" class="primaryBtn" onclick="openGallery()">
+      <i class="fa-solid fa-upload"></i> Upload
+    </button>
   </div>
 
-  <button class="saveBtn" onclick="save()">Save Changes</button>
+
+
+  <!-- PROGRESS BAR -->
+  <div id="uploadBarWrap">
+    <div id="uploadBar"></div>
+  </div>
+
+</div>
+  <div class="saveWrap">
+  <button id="saveBtn" class="saveBtn primaryBtn" onclick="save()">
+    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+  </button>
+</div>
+
+  <div class="successMsg" id="successMsg">Save successful.</div>
 
 </div>
 
@@ -194,17 +301,17 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-const id = new URLSearchParams(location.search).get("id");
-const main = document.getElementById("main");
+const id = new URLSearchParams(window.location.search).get("id");
 
-let ref;
-let petData;
+let ref = null;
+let petData = null;
 let selectedFile = null;
+let previewURL = null;
 
+/* ================= SAFE INIT ================= */
 function init() {
   if (!id) {
-    document.getElementById("petNameLabel").innerText = "Missing ID";
-    main.style.opacity = "1";
+    document.getElementById("statusDisplay").innerText = "Missing ID";
     return;
   }
 
@@ -214,23 +321,16 @@ function init() {
   load();
 }
 
+/* ================= LOAD ================= */
 async function load() {
   const snap = await getDoc(ref);
 
   if (!snap.exists()) {
-    document.getElementById("petNameLabel").innerText = "Not found";
-    main.style.opacity = "1";
+    document.getElementById("statusDisplay").innerText = "Pet not found";
     return;
   }
 
   petData = snap.data();
-
-  const status = String(petData.status || "").toLowerCase().trim();
-
-  if (status === "inactive") {
-    location.href = "activate.html?id=" + id;
-    return;
-  }
 
   document.getElementById("petNameLabel").innerText = petData.name || "";
   document.getElementById("phone").value = petData.phone || "";
@@ -239,9 +339,10 @@ async function load() {
   document.getElementById("microchipInput").value = petData.microchip || "";
   document.getElementById("preview").src = petData.photo || "";
 
-  main.style.opacity = "1";
+  updateStatus();
 }
 
+/* ================= STATUS ================= */
 window.setStatus = async (status) => {
   await updateDoc(ref, {
     petStatus: status,
@@ -249,41 +350,195 @@ window.setStatus = async (status) => {
   });
 
   petData.petStatus = status;
+  updateStatus();
 };
 
-document.getElementById("fileInput").addEventListener("change", (e) => {
-  selectedFile = e.target.files[0];
-  if (!selectedFile) return;
+function updateStatus() {
+  const box = document.getElementById("statusDisplay");
 
-  document.getElementById("preview").src =
-    URL.createObjectURL(selectedFile);
+  if (!petData) return;
+
+  const lost = petData.petStatus === "lost";
+  box.className = "statusBox " + (lost ? "lost" : "safe");
+  box.innerText = lost ? "LOST" : "SAFE";
+}
+
+/* ================= TOGGLES ================= */
+window.togglePetNameEdit = () => {
+  const i = document.getElementById("petNameInput");
+  i.readOnly = !i.readOnly;
+  i.focus();
+};
+
+window.toggleMicrochipEdit = () => {
+  const i = document.getElementById("microchipInput");
+  i.readOnly = !i.readOnly;
+  i.focus();
+};
+
+/* ================= FILE ================= */
+document.getElementById("fileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  selectedFile = file;
+  // preview image
+  if (previewURL) URL.revokeObjectURL(previewURL);
+  
+
+   // filename + size display
+  const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+  document.getElementById("fileInfo").innerText =
+    `${file.name} • ${sizeMB} MB`;
+
+  previewURL = URL.createObjectURL(file);
+  document.getElementById("preview").src = previewURL;
+   
+  // optional: auto-compress if too big
+  if (file.size > 5 * 1024 * 1024) {
+    selectedFile = await compressImage(file, 0.75);
+  }
 });
 
+/* ================= CLOUDINARY ================= */
+function upload(file) {
+  return new Promise((resolve, reject) => {
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", "arkforge-pets");
+
+    const xhr = new XMLHttpRequest();
+
+    const barWrap = document.getElementById("uploadBarWrap");
+    const bar = document.getElementById("uploadBar");
+
+    barWrap.style.display = "block";
+    bar.style.width = "0%";
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const percent = (e.loaded / e.total) * 100;
+        bar.style.width = percent + "%";
+      }
+    };
+
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+
+        if (!data.secure_url) {
+          reject("Upload failed");
+          return;
+        }
+
+        bar.style.width = "100%";
+
+        setTimeout(() => {
+          barWrap.style.display = "none";
+        }, 500);
+
+        resolve(data.secure_url);
+
+      } catch (err) {
+        reject("Invalid response");
+      }
+    };
+
+    xhr.onerror = () => reject("Network error");
+
+    xhr.open("POST", "https://api.cloudinary.com/v1_1/ddsp7ps7p/image/upload");
+    xhr.send(form);
+  });
+}
+/* ================= SAVE ================= */
+window.save = async () => {
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+
+  try {
+    let photo = petData.photo || "";
+
+    if (selectedFile) {
+      photo = await upload(selectedFile);
+    }
+
+    await updateDoc(ref, {
+      name: document.getElementById("petNameInput").value,
+      microchip: document.getElementById("microchipInput").value,
+      phone: document.getElementById("phone").value,
+      phone2: document.getElementById("phone2").value,
+      photo,
+      updatedAt: new Date()
+    });
+
+    document.getElementById("successMsg").style.display = "block";
+    setTimeout(() => {
+  window.location.reload();
+}, 1000);
+
+  } catch (e) {
+    console.error(e);
+    alert("Save failed");
+  } finally {
+    btn.disabled = false;
+  }
+};
 window.openCamera = () => {
-  const i = document.getElementById("fileInput");
-  i.setAttribute("capture","environment");
-  i.click();
+  const input = document.getElementById("fileInput");
+  input.setAttribute("capture", "environment");
+  input.click();
 };
 
 window.openGallery = () => {
-  const i = document.getElementById("fileInput");
-  i.removeAttribute("capture");
-  i.click();
+  const input = document.getElementById("fileInput");
+  input.removeAttribute("capture");
+  input.click();
 };
+/* ================= COMPRESSION ================= */
+function compressImage(file, quality = 0.75) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
 
-window.save = async () => {
-  await updateDoc(ref, {
-    name: document.getElementById("petNameInput").value,
-    microchip: document.getElementById("microchipInput").value,
-    phone: document.getElementById("phone").value,
-    phone2: document.getElementById("phone2").value,
-    updatedAt: new Date()
+    reader.onload = (event) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const maxWidth = 1600; // safe upload size control
+        const scale = Math.min(1, maxWidth / img.width);
+
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(
+          (blob) => {
+            const compressedFile = new File([blob], file.name, {
+              type: "image/jpeg",
+              lastModified: Date.now()
+            });
+
+            resolve(compressedFile);
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+
+      img.src = event.target.result;
+    };
+
+    reader.readAsDataURL(file);
   });
-
-  alert("Saved");
-};
-
+}
+  
+/* ================= START HERE ================= */
 init();
+
 </script>
 
 </body>
