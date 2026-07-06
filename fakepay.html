@@ -13,7 +13,6 @@ body{
     align-items:center;
     height:100vh;
     background:#1e1e1e;
-    overflow:hidden;
     font-family:Arial,sans-serif;
     color:white;
     text-align:center;
@@ -65,6 +64,14 @@ body{
     line-height:1.6;
 }
 
+.tap{
+    margin-top:25px;
+    font-size:14px;
+    opacity:0;
+    color:#facc15;
+    animation:fadeIn 0.6s 1.2s forwards;
+}
+
 @keyframes pop{
     0%{transform:scale(0);}
     80%{transform:scale(1.15);}
@@ -72,14 +79,8 @@ body{
 }
 
 @keyframes tick{
-    from{
-        transform:rotate(45deg) scale(0);
-        opacity:0;
-    }
-    to{
-        transform:rotate(45deg) scale(1);
-        opacity:1;
-    }
+    from{transform:rotate(45deg) scale(0); opacity:0;}
+    to{transform:rotate(45deg) scale(1); opacity:1;}
 }
 
 @keyframes fadeIn{
@@ -89,34 +90,48 @@ body{
 </style>
 
 </head>
+
 <body>
 
 <div class="circle">
     <div class="tick"></div>
 </div>
 
-<div class="message">
-    $500.00 AUD successfully sent to
-</div>
-
-<div class="amount">
-    Mr. Timothy Alexander
-</div>
+<div class="message">$500.00 AUD successfully sent to</div>
+<div class="amount">Mr. Timothy Alexander</div>
 
 <div class="bank">
-    BSB: 000-000 / Account: 0000000
+    BSB: 602-323 / Account: 938477190
 </div>
 
-<audio id="success" autoplay>
+<div class="tap">
+    Tap anywhere if sound does not play
+</div>
+
+<audio id="success" preload="auto">
     <source src="success.mp3" type="audio/mpeg">
 </audio>
 
 <script>
 window.addEventListener("load", () => {
     const audio = document.getElementById("success");
-    audio.play().catch(() => {
-        console.log("Autoplay blocked by browser.");
-    });
+
+    // 1. immediate best-effort autoplay
+    const playPromise = audio.play();
+
+    if (playPromise !== undefined) {
+        playPromise.catch(() => {
+            console.log("Autoplay blocked - waiting for interaction");
+
+            // 2. fallback: ANY user interaction triggers sound
+            const startAudio = () => {
+                audio.play();
+            };
+
+            document.body.addEventListener("click", startAudio, { once: true });
+            document.body.addEventListener("touchstart", startAudio, { once: true });
+        });
+    }
 });
 </script>
 
