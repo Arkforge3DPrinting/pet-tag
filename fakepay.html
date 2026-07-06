@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Success</title>
+
+<style>
+body{
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:#1e1e1e;
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+    color:white;
+    text-align:center;
+}
+
+.circle{
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    background:#22c55e;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    transform:scale(0);
+    animation:pop .4s ease-out forwards;
+}
+
+.tick{
+    width:60px;
+    height:100px;
+    border-right:12px solid white;
+    border-bottom:12px solid white;
+    transform:rotate(45deg) scale(0);
+    animation:tick .35s .35s forwards;
+}
+
+.message{
+    margin-top:30px;
+    font-size:20px;
+    opacity:0;
+    animation:fadeIn 0.6s 0.6s forwards;
+}
+
+.amount{
+    font-size:28px;
+    font-weight:bold;
+    margin-top:10px;
+    opacity:0;
+    animation:fadeIn 0.6s 0.8s forwards;
+    color:#4ade80;
+}
+
+.bank{
+    margin-top:20px;
+    font-size:14px;
+    opacity:0;
+    color:#a1a1aa;
+    animation:fadeIn 0.6s 1s forwards;
+    line-height:1.6;
+}
+
+@keyframes pop{
+    0%{transform:scale(0);}
+    80%{transform:scale(1.15);}
+    100%{transform:scale(1);}
+}
+
+@keyframes tick{
+    from{
+        transform:rotate(45deg) scale(0);
+        opacity:0;
+    }
+    to{
+        transform:rotate(45deg) scale(1);
+        opacity:1;
+    }
+}
+
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+}
+</style>
+
+</head>
+<body>
+
+<div class="circle">
+    <div class="tick"></div>
+</div>
+
+<div class="message">
+    $500.00 AUD successfully sent to
+</div>
+
+<div class="amount">
+    Mr. Timothy Alexander
+</div>
+
+<div class="bank">
+    BSB: 000-000 / Account: 0000000
+</div>
+
+<audio id="success" autoplay>
+    <source src="success.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+window.addEventListener("load", () => {
+    const audio = document.getElementById("success");
+    audio.play().catch(() => {
+        console.log("Autoplay blocked by browser.");
+    });
+});
+</script>
+
+</body>
+</html>
