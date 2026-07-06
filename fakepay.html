@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Success</title>
+<title>Payment Processing</title>
 
 <style>
 body{
@@ -18,60 +18,98 @@ body{
     text-align:center;
 }
 
+/* FULLSCREEN OVERLAY */
+.start-screen{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100vw;
+    height:100vh;
+    background:#0b0b0b;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+}
+
+button{
+    padding:16px 28px;
+    font-size:16px;
+    border:none;
+    border-radius:10px;
+    background:#22c55e;
+    color:black;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* MAIN CONTENT */
+.content{
+    opacity:0.2;
+    pointer-events:none;
+    transition:0.4s;
+}
+
+.content.active{
+    opacity:1;
+    pointer-events:auto;
+}
+
+/* OUTER FIXED CENTER (DO NOT SCALE THIS) */
 .circle{
     width:180px;
     height:180px;
     border-radius:50%;
     background:#22c55e;
     display:flex;
-    justify-content:center;
     align-items:center;
+    justify-content:center;
+    position:relative;
+}
+
+/* INNER ANIMATED WRAPPER */
+.circle-inner{
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     transform:scale(0);
-    animation:pop .4s ease-out forwards;
 }
 
+/* TICK stays centered */
 .tick{
-    width:60px;
-    height:100px;
-    border-right:12px solid white;
-    border-bottom:12px solid white;
-    transform:rotate(45deg) scale(0);
-    animation:tick .35s .35s forwards;
+    width:80px;
+    height:80px;
 }
 
+/* TEXT */
 .message{
     margin-top:30px;
     font-size:20px;
-    opacity:0;
-    animation:fadeIn 0.6s 0.6s forwards;
 }
 
 .amount{
     font-size:28px;
     font-weight:bold;
     margin-top:10px;
-    opacity:0;
-    animation:fadeIn 0.6s 0.8s forwards;
     color:#4ade80;
 }
 
 .bank{
     margin-top:20px;
     font-size:14px;
-    opacity:0;
     color:#a1a1aa;
-    animation:fadeIn 0.6s 1s forwards;
-    line-height:1.6;
 }
 
 .tap{
     margin-top:25px;
     font-size:14px;
-    opacity:0;
     color:#facc15;
-    animation:fadeIn 0.6s 1.2s forwards;
 }
 
+/* ANIMATIONS */
 @keyframes pop{
     0%{transform:scale(0);}
     80%{transform:scale(1.15);}
@@ -79,33 +117,51 @@ body{
 }
 
 @keyframes tick{
-    from{transform:rotate(45deg) scale(0); opacity:0;}
-    to{transform:rotate(45deg) scale(1); opacity:1;}
-}
-
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(10px);}
-    to{opacity:1; transform:translateY(0);}
+    from{transform:scale(0); opacity:0;}
+    to{transform:scale(1); opacity:1;}
 }
 </style>
-
 </head>
 
 <body>
 
-<div class="circle">
-    <div class="tick"></div>
+<div class="start-screen" id="startScreen">
+    <div>
+        <h2>ARKFORGE 3D PRINTING</h2>
+        <p>CLICK BELOW TO GET STARTED</p>
+        <button onclick="start()">LET'S GO!</button>
+    </div>
 </div>
 
-<div class="message">$500.00 AUD successfully sent to</div>
-<div class="amount">Mr. Timothy Alexander</div>
+<div class="content" id="content">
 
-<div class="bank">
-    BSB: 602-323 / Account: 938477190
-</div>
+    <div class="circle">
+        <div class="circle-inner" id="circleInner">
+            <svg class="tick" id="tick" viewBox="0 0 100 100">
+                <path d="M20 55 L40 75 L80 30"
+                      fill="none"
+                      stroke="white"
+                      stroke-width="10"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+            </svg>
+        </div>
+    </div>
 
-<div class="tap">
-    Tap anywhere if sound does not play
+    <div class="message">$500.00 AUD successfully sent to</div>
+    <div class="amount">Mr. Timothy Alexander</div>
+
+    <div class="bank">
+        BSB: 602-323 / Account: 938477190
+    </div>
+    <div class="bank">
+        NAB BANK AUSTRALIA
+    </div>
+
+    <div class="tap">
+        Transaction complete
+    </div>
+
 </div>
 
 <audio id="success" preload="auto">
@@ -113,26 +169,23 @@ body{
 </audio>
 
 <script>
-window.addEventListener("load", () => {
+function start(){
     const audio = document.getElementById("success");
 
-    // 1. immediate best-effort autoplay
-    const playPromise = audio.play();
+    document.getElementById("startScreen").style.display = "none";
 
-    if (playPromise !== undefined) {
-        playPromise.catch(() => {
-            console.log("Autoplay blocked - waiting for interaction");
+    const content = document.getElementById("content");
+    const circleInner = document.getElementById("circleInner");
+    const tick = document.getElementById("tick");
 
-            // 2. fallback: ANY user interaction triggers sound
-            const startAudio = () => {
-                audio.play();
-            };
+    content.classList.add("active");
 
-            document.body.addEventListener("click", startAudio, { once: true });
-            document.body.addEventListener("touchstart", startAudio, { once: true });
-        });
-    }
-});
+    // animate INNER only (not the circle)
+    circleInner.style.animation = "pop 0.4s ease-out forwards";
+    tick.style.animation = "tick 0.35s 0.35s forwards";
+
+    audio.play().catch(() => {});
+}
 </script>
 
 </body>
