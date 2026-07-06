@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Payment Processing</title>
+<title>ArkForge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
@@ -56,7 +57,7 @@ button{
     pointer-events:auto;
 }
 
-/* OUTER FIXED CENTER (DO NOT SCALE THIS) */
+/* OUTER FIXED STABLE CIRCLE */
 .circle{
     width:180px;
     height:180px;
@@ -68,17 +69,19 @@ button{
     position:relative;
 }
 
-/* INNER ANIMATED WRAPPER */
+/* ABSOLUTE ANIMATED LAYER (THIS FIXES SHIFT) */
 .circle-inner{
+    position:absolute;
     width:100%;
     height:100%;
     display:flex;
     align-items:center;
     justify-content:center;
+    transform-origin:center;
     transform:scale(0);
 }
 
-/* TICK stays centered */
+/* TICK */
 .tick{
     width:80px;
     height:80px;
@@ -180,7 +183,13 @@ function start(){
 
     content.classList.add("active");
 
-    // animate INNER only (not the circle)
+    // HARD RESET transform state (important fix)
+    circleInner.style.transform = "scale(0)";
+    tick.style.transform = "scale(0)";
+
+    // force reflow so animation actually starts clean
+    void circleInner.offsetWidth;
+
     circleInner.style.animation = "pop 0.4s ease-out forwards";
     tick.style.animation = "tick 0.35s 0.35s forwards";
 
