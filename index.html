@@ -225,9 +225,19 @@ const main = document.getElementById("main");
 const id = new URLSearchParams(window.location.search).get("id");
 
 if (!id) {
-  main.style.display = "block";
+
   document.getElementById("title").innerText = "Invalid ArkLink Tag";
-  document.getElementById("message").innerText = "No pet ID was supplied.";
+  document.getElementById("message").innerText =
+    "No pet ID was supplied.";
+
+  document.getElementById("petPhoto").style.display = "none";
+  document.getElementById("btnGrid").style.display = "none";
+  document.getElementById("gpsStatus").style.display = "none";
+  document.getElementById("gpsText").style.display = "none";
+  document.getElementById("lastUpdated").style.display = "none";
+
+  main.style.display = "block";
+
   throw new Error("Missing pet ID");
 }
   
@@ -259,9 +269,18 @@ function loadPet() {
   const ref = doc(db, "pets", id);
 
   onSnapshot(ref, (snap) => {
-    if (!snap.exists()) {
+if (!snap.exists()) {
+
   document.getElementById("title").innerText = "Pet not found";
-  document.getElementById("message").innerText = "This ArkLink tag is no longer registered.";
+  document.getElementById("message").innerText =
+    "This ArkLink tag is no longer registered.";
+
+  document.getElementById("petPhoto").style.display = "none";
+  document.getElementById("btnGrid").style.display = "none";
+  document.getElementById("gpsStatus").style.display = "none";
+  document.getElementById("gpsText").style.display = "none";
+  document.getElementById("lastUpdated").style.display = "none";
+
   main.style.display = "block";
   return;
 }
