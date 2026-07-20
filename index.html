@@ -265,6 +265,29 @@ function loadPet() {
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
     document.getElementById("message").innerText = "Help get them home safely.";
+    const hasSecondary = pet.phone2 && pet.phone2.trim();
+
+const secondaryButtons = [
+  "callBtn2",
+  "textBtn2",
+  "locBtn2"
+];
+
+secondaryButtons.forEach(buttonId => {
+  const button = document.getElementById(buttonId);
+
+  if (button) {
+    button.style.display = hasSecondary ? "block" : "none";
+  }
+});
+
+const btnGrid = document.getElementById("btnGrid");
+
+if (hasSecondary) {
+  btnGrid.classList.remove("single");
+} else {
+  btnGrid.classList.add("single");
+}
     
 /* MICROCHIP DISPLAY (FIX) */
 if (pet.microchip) {
@@ -335,19 +358,19 @@ if (!isNaN(last.getTime())) {
 
     /* ===== BUTTONS FIXED (NO OVERWRITING, SECONDARY INCLUDED) ===== */
 
-    document.getElementById("callBtn").onclick =
-      () => window.location.href = "tel:" + pet.phone;
+   document.getElementById("callBtn").onclick =
+  () => window.location.href = "tel:" + pet.phone;
+
+document.getElementById("textBtn").onclick =
+  () => window.open(
+    `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
+    "_self"
+  );
 
 if (hasSecondary) {
 
   document.getElementById("callBtn2").onclick =
     () => window.location.href = "tel:" + pet.phone2;
-
-    document.getElementById("textBtn").onclick =
-      () => window.open(
-        `sms:${pet.phone}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-        "_self"
-      );
 
   document.getElementById("textBtn2").onclick =
     () => window.open(
