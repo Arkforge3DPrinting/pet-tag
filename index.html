@@ -220,6 +220,10 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 const id = new URLSearchParams(window.location.search).get("id");
+  if (!id) {
+  document.getElementById("title").innerText = "Invalid ArkLink Tag";
+  throw new Error("Missing pet ID");
+}
 
 const main = document.getElementById("main");
 
@@ -420,10 +424,12 @@ if (hasSecondary) {
       };
     }
 
-    bindGPS("locBtn", pet.phone);
+bindGPS("locBtn", pet.phone);
 
 if (hasSecondary) {
   bindGPS("locBtn2", pet.phone2);
+}
+
   });
 }
 
