@@ -255,7 +255,12 @@ function loadPet() {
   const ref = doc(db, "pets", id);
 
   onSnapshot(ref, (snap) => {
-    if (!snap.exists()) return;
+    if (!snap.exists()) {
+  document.getElementById("title").innerText = "Pet not found";
+  document.getElementById("message").innerText = "This ArkLink tag is no longer registered.";
+  main.style.display = "block";
+  return;
+}
 
     const pet = snap.data();
     
@@ -269,7 +274,9 @@ function loadPet() {
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
     document.getElementById("message").innerText = "Help get them home safely.";
-    const hasSecondary = pet.phone2 && pet.phone2.trim();
+   const hasSecondary =
+  typeof pet.phone2 === "string" &&
+  pet.phone2.trim().length > 0;
 
 const secondaryButtons = [
   "callBtn2",
