@@ -265,6 +265,7 @@ function loadPet() {
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
     document.getElementById("message").innerText = "Help get them home safely.";
+    
 /* MICROCHIP DISPLAY (FIX) */
 if (pet.microchip) {
   let chip = document.getElementById("microchipText");
@@ -337,8 +338,10 @@ if (!isNaN(last.getTime())) {
     document.getElementById("callBtn").onclick =
       () => window.location.href = "tel:" + pet.phone;
 
-    document.getElementById("callBtn2").onclick =
-      () => window.location.href = "tel:" + pet.phone2;
+if (hasSecondary) {
+
+  document.getElementById("callBtn2").onclick =
+    () => window.location.href = "tel:" + pet.phone2;
 
     document.getElementById("textBtn").onclick =
       () => window.open(
@@ -346,11 +349,13 @@ if (!isNaN(last.getTime())) {
         "_self"
       );
 
-    document.getElementById("textBtn2").onclick =
-      () => window.open(
-        `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
-        "_self"
-      );
+  document.getElementById("textBtn2").onclick =
+    () => window.open(
+      `sms:${pet.phone2}?body=${encodeURIComponent("I found your pet " + pet.name)}`,
+      "_self"
+    );
+
+}
 
     function bindGPS(btnId, phone) {
       const btn = document.getElementById(btnId);
@@ -393,7 +398,9 @@ if (!isNaN(last.getTime())) {
     }
 
     bindGPS("locBtn", pet.phone);
-    if (pet.phone2?.trim()) bindGPS("locBtn2", pet.phone2);
+
+if (hasSecondary) {
+  bindGPS("locBtn2", pet.phone2);
   });
 }
 
