@@ -219,14 +219,17 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
+
+const main = document.getElementById("main");
+
 const id = new URLSearchParams(window.location.search).get("id");
+
 if (!id) {
   main.style.display = "block";
   document.getElementById("title").innerText = "Invalid ArkLink Tag";
   document.getElementById("message").innerText = "No pet ID was supplied.";
   throw new Error("Missing pet ID");
 }
-
 const main = document.getElementById("main");
 
 let gpsBusy = false;
