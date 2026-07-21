@@ -258,10 +258,18 @@ select {
  });
  
  const db = getFirestore(app);
- const id = new URLSearchParams(location.search).get("id");
+const id = new URLSearchParams(window.location.search).get("id");
+
 console.log("TAG ID:", id);
- 
- document.getElementById("tagIdDisplay").innerText = id;
+
+if (!id) {
+    document.getElementById("tagIdDisplay").textContent = "No Tag ID";
+    document.getElementById("activateBtn").disabled = true;
+    document.getElementById("activateBtn").textContent = "INVALID TAG";
+    throw new Error("No Tag ID supplied in URL. Please rescan.");
+}
+
+document.getElementById("tagIdDisplay").textContent = id;
 
 const dogBreeds = [
     "Mixed Breed",
