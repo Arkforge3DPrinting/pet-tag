@@ -231,7 +231,30 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
+
+const id = new URLSearchParams(window.location.search).get("id");
+
+const main = document.getElementById("main");
+
 async function logScan(){
+
+if(!id) return;
+
+try {
+
+await addDoc(collection(db,"scanEvents"),{
+  petID:id,
+  type:"scan",
+  timestamp:serverTimestamp()
+});
+
+console.log("Scan logged");
+
+} catch(e) {
+  console.error("Scan logging failed:", e);
+}
+
+}
 
 await addDoc(collection(db,"scanEvents"),{
 
@@ -244,9 +267,6 @@ timestamp:serverTimestamp()
 });
 
 }
-const main = document.getElementById("main");
-
-const id = new URLSearchParams(window.location.search).get("id");
 
 if (!id) {
 
