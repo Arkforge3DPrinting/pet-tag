@@ -79,7 +79,12 @@
       position: relative;
       display: inline-block;
     }
-
+.petInfo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #555;
+  margin: 8px 0 12px 0;
+}
     #petPhoto {
       width: 100%;
       max-width: 240px;
@@ -187,7 +192,7 @@
 
   <h1 id="title">Loading...</h1>
   <p id="message"></p>
-
+<div id="petInfo" class="petInfo"></div>
   <div class="photoWrap">
     <div id="statusBadge" class="statusBadge hidden"></div>
     <img id="petPhoto">
@@ -297,6 +302,17 @@ if (!snap.exists()) {
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
     document.getElementById("message").innerText = "Help get them home safely.";
+    const petInfo = [];
+
+if (pet.breed) {
+  petInfo.push(pet.breed);
+}
+
+if (pet.age) {
+  petInfo.push(pet.age);
+}
+
+document.getElementById("petInfo").innerText = petInfo.join(" • ");
    const hasSecondary =
   typeof pet.phone2 === "string" &&
   pet.phone2.trim().length > 0;
