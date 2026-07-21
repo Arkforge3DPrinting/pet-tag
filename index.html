@@ -256,18 +256,6 @@ console.log("Scan logged");
 
 }
 
-await addDoc(collection(db,"scanEvents"),{
-
-petID:id,
-
-type:"scan",
-
-timestamp:serverTimestamp()
-
-});
-
-}
-
 if (!id) {
 
   document.getElementById("title").innerText = "Invalid ArkLink Tag";
