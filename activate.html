@@ -153,8 +153,9 @@ select {
  </head>
  
  <body>
- 
- <div class="container">
+  
+ <div id="activationUI">
+    <div class="container">
  
  <h2>Activate Pet Tag</h2>
  <div class="tagid">Tag ID: <span id="tagIdDisplay"></span></div>
@@ -241,9 +242,28 @@ select {
  <div class="progress"><div class="bar" id="bar"></div></div>
  <div class="status" id="status"></div>
  
- </div>
- 
- <script type="module">
+     </div>
+</div>
+
+<div id="invalidTag" style="display:none;">
+
+    <div class="container">
+
+        <h2>❌ Invalid Activation Link</h2>
+
+        <p>
+            This activation link is invalid or has expired.
+        </p>
+
+        <p>
+            Please scan your ArkLink Pet Tag again.
+        </p>
+
+    </div>
+
+</div>
+
+<script type="module">
  
  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -263,10 +283,12 @@ const id = new URLSearchParams(window.location.search).get("id");
 console.log("TAG ID:", id);
 
 if (!id) {
-    document.getElementById("tagIdDisplay").textContent = "No Tag ID";
-    document.getElementById("activateBtn").disabled = true;
-    document.getElementById("activateBtn").textContent = "INVALID TAG";
-    throw new Error("No Tag ID supplied in URL. Please rescan.");
+
+    document.getElementById("activationUI").style.display = "none";
+    document.getElementById("invalidTag").style.display = "block";
+
+    throw new Error("No Tag ID supplied in URL.");
+
 }
 
 document.getElementById("tagIdDisplay").textContent = id;
