@@ -285,25 +285,28 @@ function start() {
   if (started) return;
   started = true;
 
-  onSnapshot(
+ onSnapshot(
 
-    query(collection(db, "pets")),
+  query(collection(db, "pets")),
 
-    (snap) => {
+  (snap) => {
 
-      console.log("Pets loaded:", snap.size);
+    console.log("Pets loaded:", snap.size);
 
-      pets = snap.docs.map(d => ({
-        id: d.id,
-        ...d.data()
-      }));
-      pendingCount = pets.filter(
-  p => p.pendingNameChangeStatus === "pending"
-).length;
+    pets = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
 
-      render();
-    },
+    pendingCount = pets.filter(
+      p => p.pendingNameChangeStatus === "pending"
+    ).length;
 
+    document.getElementById("pendingFilter").innerText =
+      "📝 Pending (" + pendingCount + ")";
+
+    render();
+  },
     (error) => {
 
       console.error("FIRESTORE ERROR:", error);
