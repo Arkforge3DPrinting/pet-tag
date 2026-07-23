@@ -186,7 +186,7 @@
 
 <body>
 
-<h2>🐾 Dashboard v1.06</h2>
+<h2>🐾 Dashboard v1.07</h2>
 
 <div id="pendingRequests"></div>
 
@@ -426,27 +426,46 @@ window.approveName = async (id) => {
 
 window.toggleDisable = async (id) => {
 
-  const pet = pets.find(p => p.id === id);
+  try {
 
-  if (!pet) {
-    alert("Pet not found");
-    return;
+    console.log("Disable clicked:", id);
+
+    const pet = pets.find(p => p.id === id);
+
+    console.log("Pet found:", pet);
+
+    if (!pet) {
+      alert("Pet not found");
+      return;
+    }
+
+    const ref = doc(db, "pets", id);
+
+    const newStatus =
+      pet.status === "disabled"
+        ? "active"
+        : "disabled";
+
+    console.log("Changing status to:", newStatus);
+
+    await updateDoc(ref, {
+
+      status: newStatus,
+      updatedAt: new Date()
+
+    });
+
+    console.log("Updated successfully");
+
+  } catch (e) {
+
+    console.error("DISABLE ERROR:", e);
+
+    alert("Disable failed: " + e.message);
+
   }
 
-  const ref = doc(db, "pets", id);
-
-  await updateDoc(ref, {
-
-    status: pet.status === "disabled"
-      ? "active"
-      : "disabled",
-
-    updatedAt: new Date()
-
-  });
-
 };
-
 /* =========================
    QR
 ========================= */
