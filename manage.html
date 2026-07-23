@@ -70,8 +70,21 @@
       background: #999;
     }
 
-    .lostBtn { background:#ef4444 !important; }
-    .safeBtn { background:#28c76f !important; }
+    .lostBtn {
+  background:#ef4444 !important;
+  opacity:0.55;
+  transition:0.2s;
+}
+    .safeBtn {
+  background:#28c76f !important;
+  opacity:0.55;
+  transition:0.2s;
+}
+    .statusActive {
+  opacity:1 !important;
+  box-shadow:0 0 0 3px rgba(0,0,0,.15);
+  transform:scale(1.02);
+}
     .saveBtn {
   background: #3b82f6 !important;
   width: calc(100% - 20px);
@@ -186,8 +199,19 @@
 
   <div class="section">
     <label><i class="fa-solid fa-heart-crack"></i> Status</label>
-    <button class="lostBtn" onclick="setStatus('lost')">Mark Lost</button>
-    <button class="safeBtn" onclick="setStatus('safe')">Mark Safe</button>
+<button
+    id="lostBtn"
+    class="lostBtn"
+    onclick="setStatus('lost')">
+    Mark Lost
+</button>
+
+<button
+    id="safeBtn"
+    class="safeBtn"
+    onclick="setStatus('safe')">
+    Mark Safe
+</button>
   </div>
 
   <div class="section">
@@ -313,7 +337,20 @@ async function load() {
     }
 
     petData = snap.data();
+    
+document.getElementById("lostBtn")
+  .classList.remove("statusActive");
 
+document.getElementById("safeBtn")
+  .classList.remove("statusActive");
+
+if (petData.petStatus === "lost") {
+  document.getElementById("lostBtn")
+    .classList.add("statusActive");
+} else {
+  document.getElementById("safeBtn")
+    .classList.add("statusActive");
+}
     const status = String(petData.status || "").toLowerCase().trim();
 
     if (status === "inactive") {
@@ -358,10 +395,17 @@ document.getElementById("pendingNameText").innerText =
 
 /* STATUS */
 window.setStatus = async (status) => {
+
   await updateDoc(ref, {
     petStatus: status,
     updatedAt: new Date()
   });
+
+  document.getElementById("lostBtn")
+    .classList.toggle("statusActive", status === "lost");
+
+  document.getElementById("safeBtn")
+    .classList.toggle("statusActive", status === "safe");
 };
 
 /* FILE SELECT */
