@@ -329,7 +329,10 @@ async function load() {
       return;
     }
 
-    document.getElementById("currentPetName").value =
+document.getElementById("petNameLabel").innerText =
+petData.name || "";
+
+document.getElementById("currentPetName").value =
 petData.name || "";
 
 
