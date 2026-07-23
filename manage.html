@@ -160,6 +160,7 @@
       justify-content:center;
       background:rgba(255,255,255,0.9);
       z-index:999;
+      user-select:none;
     }
 
 .check {
@@ -172,12 +173,15 @@
   align-items:center;
   justify-content:center;
 
+  margin:0 auto;   /* THIS is the missing piece */
+
   animation: pop 0.35s ease;
 }
 
 .tick {
   font-size:42px;
   color:#28c76f;
+  transform:translateY(-2px);
 }
 
     @keyframes pop {
@@ -191,7 +195,7 @@
 
 <div class="container" id="main">
 
-  <h2 style="text-align:center;">ArkLink - Update Pet Details v1.07</h2>
+  <h2 style="text-align:center;">ArkLink - Update Pet Details v1.08</h2>
 
   <div class="contextBox">
     You are editing:<br>
