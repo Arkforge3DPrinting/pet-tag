@@ -78,7 +78,9 @@
   margin-left: 10px;
   margin-right: 10px;
 }
-
+.requestBtn {
+  background:#8b5cf6 !important;
+}
     #preview {
       width:160px;
       height:160px;
@@ -197,8 +199,26 @@
   </div>
 
   <div class="section">
-    <label><i class="fa-solid fa-dog"></i> Pet Name</label>
-    <input id="petNameInput">
+<input id="currentPetName" disabled>
+
+<button class="requestBtn" onclick="showNameRequest()">
+  Request Name Edit
+</button>
+
+<div id="nameRequestBox" style="display:none;margin-top:10px;">
+
+  <input id="requestedPetName"
+  placeholder="Enter requested new name">
+
+  <button class="saveBtn" onclick="submitNameRequest()">
+    Submit Request
+  </button>
+
+</div>
+
+<div id="pendingNameText"
+style="text-align:center;color:#666;font-size:13px;">
+</div>
 
     <label style="margin-top:10px;">
       <i class="fa-solid fa-microchip"></i> Microchip
@@ -309,7 +329,16 @@ async function load() {
       return;
     }
 
-    document.getElementById("petNameLabel").innerText = petData.name || "";
+    document.getElementById("currentPetName").value =
+petData.name || "";
+
+
+if (petData.pendingNameChangeStatus === "pending") {
+
+document.getElementById("pendingNameText").innerText =
+"Pending request: " + petData.pendingNameChange;
+
+}
     document.getElementById("phone").value = petData.phone || "";
     document.getElementById("phone2").value = petData.phone2 || "";
     document.getElementById("petNameInput").value = petData.name || "";
@@ -381,6 +410,41 @@ function upload(file) {
     xhr.send(form);
   });
 }
+window.showNameRequest = () => {
+
+document.getElementById("nameRequestBox")
+.style.display = "block";
+
+};
+window.submitNameRequest = async () => {
+
+const requested =
+document.getElementById("requestedPetName")
+.value.trim();
+
+
+if (!requested) {
+alert("Please enter a requested name");
+return;
+}
+
+
+await updateDoc(ref, {
+
+pendingNameChange: requested,
+
+pendingNameChangeStatus: "pending",
+
+pendingNameChangeDate: new Date()
+
+});
+
+
+alert("Name change request submitted");
+
+location.reload();
+
+};
 
 /* SAVE */
 window.save = async () => {
@@ -392,7 +456,7 @@ window.save = async () => {
     }
 
     await updateDoc(ref, {
-      name: document.getElementById("petNameInput").value,
+     
       microchip: document.getElementById("microchipInput").value,
       phone: document.getElementById("phone").value,
       phone2: document.getElementById("phone2").value,
