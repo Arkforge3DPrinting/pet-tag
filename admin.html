@@ -186,7 +186,7 @@
 
 <body>
 
-<h2>🐾 Dashboard v1.07</h2>
+<h2>🐾 Dashboard v1.08</h2>
 
 <div id="pendingRequests"></div>
 
@@ -295,11 +295,12 @@ function start() {
 
     console.log("Pets loaded:", snap.size);
 
-    pets = snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
+pets = snap.docs.map(d => ({
+  id: d.id,
+  ...d.data()
+}));
 
+console.log("FIRST PET STATUS:", pets[0].status);
     pendingCount = pets.filter(
   p => p.pendingNameChangeStatus === "pending"
 ).length;
