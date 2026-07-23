@@ -198,6 +198,10 @@
   <button class="noprimary" onclick="setFilter('noprimary', this)">🟣 No Primary</button>
   <button class="nosecondary" onclick="setFilter('nosecondary', this)">🔵 No Secondary</button>
   <button class="defaultimg" onclick="setFilter('defaultimg', this)">🟠 Default Image</button>
+  <button class="pending"
+onclick="setFilter('pending', this)">
+📝 Pending (0)
+</button>
 </div>
 
 <div id="list"></div>
@@ -242,6 +246,7 @@ const auth = getAuth(app);
 let pets = [];
 let filter = "all";
 let search = "";
+let pendingCount = 0;
 
 const listDiv = document.getElementById("list");
 
@@ -292,6 +297,9 @@ function start() {
         id: d.id,
         ...d.data()
       }));
+      pendingCount = pets.filter(
+  p => p.pendingNameChangeStatus === "pending"
+).length;
 
       render();
     },
