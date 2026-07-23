@@ -186,7 +186,7 @@
 
 <body>
 
-<h2>🐾 Dashboard</h2>
+<h2>🐾 Dashboard v1.0</h2>
 
 <input id="search" placeholder="Search ID, name, phone...">
 
@@ -362,7 +362,49 @@ window.savePet = async (id) => {
   });
 
 };
+/* =========================
+   APPROVE/DECLINE
+========================= */
+window.approveName = async (id) => {
 
+  const pet = pets.find(p => p.id === id);
+
+  if (!pet || !pet.pendingNameChange) return;
+
+  const ref = doc(db, "pets", id);
+
+  await updateDoc(ref, {
+
+    name: pet.pendingNameChange,
+
+    pendingNameChange: "",
+
+    pendingNameChangeStatus: "",
+
+    updatedAt: new Date()
+
+  });
+
+  alert("Name updated");
+
+};
+  window.denyName = async (id) => {
+
+  const ref = doc(db, "pets", id);
+
+  await updateDoc(ref, {
+
+    pendingNameChangeStatus: "rejected",
+
+    pendingNameChange: "",
+
+    updatedAt: new Date()
+
+  });
+
+  alert("Name request rejected");
+
+};
 /* =========================
    TOGGLE
 ========================= */
@@ -506,7 +548,35 @@ function render() {
       </div>
 
       <div class="buttons">
+      
+${p.pendingNameChangeStatus === "pending" ? `
 
+<div style="
+background:#fef3c7;
+padding:10px;
+border-radius:10px;
+margin-top:10px;
+">
+
+<b>🐾 Name Change Request</b><br>
+
+Current: ${p.name || ""}<br>
+
+Requested: ${p.pendingNameChange}
+
+<button class="action"
+onclick="approveName('${p.id}')">
+Approve
+</button>
+
+<button class="action disable"
+onclick="denyName('${p.id}')">
+Reject
+</button>
+
+</div>
+
+` : ""}
         <button class="action"
           onclick="savePet('${p.id}')">
           Save
