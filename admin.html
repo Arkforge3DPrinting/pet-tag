@@ -186,7 +186,9 @@
 
 <body>
 
-<h2>🐾 Dashboard v1.02</h2>
+<h2>🐾 Dashboard v1.03</h2>
+
+<div id="pendingRequests"></div>
 
 <input id="search" placeholder="Search ID, name, phone...">
 
@@ -249,7 +251,7 @@ let search = "";
 let pendingCount = 0;
 
 const listDiv = document.getElementById("list");
-
+const pendingDiv = document.getElementById("pendingRequests");
 /* =========================
    AUTH
 ========================= */
@@ -299,13 +301,15 @@ function start() {
     }));
 
     pendingCount = pets.filter(
-      p => p.pendingNameChangeStatus === "pending"
-    ).length;
+  p => p.pendingNameChangeStatus === "pending"
+).length;
 
-    document.getElementById("pendingFilter").innerText =
-      "📝 Pending (" + pendingCount + ")";
+document.getElementById("pendingFilter").innerText =
+"📝 Pending (" + pendingCount + ")";
 
-    render();
+renderPendingRequests();
+
+render();
   },
     (error) => {
 
@@ -456,6 +460,78 @@ function makeQR(id) {
 /* =========================
    RENDER
 ========================= */
+function renderPendingRequests() {
+
+  const pending = pets.filter(
+    p => p.pendingNameChangeStatus === "pending"
+  );
+
+
+  if (!pending.length) {
+
+    pendingDiv.innerHTML = "";
+
+    return;
+  }
+
+
+  pendingDiv.innerHTML = `
+
+  <div style="
+    background:#fef3c7;
+    padding:15px;
+    border-radius:14px;
+    margin-bottom:15px;
+  ">
+
+  <h3>
+  📝 Pending Requests (${pending.length})
+  </h3>
+
+
+  ${pending.map(p => `
+
+    <div style="
+      background:white;
+      padding:12px;
+      border-radius:10px;
+      margin-top:10px;
+    ">
+
+    <b>${p.name || "Unnamed pet"}</b><br>
+
+    Current:
+    ${p.name || ""}<br>
+
+    Requested:
+    <b>${p.pendingNameChange}</b>
+
+
+    <br><br>
+
+
+    <button class="action"
+    onclick="approveName('${p.id}')">
+    Approve
+    </button>
+
+
+    <button class="action disable"
+    onclick="denyName('${p.id}')">
+    Reject
+    </button>
+
+
+    </div>
+
+  `).join("")}
+
+
+  </div>
+
+  `;
+}
+
 
 function render() {
 
