@@ -186,7 +186,7 @@
 
 <body>
 
-<h2>🐾 Dashboard v1.03</h2>
+<h2>🐾 Dashboard v1.04</h2>
 
 <div id="pendingRequests"></div>
 
@@ -639,34 +639,7 @@ if (filter === "nosecondary") return !p.phone2;
 
       <div class="buttons">
       
-${p.pendingNameChangeStatus === "pending" ? `
 
-<div style="
-background:#fef3c7;
-padding:10px;
-border-radius:10px;
-margin-top:10px;
-">
-
-<b>🐾 Name Change Request</b><br>
-
-Current: ${p.name || ""}<br>
-
-Requested: ${p.pendingNameChange}
-
-<button class="action"
-onclick="approveName('${p.id}')">
-Approve
-</button>
-
-<button class="action disable"
-onclick="denyName('${p.id}')">
-Reject
-</button>
-
-</div>
-
-` : ""}
         <button class="action"
           onclick="savePet('${p.id}')">
           Save
