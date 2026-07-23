@@ -319,16 +319,36 @@ if (!snap.exists()) {
 
     const pet = snap.data();
     
-    if (pet.status === "inactive") {
+if (pet.status === "inactive") {
   window.location.href =
     "activate.html?id=" + encodeURIComponent(id);
+  return;
+}
+
+
+if (pet.status === "disabled") {
+
+  document.getElementById("title").innerText =
+    "🐾 ArkLink Tag Disabled";
+
+  document.getElementById("message").innerText =
+    "This pet profile has been temporarily disabled.";
+
+  document.getElementById("petPhoto").style.display = "none";
+  document.getElementById("btnGrid").style.display = "none";
+  document.getElementById("gpsStatus").style.display = "none";
+  document.getElementById("gpsText").style.display = "none";
+  document.getElementById("lastUpdated").style.display = "none";
+
+  main.style.display = "block";
+
   return;
 }
 
     main.style.display = "block";
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
-    document.getElementById("message").innerText = "Help get them home safely.";
+    document.getElementById("message").innerText = "Help get them home safely!";
     const petInfo = [];
 
 if (pet.breed) {
