@@ -189,7 +189,7 @@
 
 <div class="container" id="main">
 
-  <h2 style="text-align:center;">ArkLink - Update Pet Details</h2>
+  <h2 style="text-align:center;">ArkLink - Update Pet Details v1.01</h2>
 
   <div class="contextBox">
     You are editing:<br>
@@ -279,7 +279,28 @@ style="text-align:center;color:#666;font-size:13px;">
 </div>
 
 <div class="successOverlay" id="successOverlay">
-  <div class="check"><i class="fa-solid fa-check"></i></div>
+  <div style="text-align:center;">
+    <div class="check">
+      <i class="fa-solid fa-check"></i>
+    </div>
+
+    <h3 style="margin:18px 0 8px;color:#28c76f;">
+      Changes Saved Successfully
+    </h3>
+
+    <p style="margin:0;color:#666;font-size:15px;">
+      Redirecting to your pet profile in
+      <span id="redirectCountdown"
+        style="
+          color:#28c76f;
+          font-weight:700;
+          font-size:20px;
+        ">
+        5
+      </span>
+      seconds...
+    </p>
+  </div>
 </div>
 
 <script type="module">
@@ -512,11 +533,22 @@ window.save = async () => {
       updatedAt: new Date()
     });
 
-    document.getElementById("successOverlay").style.display = "flex";
+document.getElementById("successOverlay").style.display = "flex";
 
-    setTimeout(() => {
-      location.reload();
-    }, 500);
+let seconds = 5;
+
+const countdown = document.getElementById("redirectCountdown");
+countdown.innerText = seconds;
+
+const timer = setInterval(() => {
+  seconds--;
+  countdown.innerText = seconds;
+
+  if (seconds <= 0) {
+    clearInterval(timer);
+    window.location.href = `index.html?id=${id}`;
+  }
+}, 1000);
 
   } catch (e) {
     console.error(e);
