@@ -328,17 +328,15 @@ if (pet.status === "inactive") {
 
 if (pet.status === "disabled") {
 
-  document.getElementById("title").innerText =
-    "🐾 ArkLink Tag Disabled";
+  main.innerHTML = `
 
-  document.getElementById("message").innerText =
-    "This pet profile has been temporarily disabled.";
+    <h1>🐾 ArkLink Tag Disabled</h1>
 
-  document.getElementById("petPhoto").style.display = "none";
-  document.getElementById("btnGrid").style.display = "none";
-  document.getElementById("gpsStatus").style.display = "none";
-  document.getElementById("gpsText").style.display = "none";
-  document.getElementById("lastUpdated").style.display = "none";
+    <p>
+      This pet profile has been temporarily disabled.
+    </p>
+
+  `;
 
   main.style.display = "block";
 
