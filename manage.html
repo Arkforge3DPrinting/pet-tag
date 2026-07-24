@@ -190,37 +190,61 @@ body {
 
 
 
-#preview {
+.petImageWrap {
 
-
-  width:110px;
-
-
-  height:110px;
-
+  width:120px;
+  height:120px;
 
   border-radius:50%;
 
+  padding:5px;
 
-  object-fit:cover;
+  background:#e5e7eb;
 
-
-  border:
-
-    4px solid white;
-
-
-  background:#f3f4f6;
-
-
-  box-shadow:
-
-
-    0 8px 20px rgba(0,0,0,.15);
-
+  transition:.35s ease;
 
 }
 
+
+#preview {
+
+  width:100%;
+
+  height:100%;
+
+  border-radius:50%;
+
+  object-fit:cover;
+
+  background:#f3f4f6;
+
+  border:4px solid white;
+
+}
+    .petImageWrap.safe {
+
+  background:#22c55e;
+
+  box-shadow:
+
+    0 0 15px rgba(34,197,94,.7),
+
+    0 0 35px rgba(34,197,94,.4);
+
+}
+
+
+.petImageWrap.lost {
+
+  background:#ef4444;
+
+  box-shadow:
+
+    0 0 15px rgba(239,68,68,.7),
+
+    0 0 35px rgba(239,68,68,.4);
+
+}
 
 
 /* PET DETAILS */
@@ -865,7 +889,7 @@ button:active {
       <span class="ark">ARK</span><span class="link">LINK</span>
     </div>
     <div class="subtitle">
-      Pet Details Manager (PDM 1.0)
+      Pet Details Manager (PDM 1.01)
     </div>
   </header>
 
@@ -874,9 +898,9 @@ button:active {
 
   <section class="petCard">
 
-    <div class="petImageWrap">
-      <img id="preview">
-    </div>
+<div class="petImageWrap" id="petImageWrap">
+  <img id="preview">
+</div>
 
     <div class="petIdentity">
 
@@ -1240,6 +1264,16 @@ if (petData.petStatus === "lost") {
   document.getElementById("safeBtn")
     .classList.add("statusActive");
 }
+    const imageWrap =
+document.getElementById("petImageWrap");
+
+imageWrap.classList.remove("safe","lost");
+
+imageWrap.classList.add(
+  petData.petStatus === "lost"
+  ? "lost"
+  : "safe"
+);
     const status = String(petData.status || "").toLowerCase().trim();
 
     if (status === "inactive") {
@@ -1295,6 +1329,12 @@ window.setStatus = async (status) => {
 
   document.getElementById("safeBtn")
     .classList.toggle("statusActive", status === "safe");
+  const imageWrap =
+document.getElementById("petImageWrap");
+
+imageWrap.classList.remove("safe","lost");
+
+imageWrap.classList.add(status);
 };
 
 /* FILE SELECT */
