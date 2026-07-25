@@ -169,31 +169,51 @@
 
   transition:.2s;
 }
+    .petNotesBtn small {
+  display:block;
+  margin-top:3px;
+  font-size:11px;
+  font-weight:400;
+  color:#888;
+}
 
 .petNotesBtn:active{
   transform:scale(.98);
   background:#eef5fb;
 }
-    .notesModal {
+  .notesModal {
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.35);
+  background:rgba(0,0,0,0.45);
   z-index:9999;
 
-  align-items:flex-end;
+  align-items:center;
   justify-content:center;
 }
-
 .notesCard {
   background:white;
-  width:90%;
-  max-width:420px;
-  margin-bottom:20px;
-  padding:20px;
-  border-radius:22px;
+  width:85%;
+  max-width:360px;
+  padding:22px;
+  border-radius:24px;
   text-align:center;
-  box-shadow:0 10px 40px rgba(0,0,0,0.2);
+
+  box-shadow:0 15px 50px rgba(0,0,0,0.25);
+
+  animation: notesPop .25s ease;
+}
+
+@keyframes notesPop {
+  from {
+    transform:scale(.85);
+    opacity:0;
+  }
+
+  to {
+    transform:scale(1);
+    opacity:1;
+  }
 }
 
 .notesCard h2 {
@@ -358,7 +378,11 @@
   <h1 id="title">Loading...</h1>
   
 <div id="message" class="petNotesBtn">
-  🐾 Pet Notes <span>›</span>
+  <div>
+    🐾 Pet Notes
+    <small>View important information</small>
+  </div>
+  <span>›</span>
 </div>
 <div id="petInfo" class="petInfo"></div>
   <div class="photoWrap">
@@ -532,7 +556,13 @@ if (pet.status === "disabled") {
     main.style.display = "block";
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
-    document.getElementById("message").innerText = "Tap here for helpful pet information.";
+  document.getElementById("message").innerHTML = `
+  <div>
+    🐾 Pet Notes
+    <small>View important information</small>
+  </div>
+  <span>›</span>
+`;
     const petInfo = [];
 
 if (pet.breed) {
