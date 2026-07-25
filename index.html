@@ -151,6 +151,28 @@
       100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.25); }
     }
 
+.petNotesBtn{
+  margin:12px auto;
+  padding:12px 16px;
+  border-radius:14px;
+  background:#f8fafc;
+  border:1px solid #dbe4ee;
+  font-weight:700;
+  color:#222;
+  cursor:pointer;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  transition:.2s;
+}
+
+.petNotesBtn:active{
+  transform:scale(.98);
+  background:#eef5fb;
+}
+    
     .statusBadge {
       position: absolute;
       top: 14px;
@@ -303,7 +325,10 @@
 <div class="container" id="main">
 
   <h1 id="title">Loading...</h1>
-  <p id="message"></p>
+  
+<div id="petNotesBtn" class="petNotesBtn">
+  🐾 Pet Notes <span>›</span>
+</div>
 <div id="petInfo" class="petInfo"></div>
   <div class="photoWrap">
     <div id="statusBadge" class="statusBadge hidden"></div>
@@ -323,6 +348,23 @@
   <div id="gpsText">Acquiring your location...</div>
 
   <div id="lastUpdated">Last updated: —</div>
+</div>
+  <div id="notesModal" class="notesModal">
+
+  <div class="notesCard">
+
+    <h2>🐾 Pet Notes</h2>
+
+    <p id="notesText">
+      This is where pet notes will appear.
+    </p>
+
+    <button id="closeNotes">
+      Close
+    </button>
+
+  </div>
+
 </div>
 
 <script type="module">
@@ -459,7 +501,7 @@ if (pet.status === "disabled") {
     main.style.display = "block";
 
     document.getElementById("title").innerText = "🐾 You found " + pet.name;
-    document.getElementById("message").innerText = "Help get them home safely!";
+    document.getElementById("message").innerText = "Tap here for helpful pet information.";
     const petInfo = [];
 
 if (pet.breed) {
@@ -636,6 +678,21 @@ if (hasSecondary) {
 
   });
 }
+  const notesModal = document.getElementById("notesModal");
+
+document.getElementById("petNotesBtn").onclick = () => {
+  notesModal.style.display = "flex";
+};
+
+document.getElementById("closeNotes").onclick = () => {
+  notesModal.style.display = "none";
+};
+
+notesModal.onclick = (e) => {
+  if (e.target === notesModal) {
+    notesModal.style.display = "none";
+  }
+};
 
 logScan();
 loadPet();
