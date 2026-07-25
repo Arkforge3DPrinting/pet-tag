@@ -326,7 +326,7 @@
 
   <h1 id="title">Loading...</h1>
   
-<div id="petNotesBtn" class="petNotesBtn">
+<div id="message" class="petNotesBtn">
   🐾 Pet Notes <span>›</span>
 </div>
 <div id="petInfo" class="petInfo"></div>
@@ -680,7 +680,7 @@ if (hasSecondary) {
 }
   const notesModal = document.getElementById("notesModal");
 
-document.getElementById("petNotesBtn").onclick = () => {
+document.getElementById("message").onclick = () => {
   notesModal.style.display = "flex";
 };
 
