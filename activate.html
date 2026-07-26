@@ -222,6 +222,21 @@ select {
  <input id="phone" placeholder="Primary Contact Number">
  <input id="phone2" placeholder="Secondary Contact (optional)">
  <input id="microchip" placeholder="Microchip number (optional)">
+     <textarea id="importantInfo" 
+placeholder="🐾 Important Pet Information (optional)
+
+Add medical details, medications, allergies, behaviour notes, or anything a finder should know."
+style="
+width:100%;
+min-height:90px;
+padding:14px;
+margin-bottom:10px;
+border-radius:12px;
+border:2px solid #ddd;
+font-size:15px;
+font-family:Arial,sans-serif;
+resize:none;
+"></textarea>
  
  <input type="file" id="photoInput" accept="image/*">
  
@@ -705,6 +720,7 @@ await setDoc(ref,{
  phone,
  phone2:document.getElementById("phone2").value.trim(),
  microchip:document.getElementById("microchip").value.trim(),
+ importantInfo:document.getElementById("importantInfo").value.trim(),
  photo:photoURL||snap.data().photo||"",
  status:"active",
  activatedAt:new Date().toISOString()
