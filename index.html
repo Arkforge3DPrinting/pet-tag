@@ -377,7 +377,7 @@
 
   <h1 id="title">Loading...</h1>
   
-<div id="message" class="petNotesBtn">
+<div id="message" class="petNotesBtn" style="display:none;">
   <div>
     🐾 Pet Notes
     <small>View important information</small>
@@ -528,8 +528,22 @@ if (!snap.exists()) {
   return;
 }
 
-    const pet = snap.data();
-    
+const pet = snap.data();
+
+const infoButton = document.getElementById("message");
+const notesText = document.getElementById("notesText");
+
+if (pet.importantInfo && pet.importantInfo.trim() !== "") {
+
+  infoButton.style.display = "flex";
+  notesText.innerText = pet.importantInfo;
+
+} else {
+
+  infoButton.style.display = "none";
+
+}
+
 if (pet.status === "inactive") {
   window.location.href =
     "activate.html?id=" + encodeURIComponent(id);
